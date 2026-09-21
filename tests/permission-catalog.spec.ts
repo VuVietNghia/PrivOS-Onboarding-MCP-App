@@ -30,6 +30,10 @@ const CATALOG: Readonly<Record<string, CatalogEntry>> = {
 	'custom-permissions:read': { contexts: ['room'], executionContexts: ['user', 'background', 'both'] },
 	'custom-permissions:write': { contexts: ['room'], executionContexts: ['user', 'background', 'both'] },
 	'users:read': { contexts: ['workspace', 'room'], executionContexts: ['user'] },
+	// NOT yet confirmed against the live Portal catalog: taken from privos-dev-docs
+	// mcp-app-platform/api-reference.md ("Read room metadata and members"). Contexts are the
+	// conservative mirror of `users:read`. Re-check before a Marketplace submission.
+	'rooms:read': { contexts: ['workspace', 'room'], executionContexts: ['user'] },
 	'notifications:write': { contexts: ['room'], executionContexts: ['user', 'background', 'both'] },
 	'files:read': { contexts: ['workspace', 'room'], executionContexts: ['user', 'background', 'both'] },
 	'files:write': { contexts: ['workspace', 'room'], executionContexts: ['user', 'background', 'both'] },

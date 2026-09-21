@@ -4,6 +4,41 @@ This project follows [Semantic Versioning](https://semver.org/). Each marketplac
 must equal `privos-app.json.version` and `package.json.version`; change both release notes and metadata
 in one commit.
 
+## [3.0.0] - 2026-09-21
+
+Breaking: the reference demo app became the standalone Onboarding app. Every existing installation
+needs a workspace admin to **Refresh** it (Admin → Apps) and re-approve the changed permission set.
+
+### Added
+
+- Onboarding: one roadmap template list per position, one hire-record list, one roadmap list per hire
+  copied from the template; working-day deadlines; resumable provisioning; per-hire progress with
+  automatic completion. Admin/HR and hire screens are chosen from the room role.
+- The provisioning form picks the hire from the room member list (`rooms:read`, optional); without
+  it HR types a username resolved through `users.info` (`users:read`, optional).
+
+### Changed
+
+- App id `ai.privos.onboarding-mcp-app`; the only tool is `onboarding_dashboard`, opening the
+  Onboarding screen directly (no tab bar).
+- Permissions reduced to `basic:information`, `lists:read`, `lists:write` (required) and
+  `lists:query`, `rooms:read`, `users:read` (optional).
+
+### Removed
+
+- Every demo panel and demo tool (`hr_whoami`, `hr_bulk_export`, `hr_agent_bot_credential_check`,
+  `hr_app_object_store`, `hr_app_db_store`), the license tiers, the `agentBot` block, the demo
+  environment variables, and `launch-kit/`.
+
+### Fixed
+
+- The tool's `ui.resourceUri` now matches the renamed app id; the mismatch made the Hub ask for a
+  resource the server refused ("No UI resource available").
+- A blank "Hạn" box in the template editor is an error instead of silently saving D+0.
+- Hub-internal `errorType` strings are no longer shown to users or written to the hire record.
+- `tests/ui-shell.spec.ts` runs on Windows (it used to skip its whole suite there), and
+  `tests/manifest.spec.ts` no longer fails on the publisher-only `ui` key.
+
 ## [2.17.17] - 2026-09-15
 
 ### Changed

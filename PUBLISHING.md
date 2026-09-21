@@ -269,8 +269,8 @@ unless the listing already has all of:
 
 These live on the **listing**, not in `privos-app.json`, and are uploaded
 through the same upload endpoint with `kind: ICON | HERO | SCREENSHOT`
-(PNG/JPEG/WebP; icon ≤ 2 MB, others ≤ 10 MB; `altText` required). The assets in
-`launch-kit/` exist for this step.
+(PNG/JPEG/WebP; icon ≤ 2 MB, others ≤ 10 MB; `altText` required). The demo `launch-kit/` assets were removed with the demo; prepare icon, hero and
+screenshots for the Onboarding listing before this step.
 
 Data-policy disclosure is split: `dataPolicy` in the manifest describes what the
 app does; `externalDestinations`, `dataCategories`, `dataResidency`,

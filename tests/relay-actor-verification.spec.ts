@@ -1,32 +1,36 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ApplicationMcpRequest, ToolCallContext, VerifiedActor } from '@privos_ai/app-server';
 
-import { relayMcpHandler } from '../src/relay-transport';
+const handleMcpMessage = vi.fn(async () => ({ ok: true }));
+vi.mock('../src/mcp-message-handlers', () => ({ handleMcpMessage }));
+
+const { relayMcpHandler } = await import('../src/relay-transport');
 
 /**
- * `relayMcpHandler` is the adapter between the SDK's `AppMcpHandler` contract
- * (invoked by `connectRelay` for both `development` relay pairing and
- * `standalone-production`) and this app's `handleMcpMessage`. These tests
- * prove the adapter forwards exactly what the SDK verified — nothing more,
- * nothing less — without booting a real WebSocket relay connection.
+ * `relayMcpHandler` is the adapter between the SDK's `AppMcpHandler` contract (invoked by
+ * `connectRelay`) and this app's `handleMcpMessage`. These tests prove the adapter forwards exactly
+ * the actor the SDK verified — never an identity read from the request params — without booting a
+ * real WebSocket relay connection.
  */
 
-function whoamiRequest(id = 1): ApplicationMcpRequest {
-  return { jsonrpc: '2.0', id, method: 'tools/call', params: { name: 'hr_whoami', arguments: {} } };
+function request(params: Record<string, unknown> = { name: 'onboarding_dashboard', arguments: {} }): ApplicationMcpRequest {
+  return { jsonrpc: '2.0', id: 7, method: 'tools/call', params };
 }
 
-function baseContext(overrides: Partial<ToolCallContext> = {}): ToolCallContext {
-  return {
-    transport: 'relay',
-    identityState: 'missing',
-    sessionScope: 'test-scope',
-    ...overrides,
-  };
+function context(overrides: Partial<ToolCallContext> = {}): ToolCallContext {
+  return { transport: 'relay', identityState: 'missing', sessionScope: 'test-scope', ...overrides };
+}
+
+function forwardedActor(): unknown {
+  expect(handleMcpMessage).toHaveBeenCalledTimes(1);
+  return (handleMcpMessage.mock.calls[0] as unknown[])[3];
 }
 
 describe('relayMcpHandler actor wiring', () => {
-  it('forwards a verified relay actor (user-token provenance) to hr_whoami', async () => {
+  beforeEach(() => handleMcpMessage.mockClear());
+
+  it('chuyển tiếp đúng actor đã xác thực (user-token) cùng method, id và params', async () => {
     const actor: VerifiedActor = Object.freeze({
       userId: 'user-1',
       username: 'techcomthanh',
@@ -34,57 +38,27 @@ describe('relayMcpHandler actor wiring', () => {
       claims: Object.freeze({ sub: 'user-1', rid: 'room-1' }),
       provenance: 'user-token',
     });
-    const context = baseContext({ identityState: 'verified', actor, roomId: 'room-1' });
-
-    const result: any = await relayMcpHandler(whoamiRequest(), context);
-
-    expect(JSON.parse(result.content[0].text)).toMatchObject({
-      verified: true,
-      userId: 'user-1',
-      username: 'techcomthanh',
-      roomId: 'room-1',
-      provenance: 'user-token',
-    });
+    await relayMcpHandler(request(), context({ identityState: 'verified', actor, roomId: 'room-1' }));
+    expect(handleMcpMessage).toHaveBeenCalledWith('tools/call', 7, { name: 'onboarding_dashboard', arguments: {} }, actor);
   });
 
-  it('reports unverified when no token was presented (identityState: missing)', async () => {
-    const context = baseContext({ identityState: 'missing' });
-
-    const result: any = await relayMcpHandler(whoamiRequest(), context);
-
-    expect(JSON.parse(result.content[0].text)).toMatchObject({ verified: false });
+  it('không chuyển actor nào khi không có token (identityState: missing)', async () => {
+    await relayMcpHandler(request(), context({ identityState: 'missing' }));
+    expect(forwardedActor()).toBeUndefined();
   });
 
-  it('reports unverified when the token failed verification (identityState: invalid), never throws', async () => {
-    const context = baseContext({ identityState: 'invalid' });
-
-    const result: any = await relayMcpHandler(whoamiRequest(), context);
-
-    expect(JSON.parse(result.content[0].text)).toMatchObject({ verified: false });
+  it('không chuyển actor nào khi token sai (identityState: invalid)', async () => {
+    await relayMcpHandler(request(), context({ identityState: 'invalid' }));
+    expect(forwardedActor()).toBeUndefined();
   });
 
-  it('never falls back to the plain, unverified _meta.privosUser fields when context.actor is absent', async () => {
-    // A malicious or buggy caller could put anything here; only `context.actor`
-    // — populated solely by the SDK's own JWKS-verified user-token check — may
-    // ever name a caller. `relayMcpHandler` must not read `request.params`
-    // for identity at all.
-    const request: ApplicationMcpRequest = {
-      jsonrpc: '2.0',
-      id: 2,
-      method: 'tools/call',
-      params: {
-        name: 'hr_whoami',
-        arguments: {},
-        _meta: { privosUser: { userId: 'attacker-claimed-id', username: 'root', userToken: 'not-a-real-jwt' } },
-      },
+  it('không bao giờ lấy danh tính từ _meta.privosUser chưa xác thực', async () => {
+    const params = {
+      name: 'onboarding_dashboard',
+      arguments: {},
+      _meta: { privosUser: { userId: 'attacker-claimed-id', username: 'root', userToken: 'not-a-real-jwt' } },
     };
-    const context = baseContext({ identityState: 'invalid' });
-
-    const result: any = await relayMcpHandler(request, context);
-
-    const parsed = JSON.parse(result.content[0].text);
-    expect(parsed).toMatchObject({ verified: false });
-    expect(JSON.stringify(parsed)).not.toContain('attacker-claimed-id');
-    expect(JSON.stringify(parsed)).not.toContain('root');
+    await relayMcpHandler(request(params), context({ identityState: 'invalid' }));
+    expect(forwardedActor()).toBeUndefined();
   });
 });

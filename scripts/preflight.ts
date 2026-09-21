@@ -95,8 +95,12 @@ for (const permission of manifest.permissions) {
   }
 }
 
+// License tiers are optional: an app that declares none sells no gated feature, so there is nothing
+// to guard. When a `license` block IS declared it must be well-formed and every feature guarded.
 const tiers = manifest.license?.tiers;
-if (!Array.isArray(tiers) || !tiers.some((tier: any) => tier.id === 'free') || !tiers.some((tier: any) => tier.id === 'pro')) {
+if (manifest.license === undefined) {
+  // No licensed features.
+} else if (!Array.isArray(tiers) || !tiers.some((tier: any) => tier.id === 'free') || !tiers.some((tier: any) => tier.id === 'pro')) {
   fail('license.tiers is malformed.', 'Declare free and pro tiers with features arrays and numeric limits.');
 } else {
   const licenseSources = fs.readFileSync('src/license.ts', 'utf8') + fs.readFileSync('src/mcp-message-handlers.ts', 'utf8');

@@ -1,10 +1,10 @@
 {
-  "name": "ai.privos.mcp-app-demo",
-  "version": "2.17.17",
+  "name": "ai.privos.onboarding-mcp-app",
+  "version": "3.0.0",
   "type": "module",
   "private": false,
   "description": "Reference PrivOS MCP app demonstrating HR workflows, scoped workspace APIs, AI and sandbox controls, and license-aware features.",
-  "title": "PrivOS Demo MCP App",
+  "title": "PrivOS Onboarding MCP App",
   "icon": "/public/icon.svg",
   "homepage": "https://privos.ai",
   "author": {
@@ -66,6 +66,7 @@
     "react-dom": "^18.0.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "zod": "^3.25.76"
   }
 }

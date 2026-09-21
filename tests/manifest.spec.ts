@@ -8,7 +8,10 @@ describe('manifest', () => {
   it('serves the canonical Marketplace manifest', () => {
     const manifest = createManifest();
     expect(Object.keys(manifest)).toEqual(MARKETPLACE_MANIFEST_FIELDS);
-    expect(manifest).toEqual(publisherManifest);
+    // `ui` (`distDir`) is publisher-side build metadata, not a Marketplace manifest field, so the
+    // served manifest is the publisher manifest minus exactly that key.
+    const { ui: _publisherOnlyUi, ...marketplaceManifest } = publisherManifest;
+    expect(manifest).toEqual(marketplaceManifest);
     expect(manifest.name).toBe(pkg.name);
     expect(manifest.version).toBe(pkg.version);
     expect(manifest.title).toBe(pkg.title);

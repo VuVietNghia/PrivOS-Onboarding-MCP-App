@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { createElement } from 'react';
 import { beforeAll, describe, expect, it } from 'vitest';
 import appManifest from '../privos-app.json';
-import { handleMcpMessage } from '../src/mcp-message-handlers';
+import { handleMcpMessage, TOOL_NAME } from '../src/mcp-message-handlers';
 import { LazyBoundary } from '../src/ui/lazy-boundary';
 
 // Read the real `resourceUri` off the published manifest rather than duplicating it as a second
@@ -19,7 +19,9 @@ const ASSET_URI_PREFIX = `${UI_RESOURCE_URI.slice(0, UI_RESOURCE_URI.lastIndexOf
 // contract cannot assume `dist/ui` already exists — build it here first, the same way
 // packaging.spec.ts self-invokes its own script instead of assuming prior pipeline steps ran.
 beforeAll(() => {
-  const result = spawnSync(path.resolve('node_modules/.bin/vite'), ['build'], { encoding: 'utf8' });
+  // Run Vite's JS entry through the current Node binary: `node_modules/.bin/vite` is a POSIX shell
+  // shim that `spawnSync` cannot execute on Windows, which silently skipped this whole suite there.
+  const result = spawnSync(process.execPath, [path.resolve('node_modules/vite/bin/vite.js'), 'build'], { encoding: 'utf8' });
   if (result.status !== 0) {
     throw new Error(`vite build failed ahead of the UI shell tests:\n${result.stdout}\n${result.stderr}`);
   }
@@ -52,7 +54,6 @@ describe('built UI shell and split assets', () => {
     expect(Array.isArray(manifest.files)).toBe(true);
     expect(manifest.files.some((f) => f.name.endsWith('.js'))).toBe(true);
     expect(manifest.files.some((f) => f.name.endsWith('.css'))).toBe(true);
-    expect(manifest.files.some((f) => /^sample-agent-set\.tar-.+\.gz$/.test(f.name))).toBe(true);
   });
 
   it('serves a listed asset and refuses an unlisted or .map uri with JSON-RPC -32602', async () => {
@@ -76,7 +77,7 @@ describe('built UI shell and split assets', () => {
   it('serves the identical shell from both the tools/call embedded resource and resources/read', async () => {
     const viaResourcesRead = await handleMcpMessage('resources/read', 6, { uri: UI_RESOURCE_URI });
     const viaToolsCall = await handleMcpMessage('tools/call', 7, {
-      name: 'hr_management_dashboard',
+      name: TOOL_NAME,
       arguments: {},
     });
     expect(viaToolsCall.content[0].resource.text).toBe(viaResourcesRead.contents[0].text);
