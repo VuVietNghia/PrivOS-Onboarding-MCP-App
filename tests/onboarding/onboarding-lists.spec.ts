@@ -11,20 +11,23 @@ describe('onboarding-lists', () => {
   });
 
   it('createList gửi key, isolatedList, field và stage', async () => {
-    const { app, calls } = fakeRestApp([{ method: 'POST', path: 'lists.create', reply: () => ok({ list: { _id: 'L2', name: 'T', key: 'onb-tpl-t' } }) }]);
+    const { app, toolCalls } = fakeRestApp([{ method: 'POST', path: 'lists.create', reply: () => ok({ list: { _id: 'L2', name: 'T', key: 'onb-tpl-t' } }) }]);
     const list = await createList(app, { roomId: 'R1', name: 'T', key: 'onb-tpl-t', isolated: true,
       fields: [{ name: 'Người thực hiện', type: 'SELECT', options: ['Nhân sự', 'HR'] }], stages: [{ name: 'Ngày đầu', order: 0 }] });
     expect(list._id).toBe('L2');
-    expect(calls[0].body).toEqual({ roomId: 'R1', name: 'T', key: 'onb-tpl-t', isolatedList: true,
+    expect(toolCalls[0]).toEqual({ name: 'mcpapp.lists.create', arguments: { roomId: 'R1', name: 'T', key: 'onb-tpl-t', isolatedList: true, crossTeamWorkflow: false,
       fieldDefinitions: [{ name: 'Người thực hiện', type: 'SELECT', options: [{ value: 'Nhân sự' }, { value: 'HR' }] }],
-      stages: [{ name: 'Ngày đầu', order: 0 }] });
+      stages: [{ name: 'Ngày đầu', color: '#3b82f6' }] } });
   });
 
   it('createItem gửi name, stageId, parentId, customFields', async () => {
-    const { app, calls } = fakeRestApp([{ method: 'POST', path: 'items.create', reply: () => ok({ item: { _id: 'I1', parentId: 'root' } }) }]);
+    const { app, toolCalls } = fakeRestApp([
+      { method: 'POST', path: 'items.create', reply: () => ok({ item: { _id: 'I1', name: 'Ký NDA', stageId: 'S1', parentId: 'root' } }) },
+      { method: 'GET', path: 'items.get', reply: () => ok({ item: { _id: 'I1', name: 'Ký NDA', stageId: 'S1', parentId: 'root' } }) },
+    ]);
     const item = await createItem(app, { listId: 'L2', name: 'Ký NDA', stageId: 'S1', parentId: 'root', customFields: [{ fieldId: 'f1', value: true }] });
     expect(item._id).toBe('I1');
-    expect(calls[0].body).toEqual({ listId: 'L2', name: 'Ký NDA', stageId: 'S1', parentId: 'root', customFields: [{ fieldId: 'f1', value: true }] });
+    expect(toolCalls[0]).toEqual({ name: 'mcpapp.lists.createItem', arguments: { listId: 'L2', title: 'Ký NDA', parentId: 'root', customFields: [{ fieldId: 'f1', value: true }] } });
   });
 
   it('listAllItems phân trang items.query tới khi hết cursor', async () => {

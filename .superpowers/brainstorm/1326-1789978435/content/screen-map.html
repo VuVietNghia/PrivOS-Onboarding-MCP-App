@@ -1,0 +1,103 @@
+<style>
+  .map{font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1F2329}
+  .map *{box-sizing:border-box}
+  .grp{margin:18px 0 8px;font-size:11px;font-weight:700;letter-spacing:.08em;color:#6C737A;text-transform:uppercase}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .scr{border:1px solid #E4E7EA;border-radius:8px;background:#fff;padding:12px 14px}
+  .scr.new{border-color:#156FF5;box-shadow:0 0 0 1px #156FF5 inset}
+  .scr h4{margin:0 0 2px;font-size:14px}
+  .route{font:11px ui-monospace,monospace;color:#6C737A}
+  .tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;background:#EEF4FF;color:#156FF5;margin-left:6px;vertical-align:2px}
+  .tag.o{background:#F2F3F5;color:#6C737A}
+  .scr ul{margin:8px 0 0;padding-left:16px}
+  .scr li{margin:2px 0}
+  .scr li b{font-weight:600}
+  .go{margin-top:8px;font-size:12px;color:#156FF5}
+  .nav{display:flex;gap:6px;align-items:center;border:1px solid #E4E7EA;border-radius:8px;padding:8px 12px;background:#fff;margin-top:8px}
+  .nav span{padding:4px 10px;border-radius:6px;background:#F2F3F5;font-weight:600;font-size:12px}
+  .warn{margin-top:8px;font-size:12px;color:#B26A00;background:#FFF4DE;border-radius:6px;padding:6px 8px}
+</style>
+
+<div class="map">
+<h2>Bản đồ màn hình (8 màn, trước đây là 3)</h2>
+<p class="subtitle">Khung xanh = màn mới hoàn toàn. Mỗi màn liệt kê đủ thông tin sẽ hiển thị. Chưa bàn style, chỉ chốt có những màn gì và mỗi màn chứa gì.</p>
+
+<div class="grp">Admin / HR: thanh điều hướng cố định</div>
+<div class="nav"><b style="margin-right:8px">Onboarding</b><span>Tổng quan</span><span>Nhân sự</span><span>Tiến độ</span><span>Template</span><span style="margin-left:auto;background:#156FF5;color:#fff">+ Khởi tạo onboarding</span></div>
+
+<div class="grid" style="margin-top:12px">
+
+<div class="scr new"><h4>1. Tổng quan <span class="tag">MỚI</span></h4><div class="route">màn mặc định của Admin</div>
+<ul>
+<li>4 số: <b>đang onboarding</b>, <b>có việc quá hạn</b>, <b>bắt đầu trong 7 ngày tới</b>, <b>hoàn tất 30 ngày qua</b></li>
+<li><b>Cần xử lý ngay</b>: hồ sơ khởi tạo lỗi, hồ sơ kẹt "Đang khởi tạo", việc HR quá hạn</li>
+<li><b>Sắp bắt đầu</b>: ai, vị trí, ngày, còn mấy ngày làm việc</li>
+<li><b>Chậm tiến độ</b>: người có % thực tế thấp hơn % lẽ ra phải đạt theo hạn</li>
+</ul></div>
+
+<div class="scr new"><h4>2. Danh sách nhân sự <span class="tag">LÀM LẠI</span></h4><div class="route">Nhân sự</div>
+<ul>
+<li>Tìm theo tên; lọc theo <b>trạng thái</b>, <b>vị trí</b>, <b>có quá hạn</b>; sắp xếp theo ngày bắt đầu / tiến độ</li>
+<li>Cột: avatar + tên + username · vị trí · ngày bắt đầu · <b>ngày thứ N</b> · thanh tiến độ % · <b>HR còn X</b> · <b>NS còn Y</b> · quá hạn · trạng thái</li>
+<li>Menu "⋯" từng dòng: Mở · Tiếp tục khởi tạo · Hủy</li>
+<li>Trạng thái rỗng có nút "Khởi tạo onboarding đầu tiên"</li>
+</ul><div class="go">Click dòng → màn 3</div></div>
+
+<div class="scr new"><h4>3. Chi tiết một nhân sự <span class="tag">MỚI</span></h4><div class="route">Nhân sự › Nguyễn An</div>
+<ul>
+<li>Đầu trang: avatar, tên, username, vị trí, ngày bắt đầu, <b>ngày thứ N / tổng số ngày của lộ trình</b>, trạng thái, nút Tính lại · Hủy · Tiếp tục</li>
+<li>Khối số liệu: % hoàn thành, thực tế so với kế hoạch, quá hạn, sắp đến hạn, hạn gần nhất, ngày dự kiến xong (hạn của task cuối)</li>
+<li>Tab <b>Lộ trình</b>: từng giai đoạn có thanh % riêng; task hiện tên, người làm (HR/NS), hạn thật + "D+N", trạng thái; Admin tick mọi task</li>
+<li>Tab <b>Việc của HR</b> / <b>Việc của nhân sự</b>: tách theo người làm</li>
+<li>Tab <b>Hồ sơ</b>: template nguồn, ID list lộ trình, mã lỗi nếu có</li>
+</ul></div>
+
+<div class="scr new"><h4>4. Tiến độ toàn room <span class="tag">MỚI</span></h4><div class="route">Tiến độ</div>
+<ul>
+<li><b>Ma trận</b>: mỗi hàng một nhân sự, mỗi cột một giai đoạn, ô = % xong của giai đoạn đó (tô màu, đỏ nếu có quá hạn)</li>
+<li>Tab <b>Việc quá hạn</b>: mọi task quá hạn của mọi người, cột: task · nhân sự · người làm · trễ mấy ngày</li>
+<li>Tab <b>Hạn tuần này</b>: task đến hạn trong 5 ngày làm việc tới</li>
+</ul>
+<div class="warn">Màn này phải mở list lộ trình của từng người (N call, chạy song song 4). Chạy tốt với vài chục người; nhiều hơn thì chậm.</div></div>
+
+<div class="scr new"><h4>5. Danh sách template <span class="tag">MỚI</span></h4><div class="route">Template</div>
+<ul>
+<li>Mỗi vị trí một thẻ: tên, số giai đoạn, số task (HR / NS), độ dài lộ trình (D+max), <b>số người đang dùng</b></li>
+<li>Nút "+ Tạo template vị trí", nút Nhân bản</li>
+</ul><div class="go">Click thẻ / Tạo → màn 6</div></div>
+
+<div class="scr new"><h4>6. Tạo / sửa template (tạo list) <span class="tag">MỚI</span></h4><div class="route">Template › Kỹ sư Backend</div>
+<ul>
+<li>Bước 1 khi tạo mới: tên vị trí, mô tả, <b>chọn bộ giai đoạn gợi ý</b> (Ngày đầu / Tuần 1 / Tháng 1…) hoặc tự đặt</li>
+<li>Trình soạn: giai đoạn thành từng khối, kéo đổi thứ tự; task: tên, người làm, hạn D+N, thêm/sửa/xóa ngay trong dòng</li>
+<li>Cột phải <b>Xem trước</b>: chọn một ngày bắt đầu mẫu, thấy ngay ngày thật của từng task (bỏ T7/CN)</li>
+<li>Cảnh báo: giai đoạn rỗng, task trùng tên, hạn giảm dần giữa các giai đoạn</li>
+</ul></div>
+
+<div class="scr new"><h4>7. Khởi tạo onboarding <span class="tag">LÀM LẠI</span></h4><div class="route">+ Khởi tạo onboarding</div>
+<ul>
+<li>Trang riêng, 3 bước: <b>Chọn nhân sự</b> (dropdown thành viên room, có avatar) → <b>Chọn vị trí + ngày bắt đầu</b> → <b>Xem trước</b> toàn bộ lộ trình với ngày thật</li>
+<li>Kiểm tra trước: nhân sự đã có hồ sơ đang chạy, ngày bắt đầu rơi vào cuối tuần</li>
+<li>Khi chạy: thanh tiến độ "Đang tạo task 7/12"; xong thì nút "Mở hồ sơ" → màn 3</li>
+</ul></div>
+
+</div>
+
+<div class="grp">Nhân sự mới</div>
+<div class="grid">
+<div class="scr new"><h4>8. Lộ trình của tôi <span class="tag">LÀM LẠI</span></h4><div class="route">màn duy nhất của nhân sự</div>
+<ul>
+<li>Lời chào kèm tên, vị trí, "Ngày thứ N", % hoàn thành</li>
+<li><b>Hôm nay cần làm</b>: task quá hạn + đến hạn hôm nay, đặt trên cùng</li>
+<li>Các giai đoạn: giai đoạn hiện tại mở, giai đoạn đã xong thu gọn, giai đoạn sau hiện mờ</li>
+<li>Task HR hiện "HR đang lo" để nhân sự biết việc đó không phải của mình</li>
+<li>Hoàn tất 100% → màn chúc mừng</li>
+</ul></div>
+<div class="scr" style="background:#F7F8FA"><h4>Không có thêm dữ liệu mới</h4>
+<ul>
+<li>Mọi số liệu ở trên đều tính được từ dữ liệu hiện có: hạn, người làm, trạng thái xong, ngày bắt đầu</li>
+<li>"Ngày thứ N", "thực tế vs kế hoạch", "sắp bắt đầu", ma trận giai đoạn: đều là phép tính trong app</li>
+<li>Không có: thời điểm tick xong, lịch sử thao tác, ghi chú. Muốn có thì phải thêm field vào list</li>
+</ul></div>
+</div>
+</div>

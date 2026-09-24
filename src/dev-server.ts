@@ -3,7 +3,8 @@
  * to the hub-embedded iframe so you get true Hot Module Replacement and
  * TypeScript breakpoints — the browser talks to Vite directly, not to an inlined
  * bundle. Production keeps the relay inline-bundle path (mcp-message-handlers.ts);
- * this module is only loaded when `npm run dev` sets PRIVOS_DEV_UI=1.
+ * this module is loaded only for an explicit non-production `PRIVOS_DEV_UI=1`
+ * session, including a paired standalone Hub session used for local P0 testing.
  *
  * Two ways to reach the Vite server (DEV_TUNNEL env):
  *   - "localhost" (default): iframe loads http://localhost:<port>. Works when you

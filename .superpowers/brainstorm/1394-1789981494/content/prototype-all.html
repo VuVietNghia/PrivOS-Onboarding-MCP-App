@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Onboarding — prototype 8 màn</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1f2029; --side:#1a1b23; --surface:#272833; --surface-2:#2e303c; --surface-3:#353848; --line:#363947; --line-soft:#2f3140;
+    --text:#e6e8ef; --text-2:#a9afbd; --text-3:#7c8395;
+    --primary:#5b6ee1; --primary-2:#7f61fe; --primary-soft:rgba(91,110,225,.16); --primary-line:rgba(91,110,225,.45); --primary-text:#b3bfff;
+    --ok:#2DE0A5; --ok-soft:rgba(45,224,165,.13); --ok-text:#6ff0c4;
+    --warn:#FFD031; --warn-soft:rgba(255,208,49,.13); --warn-text:#ffdd6b;
+    --err:#ef4444; --err-soft:rgba(239,68,68,.14); --err-text:#ff8b8b;
+    --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font:13px/1.5 Montserrat,-apple-system,"Segoe UI",sans-serif;background:#0b0c10;color:var(--text);padding:16px 24px 40px}
+  b,strong{font-weight:600}
+  .proto{max-width:1440px;margin:0 auto 12px;display:flex;align-items:center;gap:10px;color:#9aa1b2;font-size:12px}
+  .proto .seg{display:inline-flex;background:#15161c;border:1px solid var(--line);border-radius:var(--r-md);padding:2px}
+  .proto .seg span{padding:4px 12px;border-radius:4px;cursor:pointer;color:var(--text-2);font-weight:600}
+  .proto .seg span.on{background:var(--primary);color:#fff}
+  .proto .jump{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+  .proto .jump span{cursor:pointer;padding:3px 8px;border-radius:4px;background:#15161c;border:1px solid var(--line-soft)}
+  .proto .jump span.on{border-color:var(--primary);color:#fff}
+
+  .app{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:232px 1fr;min-height:900px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+  .app.hire{grid-template-columns:1fr}
+  .app.hire .side{display:none}
+
+  .side{background:var(--side);border-right:1px solid var(--line-soft);padding:18px 12px;display:flex;flex-direction:column;gap:4px}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px}
+  .logo{width:30px;height:30px;border-radius:var(--r-md);background:linear-gradient(135deg,var(--primary),var(--primary-2));display:grid;place-items:center;font-weight:700;color:#fff;flex:none}
+  .brand b{font-size:14px;display:block}.brand small{color:var(--text-3);font-size:11px}
+  .nav{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-md);color:var(--text-2);font-weight:500;cursor:pointer}
+  .nav:hover{background:var(--surface)}
+  .nav svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;flex:none}
+  .nav.on{background:var(--primary-soft);color:#c9d0ff}
+  .nav .cnt{margin-left:auto;font-size:11px;color:var(--text-3)}
+  .nav .cnt.red{color:#fff;background:var(--err);padding:0 6px;border-radius:99px;font-weight:600}
+  .sep{height:1px;background:var(--line-soft);margin:12px 6px}
+  .foot{margin-top:auto;padding:10px;border-radius:var(--r-md);background:var(--surface);color:var(--text-3);font-size:11px}
+  .foot b{color:var(--text-2);display:block;font-size:12px}
+
+  .main{padding:22px 28px 36px;min-width:0}
+  .screen{display:none}.screen.on{display:block}
+  .crumb{font-size:12px;color:var(--text-3);margin-bottom:6px}
+  .crumb a{color:var(--primary-text);cursor:pointer;text-decoration:none}
+  .top{display:flex;align-items:flex-end;gap:12px;margin-bottom:18px}
+  .top h1{font-size:20px;font-weight:600;line-height:1.3}
+  .top p{color:var(--text-3);font-size:12px;margin-top:2px}
+  .sp{flex:1}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 14px;border-radius:var(--r-md);font-weight:600;font-size:13px;border:1px solid transparent;white-space:nowrap;cursor:pointer;color:var(--text)}
+  .btn-p{background:var(--primary);color:#fff}
+  .btn-s{background:var(--surface);border-color:var(--line)}
+  .btn-d{background:transparent;border-color:rgba(239,68,68,.45);color:var(--err-text)}
+  .btn-sm{height:28px;padding:0 10px;font-size:12px}
+  .btn-ghost{color:var(--primary-text);padding:0 4px;height:auto;background:none}
+  .btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+
+  .panel{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg)}
+  .ph{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line-soft)}
+  .ph h3{font-size:13px;font-weight:600}
+  .n{font-size:11px;color:var(--text-3);background:var(--surface-2);padding:1px 7px;border-radius:99px}
+  .row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line-soft)}
+  .row:last-child{border-bottom:0}
+  .meta{color:var(--text-3);font-size:11px}
+  .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;color:#fff}
+  .av.lg{width:52px;height:52px;font-size:17px}
+  .av.sm{width:20px;height:20px;font-size:9px}
+  .who b{display:block}.who small{color:var(--text-3);font-size:11px}
+  .ico{width:28px;height:28px;border-radius:var(--r-md);display:grid;place-items:center;flex:none}
+  .ico svg{width:15px;height:15px;fill:none;stroke-width:2}
+  .ico.err{background:var(--err-soft)} .ico.err svg{stroke:var(--err)}
+  .ico.warn{background:var(--warn-soft)} .ico.warn svg{stroke:var(--warn)}
+  .ico.info{background:var(--primary-soft)} .ico.info svg{stroke:#9fb0ff}
+  .ico.ok{background:var(--ok-soft)} .ico.ok svg{stroke:var(--ok)}
+
+  .lz{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:var(--r-sm);font-size:11px;font-weight:600;white-space:nowrap}
+  .lz-err{background:var(--err-soft);color:var(--err-text)}
+  .lz-warn{background:var(--warn-soft);color:var(--warn-text)}
+  .lz-ok{background:var(--ok-soft);color:var(--ok-text)}
+  .lz-info{background:var(--primary-soft);color:var(--primary-text)}
+  .lz-mute{background:var(--surface-2);color:var(--text-2)}
+  .lz-hr{background:rgba(255,200,20,.10);color:#ffd766}
+  .lz-ns{background:rgba(50,170,240,.12);color:#8fd0ff}
+
+  .bar{height:6px;border-radius:99px;background:#3a3d4c;position:relative}
+  .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--primary)}
+  .bar i.ok{background:var(--ok)}
+  .bar .plan{position:absolute;top:-3px;width:2px;height:12px;background:#e6e8ef;border-radius:1px}
+  .prog{width:170px}
+  .prog .t{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-bottom:4px}
+  .prog .t b{color:var(--text)}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:14px 16px}
+  .kpi .lbl{color:var(--text-2);font-size:12px;display:flex;align-items:center;gap:6px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+  .kpi .val{font-size:26px;font-weight:600;margin:4px 0 2px}
+  .kpi .sub{font-size:11px;color:var(--text-3)}
+  .cols{display:grid;grid-template-columns:1.55fr 1fr;gap:16px}
+  .stack{display:flex;flex-direction:column;gap:16px}
+
+  .days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 16px}
+  .day{border:1px solid var(--line-soft);border-radius:var(--r-md);padding:8px;min-height:92px;background:var(--surface-2)}
+  .day.today{border-color:var(--primary-line);background:rgba(91,110,225,.07)}
+  .day .d{font-size:11px;color:var(--text-3);display:flex;justify-content:space-between}
+  .day .d b{color:var(--text);font-size:15px}
+  .chip{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;background:var(--surface);border-radius:var(--r-sm);padding:4px 6px}
+  .legend{display:flex;gap:14px;font-size:11px;color:var(--text-3);padding:0 16px 12px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:10px;height:6px;border-radius:99px;background:var(--primary)}
+  .legend em{display:inline-block;width:2px;height:10px;background:#e6e8ef}
+
+  /* toolbar + table */
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line-soft);margin-bottom:14px}
+  .tab{padding:9px 14px;color:var(--text-2);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .tab.on{color:var(--text);border-bottom-color:var(--primary)}
+  .tab .n{font-weight:600}
+  .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .input{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r-md);background:#1a1b23;color:var(--text-3);min-width:260px}
+  .input svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+  .select{display:flex;align-items:center;gap:6px;height:34px;padding:0 10px;border:1px solid var(--line);border-radius:var(--r-md);background:#1a1b23;color:var(--text-2);font-weight:500}
+  .select:after{content:"▾";color:var(--text-3);font-size:10px;margin-left:2px}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;font-weight:600;color:var(--text-3);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;text-transform:uppercase;letter-spacing:.03em}
+  td{padding:11px 12px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+  tr.click{cursor:pointer} tr.click:hover td{background:rgba(255,255,255,.02)}
+  td .who{display:flex;align-items:center;gap:10px}
+  .num{font-variant-numeric:tabular-nums}
+  .kebab{width:28px;height:28px;border-radius:var(--r-md);display:grid;place-items:center;color:var(--text-3);cursor:pointer}
+  .kebab:hover{background:var(--surface-2)}
+  .menu{position:absolute;right:12px;top:34px;background:#2b2d39;border:1px solid var(--line);border-radius:var(--r-md);padding:4px;min-width:190px;box-shadow:0 12px 32px rgba(0,0,0,.4);z-index:5}
+  .menu div{padding:7px 10px;border-radius:4px;font-size:12px}
+  .menu div:hover{background:var(--surface-3)}
+  .menu .dz{color:var(--err-text)}
+
+  /* hire detail */
+  .hero{display:flex;align-items:center;gap:16px;padding:18px 20px}
+  .hero h2{font-size:18px;font-weight:600}
+  .facts{display:flex;gap:18px;margin-top:4px;color:var(--text-2);font-size:12px;flex-wrap:wrap}
+  .facts span{display:inline-flex;align-items:center;gap:6px}
+  .facts svg{width:13px;height:13px;stroke:var(--text-3);fill:none;stroke-width:2}
+  .stats{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line-soft)}
+  .stat{padding:12px 18px;border-right:1px solid var(--line-soft)}
+  .stat:last-child{border-right:0}
+  .stat .l{font-size:11px;color:var(--text-3)}
+  .stat .v{font-size:18px;font-weight:600;margin-top:2px}
+  .stage{margin-bottom:12px}
+  .stage-h{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer}
+  .stage-h .chev{color:var(--text-3);width:14px}
+  .stage-h h4{font-size:13px;font-weight:600}
+  .stage-h .range{font-size:11px;color:var(--text-3)}
+  .stage-h .bar{width:140px}
+  .task{display:grid;grid-template-columns:24px 1fr 110px 150px 120px 36px;align-items:center;gap:10px;padding:9px 16px;border-top:1px solid var(--line-soft)}
+  .task > .lz, .htask > .lz, .erow > .ownsel, .erow > .dn{justify-self:start}
+  .htask > .lz{justify-self:end}
+  .task.done .tn{color:var(--text-3);text-decoration:line-through}
+  .cb{width:16px;height:16px;border-radius:4px;border:1.5px solid #6b7286;display:grid;place-items:center}
+  .cb.on{background:var(--primary);border-color:var(--primary)}
+  .cb.on:after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+  .cb.dis{opacity:.4}
+  .due b{font-weight:500;color:var(--text)} .due small{display:block;color:var(--text-3);font-size:11px}
+  .two{display:grid;grid-template-columns:1fr 300px;gap:16px}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;padding:14px 16px;font-size:12px}
+  .kv dt{color:var(--text-3)} .kv dd{color:var(--text)}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:var(--text-2)}
+
+  /* progress screen */
+  .lane{display:grid;grid-template-columns:230px 1fr 190px;align-items:center;gap:16px;padding:12px 16px;border-bottom:1px solid var(--line-soft)}
+  .segs{position:relative;display:flex;gap:3px;height:26px}
+  .seg{position:relative;border-radius:4px;background:#34374a;overflow:hidden;display:flex;align-items:center;padding:0 8px;font-size:10px;color:var(--text-2);white-space:nowrap}
+  .seg i{position:absolute;left:0;top:0;bottom:0;background:rgba(91,110,225,.55)}
+  .seg.late i{background:rgba(239,68,68,.55)}
+  .seg.full i{background:rgba(45,224,165,.45)}
+  .seg span{position:relative}
+  .today{position:absolute;top:-6px;bottom:-6px;width:2px;background:#fff;border-radius:1px}
+  .today:before{content:"hôm nay";position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text-2);white-space:nowrap}
+  .axis{display:grid;grid-template-columns:230px 1fr 190px;gap:16px;padding:10px 16px 6px;font-size:11px;color:var(--text-3)}
+
+  /* templates */
+  .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tcard{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:16px;cursor:pointer;display:flex;flex-direction:column;gap:12px}
+  .tcard:hover{border-color:var(--primary-line)}
+  .tcard h4{font-size:14px;font-weight:600}
+  .tcard .mini{display:flex;gap:3px;height:8px}
+  .tcard .mini i{border-radius:2px;background:#454a60}
+  .tstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;color:var(--text-3)}
+  .tstats b{display:block;color:var(--text);font-size:15px}
+  .tcard.new{border-style:dashed;align-items:center;justify-content:center;color:var(--text-2);min-height:190px}
+  .tcard.new .plus{width:36px;height:36px;border-radius:50%;background:var(--primary-soft);color:var(--primary-text);display:grid;place-items:center;font-size:20px}
+
+  /* editor */
+  .editor{display:grid;grid-template-columns:1fr 340px;gap:16px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:11px;color:var(--text-3);font-weight:600}
+  .inp{height:34px;border:1px solid var(--line);border-radius:var(--r-md);background:#1a1b23;padding:0 10px;display:flex;align-items:center;color:var(--text)}
+  .inp.ph{color:var(--text-3)}
+  .estage{border:1px solid var(--line-soft);border-radius:var(--r-lg);background:var(--surface);margin-bottom:12px}
+  .estage-h{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line-soft)}
+  .grip{color:var(--text-3);cursor:grab;letter-spacing:-2px}
+  .erow{display:grid;grid-template-columns:18px 1fr 130px 110px 28px;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line-soft)}
+  .erow:last-of-type{border-bottom:0}
+  .erow .inp{height:30px}
+  .ownsel{display:inline-flex;background:#1a1b23;border:1px solid var(--line);border-radius:var(--r-md);padding:2px;height:30px}
+  .ownsel span{padding:0 10px;display:flex;align-items:center;border-radius:4px;font-size:12px;font-weight:600;color:var(--text-3)}
+  .ownsel span.on{background:var(--surface-3);color:var(--text)}
+  .dn{display:flex;align-items:center;border:1px solid var(--line);border-radius:var(--r-md);background:#1a1b23;height:30px;overflow:hidden}
+  .dn span{padding:0 8px;color:var(--text-3);font-size:11px;border-right:1px solid var(--line);height:100%;display:flex;align-items:center}
+  .dn b{padding:0 10px;font-weight:500}
+  .addrow{padding:8px 12px;color:var(--primary-text);font-weight:600;font-size:12px;cursor:pointer}
+  .warnbox{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:var(--r-md);background:var(--warn-soft);color:var(--warn-text);font-size:12px;margin-bottom:12px}
+  .pv-task{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:12px;border-bottom:1px dashed var(--line-soft)}
+  .pv-task:last-child{border-bottom:0}
+  .pv-st{font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 4px}
+
+  /* wizard */
+  .stepper{display:flex;align-items:center;gap:0;margin-bottom:18px}
+  .step{display:flex;align-items:center;gap:10px;flex:1}
+  .step .c{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:12px;border:2px solid var(--line);color:var(--text-3);flex:none}
+  .step.done .c{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+  .step.cur .c{background:var(--primary);border-color:var(--primary);color:#fff}
+  .step .s b{display:block;font-size:12px}.step .s small{color:var(--text-3);font-size:11px}
+  .step .line{flex:1;height:2px;background:var(--line);margin:0 12px}
+  .step.done .line{background:var(--ok)}
+  .sum{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line-soft)}
+  .sum .k{width:120px;color:var(--text-3);font-size:12px}
+  .check{display:flex;gap:10px;align-items:center;padding:8px 16px;font-size:12px}
+  .check svg{width:15px;height:15px;stroke-width:2.2;fill:none}
+
+  /* hire screen */
+  .h-wrap{max-width:980px;margin:0 auto;padding:28px 28px 40px}
+  .welcome{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding:24px;border-radius:var(--r-xl);background:linear-gradient(135deg,rgba(91,110,225,.22),rgba(127,97,254,.10) 60%,rgba(39,40,51,1));border:1px solid var(--primary-line);margin-bottom:18px}
+  .welcome h1{font-size:22px;font-weight:600}
+  .welcome p{color:var(--text-2);margin-top:4px}
+  .ring{width:112px;height:112px;position:relative}
+  .ring svg{transform:rotate(-90deg)}
+  .ring div{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+  .ring b{font-size:24px;display:block;line-height:1}
+  .ring small{font-size:11px;color:var(--text-2)}
+  .mini-stats{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .mini-stats span{background:rgba(0,0,0,.18);border:1px solid var(--line-soft);border-radius:99px;padding:3px 10px;font-size:12px;color:var(--text-2)}
+  .mini-stats b{color:var(--text)}
+  .htask{display:grid;grid-template-columns:24px 1fr auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line-soft)}
+  .htask:first-child{border-top:0}
+  .htask .tn{font-weight:500}
+  .htask.done .tn{color:var(--text-3);text-decoration:line-through}
+  .htask.hr .tn{color:var(--text-2)}
+  .future{opacity:.55}
+  .celebrate{margin-top:18px;border:1px dashed var(--line);border-radius:var(--r-lg);padding:16px;display:flex;gap:14px;align-items:center;color:var(--text-2);font-size:12px}
+  .celebrate .badge{width:42px;height:42px;border-radius:50%;background:var(--ok-soft);display:grid;place-items:center;flex:none}
+  .celebrate .badge svg{width:22px;height:22px;stroke:var(--ok);fill:none;stroke-width:2}
+</style>
+</head>
+<body>
+
+<div class="proto">
+  <span>Prototype · xem với vai trò</span>
+  <div class="seg"><span class="on" data-role="admin">Admin / HR</span><span data-role="hire">Nhân sự mới</span></div>
+  <div class="jump">
+    <span data-go="s1">1 Tổng quan</span><span data-go="s2">2 Nhân sự</span><span data-go="s3">3 Chi tiết</span><span data-go="s4">4 Tiến độ</span><span data-go="s5">5 Template</span><span data-go="s6">6 Sửa template</span><span data-go="s7">7 Khởi tạo</span><span data-go="s8">8 Lộ trình của tôi</span>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <aside class="side">
+    <div class="brand"><div class="logo">O</div><div><b>Onboarding</b><small>Room · Nhân sự 2026</small></div></div>
+    <div class="nav" data-go="s1"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Tổng quan</div>
+    <div class="nav" data-go="s2" data-also="s3"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7"/><path d="M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5.5-5-6"/></svg>Nhân sự<span class="cnt">9</span></div>
+    <div class="nav" data-go="s4"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Tiến độ<span class="cnt red">7</span></div>
+    <div class="nav" data-go="s5" data-also="s6"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Template<span class="cnt">4</span></div>
+    <div class="sep"></div>
+    <div class="btn btn-p" data-go="s7">+ Khởi tạo onboarding</div>
+    <div class="foot"><b>Dữ liệu lưu trong PrivOS Lists</b>Cập nhật 2 phút trước · <span style="color:var(--primary-text)">Tải lại</span></div>
+  </aside>
+
+  <main class="main">
+
+<!-- =============== 1. TỔNG QUAN =============== -->
+<section class="screen" id="s1">
+  <div class="top"><div><h1>Tổng quan</h1><p>Thứ Hai, 21/09/2026</p></div><span class="sp"></span><span class="btn btn-s" data-go="s5">Quản lý template</span></div>
+  <div class="kpis">
+    <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--primary)"></span>Đang onboarding</div><div class="val">3</div><div class="sub">+ 2 sắp bắt đầu · 1 đang khởi tạo</div></div>
+    <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--err)"></span>Có việc quá hạn</div><div class="val" style="color:var(--err-text)">2</div><div class="sub">7 việc quá hạn · 3 của HR</div></div>
+    <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--warn)"></span>Bắt đầu trong 7 ngày</div><div class="val">2</div><div class="sub">Gần nhất: thứ Tư 23/09</div></div>
+    <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--ok)"></span>Đã hoàn tất</div><div class="val">2</div><div class="sub">Tổng số hồ sơ đã xong</div></div>
+  </div>
+  <div class="cols">
+    <div class="stack">
+      <section class="panel">
+        <div class="ph"><h3>Cần xử lý ngay</h3><span class="n">5</span><span class="sp"></span><span class="btn btn-ghost" data-go="s4" data-tab="late">Xem tất cả việc quá hạn →</span></div>
+        <div class="row"><div class="ico err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg></div><div style="flex:1"><b>Khởi tạo lỗi · Phạm Dũng</b><div class="meta">Sales Executive · dừng ở task 7/12 · lỗi mạng khi tạo task</div></div><span class="btn btn-s btn-sm">Hủy</span><span class="btn btn-p btn-sm">Tiếp tục khởi tạo</span></div>
+        <div class="row"><div class="ico warn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div style="flex:1"><b>Kẹt ở "Đang khởi tạo" · Võ Hà</b><div class="meta">Designer · 0/9 task · có thể tab đã bị đóng giữa chừng</div></div><span class="btn btn-s btn-sm">Tiếp tục khởi tạo</span></div>
+        <div class="row"><div class="ico err"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg></div><div style="flex:1"><b>Cấp laptop và tài khoản VPN</b><div class="meta">Việc của HR · cho <b style="color:var(--text-2)">Nguyễn An</b> · hạn thứ Sáu 18/09</div></div><span class="lz lz-err">Trễ 1 ngày</span><span class="btn btn-s btn-sm">Đánh dấu xong</span></div>
+        <div class="row"><div class="ico err"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg></div><div style="flex:1"><b>Ký cam kết bảo mật (NDA)</b><div class="meta">Việc của HR · cho <b style="color:var(--text-2)">Trần Bình</b> · hạn thứ Năm 17/09</div></div><span class="lz lz-err">Trễ 2 ngày</span><span class="btn btn-s btn-sm">Đánh dấu xong</span></div>
+        <div class="row"><div class="ico err"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg></div><div style="flex:1"><b>Thêm vào nhóm chat phòng ban</b><div class="meta">Việc của HR · cho <b style="color:var(--text-2)">Trần Bình</b> · hạn thứ Sáu 18/09</div></div><span class="lz lz-err">Trễ 1 ngày</span><span class="btn btn-s btn-sm">Đánh dấu xong</span></div>
+      </section>
+      <section class="panel">
+        <div class="ph"><h3>Chậm tiến độ</h3><span class="n">3</span><span class="meta" style="margin-left:6px">thực tế thấp hơn mức lẽ ra phải đạt</span><span class="sp"></span><span class="btn btn-ghost" data-go="s4">Mở màn Tiến độ →</span></div>
+        <div class="row" data-go="s3" style="cursor:pointer"><div class="av" style="background:#7f61fe">NA</div><div class="who" style="width:210px"><b>Nguyễn An</b><small>Kỹ sư Backend · ngày thứ 6/20</small></div><div class="prog"><div class="t"><span>Thực tế <b>43%</b></span><span>Kế hoạch 64%</span></div><div class="bar"><i style="width:43%"></i><span class="plan" style="left:64%"></span></div></div><span class="sp"></span><span class="lz lz-err">3 quá hạn</span><span class="lz lz-mute">HR còn 3 · NS còn 5</span></div>
+        <div class="row"><div class="av" style="background:#32AAF0">TB</div><div class="who" style="width:210px"><b>Trần Bình</b><small>QA Engineer · ngày thứ 9/15</small></div><div class="prog"><div class="t"><span>Thực tế <b>45%</b></span><span>Kế hoạch 64%</span></div><div class="bar"><i style="width:45%"></i><span class="plan" style="left:64%"></span></div></div><span class="sp"></span><span class="lz lz-err">4 quá hạn</span><span class="lz lz-mute">HR còn 2 · NS còn 4</span></div>
+        <div class="row"><div class="av" style="background:#D7801D">LM</div><div class="who" style="width:210px"><b>Lê Minh</b><small>Kế toán · ngày thứ 3/10</small></div><div class="prog"><div class="t"><span>Thực tế <b>10%</b></span><span>Kế hoạch 20%</span></div><div class="bar"><i style="width:10%"></i><span class="plan" style="left:20%"></span></div></div><span class="sp"></span><span class="lz lz-warn">2 sắp đến hạn</span><span class="lz lz-mute">HR còn 0 · NS còn 9</span></div>
+        <div class="legend"><span><i></i>Đã xong</span><span><em></em>Lẽ ra phải đạt hôm nay (theo hạn các task)</span></div>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="panel">
+        <div class="ph"><h3>Sắp bắt đầu</h3><span class="n">2</span></div>
+        <div class="row"><div class="av" style="background:#1DD787;color:#0b0c10">HT</div><div class="who" style="flex:1"><b>Hoàng Thu</b><small>Kỹ sư Frontend</small></div><div style="text-align:right"><b>Thứ Tư 23/09</b><div class="meta">còn 2 ngày làm việc</div></div></div>
+        <div class="row"><div class="av" style="background:#F0328C">ĐK</div><div class="who" style="flex:1"><b>Đỗ Khang</b><small>Product Manager</small></div><div style="text-align:right"><b>Thứ Hai 28/09</b><div class="meta">còn 5 ngày làm việc</div></div></div>
+      </section>
+      <section class="panel">
+        <div class="ph"><h3>Hạn trong tuần này</h3><span class="n">11</span><span class="sp"></span><span class="meta">21 – 25/09</span></div>
+        <div class="days">
+          <div class="day today"><div class="d">T2 <b>21</b></div><div class="chip"><span class="av sm" style="background:#7f61fe">NA</span>2 việc</div><div class="chip"><span class="av sm" style="background:#32AAF0">TB</span>1 việc</div></div>
+          <div class="day"><div class="d">T3 <b>22</b></div><div class="chip"><span class="av sm" style="background:#D7801D">LM</span>2 việc</div></div>
+          <div class="day"><div class="d">T4 <b>23</b></div><div class="chip"><span class="av sm" style="background:#1DD787;color:#0b0c10">HT</span>Ngày đầu</div><div class="chip"><span class="av sm" style="background:#7f61fe">NA</span>1 việc</div></div>
+          <div class="day"><div class="d">T5 <b>24</b></div><div class="chip"><span class="av sm" style="background:#32AAF0">TB</span>2 việc</div></div>
+          <div class="day"><div class="d">T6 <b>25</b></div><div class="chip"><span class="av sm" style="background:#7f61fe">NA</span>2 việc</div></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="ph"><h3>Hoàn tất</h3></div>
+        <div class="row"><div class="av" style="background:#5b6ee1">LC</div><div class="who" style="flex:1"><b>Lê Chi</b><small>Designer · 16/16 việc</small></div><span class="lz lz-ok">Hoàn tất</span></div>
+        <div class="row"><div class="av" style="background:#686f7a">PQ</div><div class="who" style="flex:1"><b>Phan Quân</b><small>Kỹ sư Backend · 14/14 việc</small></div><span class="lz lz-ok">Hoàn tất</span></div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- =============== 2. NHÂN SỰ =============== -->
+<section class="screen" id="s2">
+  <div class="top"><div><h1>Nhân sự</h1><p>9 hồ sơ onboarding trong room này</p></div><span class="sp"></span><span class="btn btn-p" data-go="s7">+ Khởi tạo onboarding</span></div>
+  <div class="tabs">
+    <div class="tab on">Tất cả <span class="n">9</span></div>
+    <div class="tab">Sắp bắt đầu <span class="n">2</span></div>
+    <div class="tab">Đang onboarding <span class="n">3</span></div>
+    <div class="tab">Đang khởi tạo <span class="n">1</span></div>
+    <div class="tab">Khởi tạo lỗi <span class="n" style="background:var(--err-soft);color:var(--err-text)">1</span></div>
+    <div class="tab">Hoàn tất <span class="n">2</span></div>
+  </div>
+  <div class="toolbar">
+    <div class="input"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Tìm theo tên hoặc username</div>
+    <div class="select">Vị trí: Tất cả</div>
+    <div class="select">Chỉ người có việc quá hạn</div>
+    <span class="sp"></span>
+    <span class="meta">Sắp xếp</span><div class="select">Ngày bắt đầu mới nhất</div>
+  </div>
+  <section class="panel" style="overflow:visible">
+    <table>
+      <thead><tr><th>Nhân sự</th><th>Vị trí</th><th>Bắt đầu</th><th>Ngày thứ</th><th>Tiến độ</th><th>HR còn</th><th>NS còn</th><th>Quá hạn</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>
+        <tr class="click" data-go="s3"><td><div class="who"><div class="av" style="background:#7f61fe">NA</div><div><b>Nguyễn An</b><div class="meta">@an.nguyen</div></div></div></td><td>Kỹ sư Backend</td><td class="num">T2 14/09</td><td class="num">6 / 20</td><td><div class="prog"><div class="t"><span><b>6/14</b> việc</span><span>43%</span></div><div class="bar"><i style="width:43%"></i><span class="plan" style="left:64%"></span></div></div></td><td class="num">3</td><td class="num">5</td><td><span class="lz lz-err">3</span></td><td><span class="lz lz-info">Đang onboarding</span></td><td style="position:relative"><div class="kebab">⋯</div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#32AAF0">TB</div><div><b>Trần Bình</b><div class="meta">@binh.tran</div></div></div></td><td>QA Engineer</td><td class="num">T4 09/09</td><td class="num">9 / 15</td><td><div class="prog"><div class="t"><span><b>5/11</b> việc</span><span>45%</span></div><div class="bar"><i style="width:45%"></i><span class="plan" style="left:64%"></span></div></div></td><td class="num">2</td><td class="num">4</td><td><span class="lz lz-err">4</span></td><td><span class="lz lz-info">Đang onboarding</span></td><td><div class="kebab">⋯</div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#D7801D">LM</div><div><b>Lê Minh</b><div class="meta">@minh.le</div></div></div></td><td>Kế toán</td><td class="num">T5 17/09</td><td class="num">3 / 10</td><td><div class="prog"><div class="t"><span><b>1/10</b> việc</span><span>10%</span></div><div class="bar"><i style="width:10%"></i><span class="plan" style="left:20%"></span></div></div></td><td class="num">0</td><td class="num">9</td><td><span class="meta">—</span></td><td><span class="lz lz-info">Đang onboarding</span></td><td><div class="kebab">⋯</div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#1DD787;color:#0b0c10">HT</div><div><b>Hoàng Thu</b><div class="meta">@thu.hoang</div></div></div></td><td>Kỹ sư Frontend</td><td class="num">T4 23/09</td><td class="meta">còn 2 ngày</td><td><div class="prog"><div class="t"><span><b>0/13</b> việc</span><span>0%</span></div><div class="bar"></div></div></td><td class="num">2</td><td class="num">11</td><td><span class="meta">—</span></td><td><span class="lz lz-warn">Sắp bắt đầu</span></td><td><div class="kebab">⋯</div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#F0328C">ĐK</div><div><b>Đỗ Khang</b><div class="meta">@khang.do</div></div></div></td><td>Product Manager</td><td class="num">T2 28/09</td><td class="meta">còn 5 ngày</td><td><div class="prog"><div class="t"><span><b>0/12</b> việc</span><span>0%</span></div><div class="bar"></div></div></td><td class="num">3</td><td class="num">9</td><td><span class="meta">—</span></td><td><span class="lz lz-warn">Sắp bắt đầu</span></td><td><div class="kebab">⋯</div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#E62D2D">PD</div><div><b>Phạm Dũng</b><div class="meta">@dung.pham</div></div></div></td><td>Sales Executive</td><td class="num">T2 05/10</td><td class="meta">—</td><td><div class="prog"><div class="t"><span>Đã tạo <b>7/12</b> task</span><span></span></div><div class="bar"><i style="width:58%;background:var(--err)"></i></div></div></td><td class="meta">—</td><td class="meta">—</td><td><span class="meta">—</span></td><td><span class="lz lz-err">Khởi tạo lỗi · NETWORK</span></td><td style="position:relative"><div class="kebab" style="background:var(--surface-2)">⋯</div>
+          <div class="menu"><div>Mở hồ sơ</div><div>Tiếp tục khởi tạo</div><div class="dz">Hủy và xóa lộ trình</div></div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#999ea8">VH</div><div><b>Võ Hà</b><div class="meta">@ha.vo</div></div></div></td><td>Designer</td><td class="num">T2 12/10</td><td class="meta">—</td><td><div class="prog"><div class="t"><span>Đã tạo <b>0/9</b> task</span><span></span></div><div class="bar"></div></div></td><td class="meta">—</td><td class="meta">—</td><td><span class="meta">—</span></td><td><span class="lz lz-mute">Đang khởi tạo</span></td><td><div class="kebab">⋯</div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#5b6ee1">LC</div><div><b>Lê Chi</b><div class="meta">@chi.le</div></div></div></td><td>Designer</td><td class="num">T2 10/08</td><td class="meta">đã xong</td><td><div class="prog"><div class="t"><span><b>16/16</b> việc</span><span>100%</span></div><div class="bar"><i class="ok" style="width:100%"></i></div></div></td><td class="num">0</td><td class="num">0</td><td><span class="meta">—</span></td><td><span class="lz lz-ok">Hoàn tất</span></td><td><div class="kebab">⋯</div></td></tr>
+        <tr class="click"><td><div class="who"><div class="av" style="background:#686f7a">PQ</div><div><b>Phan Quân</b><div class="meta">@quan.phan</div></div></div></td><td>Kỹ sư Backend</td><td class="num">T2 03/08</td><td class="meta">đã xong</td><td><div class="prog"><div class="t"><span><b>14/14</b> việc</span><span>100%</span></div><div class="bar"><i class="ok" style="width:100%"></i></div></div></td><td class="num">0</td><td class="num">0</td><td><span class="meta">—</span></td><td><span class="lz lz-ok">Hoàn tất</span></td><td><div class="kebab">⋯</div></td></tr>
+      </tbody>
+    </table>
+  </section>
+  <p class="meta" style="margin-top:10px">Vạch trắng trên thanh tiến độ = mức lẽ ra phải đạt hôm nay. Bấm một dòng để mở hồ sơ.</p>
+</section>
+
+<!-- =============== 3. CHI TIẾT NHÂN SỰ =============== -->
+<section class="screen" id="s3">
+  <div class="crumb"><a data-go="s2">Nhân sự</a> › Nguyễn An</div>
+  <section class="panel" style="margin-bottom:16px">
+    <div class="hero">
+      <div class="av lg" style="background:#7f61fe">NA</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px"><h2>Nguyễn An</h2><span class="lz lz-info">Đang onboarding</span><span class="lz lz-err">3 quá hạn</span></div>
+        <div class="facts">
+          <span><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Kỹ sư Backend</span>
+          <span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Bắt đầu thứ Hai 14/09/2026</span>
+          <span><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Ngày thứ 6 / 20 · dự kiến xong thứ Sáu 09/10</span>
+          <span class="mono">@an.nguyen</span>
+        </div>
+      </div>
+      <span class="btn btn-s">Tính lại tiến độ</span>
+      <span class="btn btn-d">Hủy onboarding</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="l">Hoàn thành</div><div class="v">6/14 <span class="meta" style="font-size:13px">· 43%</span></div></div>
+      <div class="stat"><div class="l">Kế hoạch hôm nay</div><div class="v">64% <span class="lz lz-err" style="vertical-align:3px">−21%</span></div></div>
+      <div class="stat"><div class="l">Quá hạn</div><div class="v" style="color:var(--err-text)">3</div></div>
+      <div class="stat"><div class="l">Sắp đến hạn</div><div class="v" style="color:var(--warn-text)">1</div></div>
+      <div class="stat"><div class="l">HR còn / NS còn</div><div class="v">3 / 5</div></div>
+      <div class="stat"><div class="l">Hạn gần nhất</div><div class="v" style="font-size:15px">T4 23/09</div></div>
+    </div>
+  </section>
+
+  <div class="tabs">
+    <div class="tab on">Lộ trình <span class="n">14</span></div>
+    <div class="tab">Việc của HR <span class="n">5</span></div>
+    <div class="tab">Việc của nhân sự <span class="n">9</span></div>
+    <div class="tab">Hồ sơ</div>
+    <span class="sp"></span>
+    <div class="select" style="height:30px;align-self:center">Hiện: tất cả việc</div>
+  </div>
+
+  <div class="two">
+    <div>
+      <section class="panel stage">
+        <div class="stage-h"><span class="chev">▸</span><h4>Ngày đầu</h4><span class="range">D+0 · T2 14/09</span><span class="sp"></span><span class="meta">3/3</span><div class="bar"><i class="ok" style="width:100%"></i></div></div>
+      </section>
+      <section class="panel stage">
+        <div class="stage-h"><span class="chev">▾</span><h4>Tuần đầu</h4><span class="range">D+1 → D+4 · 15/09 – 18/09</span><span class="sp"></span><span class="lz lz-err">3 quá hạn</span><span class="meta">3/6</span><div class="bar"><i style="width:50%"></i></div></div>
+        <div class="task done"><div class="cb on"></div><div class="tn">Tạo tài khoản Git, CI, Jira</div><span class="lz lz-hr">HR</span><div class="due"><b>T3 15/09</b><small>D+1</small></div><span class="lz lz-ok">Xong</span><span class="kebab">⋯</span></div>
+        <div class="task done"><div class="cb on"></div><div class="tn">Cài môi trường phát triển</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T4 16/09</b><small>D+2</small></div><span class="lz lz-ok">Xong</span><span class="kebab">⋯</span></div>
+        <div class="task"><div class="cb"></div><div class="tn">Đọc tài liệu kiến trúc hệ thống</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T5 17/09</b><small>D+3</small></div><span class="lz lz-err">Trễ 2 ngày</span><span class="kebab">⋯</span></div>
+        <div class="task"><div class="cb"></div><div class="tn">Cấp laptop và tài khoản VPN</div><span class="lz lz-hr">HR</span><div class="due"><b>T6 18/09</b><small>D+4</small></div><span class="lz lz-err">Trễ 1 ngày</span><span class="kebab">⋯</span></div>
+        <div class="task"><div class="cb"></div><div class="tn">Pair programming với mentor</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T6 18/09</b><small>D+4</small></div><span class="lz lz-err">Trễ 1 ngày</span><span class="kebab">⋯</span></div>
+        <div class="task done"><div class="cb on"></div><div class="tn">Hoàn thành khoá bảo mật thông tin</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T6 18/09</b><small>D+4</small></div><span class="lz lz-ok">Xong</span><span class="kebab">⋯</span></div>
+      </section>
+      <section class="panel stage">
+        <div class="stage-h"><span class="chev">▾</span><h4>Tuần 2 – 4</h4><span class="range">D+5 → D+19 · 21/09 – 09/10</span><span class="sp"></span><span class="meta">0/5</span><div class="bar"></div></div>
+        <div class="task"><div class="cb"></div><div class="tn">Review code đầu tiên</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T4 23/09</b><small>D+7</small></div><span class="lz lz-warn">Còn 2 ngày</span><span class="kebab">⋯</span></div>
+        <div class="task"><div class="cb"></div><div class="tn">Merge task đầu tiên lên main</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T2 28/09</b><small>D+10</small></div><span class="meta">Còn 5 ngày</span><span class="kebab">⋯</span></div>
+        <div class="task"><div class="cb"></div><div class="tn">Họp 1:1 giữa kỳ với HR</div><span class="lz lz-hr">HR</span><div class="due"><b>T2 28/09</b><small>D+10</small></div><span class="meta">Còn 5 ngày</span><span class="kebab">⋯</span></div>
+        <div class="task"><div class="cb"></div><div class="tn">Tham gia trực on-call cùng team</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T2 05/10</b><small>D+15</small></div><span class="meta">Còn 10 ngày</span><span class="kebab">⋯</span></div>
+        <div class="task"><div class="cb"></div><div class="tn">Đánh giá cuối onboarding</div><span class="lz lz-hr">HR</span><div class="due"><b>T6 09/10</b><small>D+19</small></div><span class="meta">Còn 14 ngày</span><span class="kebab">⋯</span></div>
+      </section>
+    </div>
+    <div class="stack">
+      <section class="panel">
+        <div class="ph"><h3>Tiến độ theo giai đoạn</h3></div>
+        <div style="padding:12px 16px;display:flex;flex-direction:column;gap:12px">
+          <div><div class="prog" style="width:auto"><div class="t"><span>Ngày đầu</span><b>3/3</b></div><div class="bar"><i class="ok" style="width:100%"></i></div></div></div>
+          <div><div class="prog" style="width:auto"><div class="t"><span>Tuần đầu</span><b>3/6</b></div><div class="bar"><i style="width:50%"></i><span class="plan" style="left:100%"></span></div></div></div>
+          <div><div class="prog" style="width:auto"><div class="t"><span>Tuần 2 – 4</span><b>0/5</b></div><div class="bar"></div></div></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="ph"><h3>Hồ sơ</h3></div>
+        <dl class="kv">
+          <dt>Template nguồn</dt><dd>Kỹ sư Backend</dd>
+          <dt>List lộ trình</dt><dd class="mono">onb-run-u8f2…-20260914</dd>
+          <dt>Người phụ trách</dt><dd>Admin / HR của room</dd>
+          <dt>Trạng thái</dt><dd>Đang onboarding</dd>
+        </dl>
+      </section>
+      <p class="meta">Admin tick được mọi task, kể cả task của nhân sự. Menu "⋯" trên từng task: đổi hạn, bỏ đánh dấu xong.</p>
+    </div>
+  </div>
+</section>
+
+<!-- =============== 4. TIẾN ĐỘ =============== -->
+<section class="screen" id="s4">
+  <div class="top"><div><h1>Tiến độ</h1><p>Mọi lộ trình đang chạy, theo từng giai đoạn</p></div><span class="sp"></span><div class="select">Vị trí: Tất cả</div></div>
+  <div class="tabs" id="s4tabs">
+    <div class="tab on" data-t4="lanes">Theo nhân sự <span class="n">3</span></div>
+    <div class="tab" data-t4="late">Việc quá hạn <span class="n" style="background:var(--err-soft);color:var(--err-text)">7</span></div>
+    <div class="tab" data-t4="week">Hạn tuần này <span class="n">11</span></div>
+  </div>
+
+  <div data-p4="lanes">
+    <section class="panel">
+      <div class="axis"><span>Nhân sự</span><span>Giai đoạn · độ rộng theo số task · phần tô = đã xong</span><span>Tổng</span></div>
+      <div class="lane"><div class="who" style="display:flex;gap:10px;align-items:center"><div class="av" style="background:#7f61fe">NA</div><div><b>Nguyễn An</b><div class="meta">Kỹ sư Backend · ngày 6/20</div></div></div>
+        <div class="segs"><div class="seg full" style="flex:3"><i style="width:100%"></i><span>Ngày đầu 3/3</span></div><div class="seg late" style="flex:6"><i style="width:50%"></i><span>Tuần đầu 3/6 · 3 trễ</span></div><div class="seg" style="flex:5"><i style="width:0"></i><span>Tuần 2–4 0/5</span></div><span class="today" style="left:64%"></span></div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><b>43%</b><span class="lz lz-err">3 trễ</span></div></div>
+      <div class="lane"><div class="who" style="display:flex;gap:10px;align-items:center"><div class="av" style="background:#32AAF0">TB</div><div><b>Trần Bình</b><div class="meta">QA Engineer · ngày 9/15</div></div></div>
+        <div class="segs"><div class="seg late" style="flex:4"><i style="width:75%"></i><span>Chuẩn bị 3/4 · 1 trễ</span></div><div class="seg late" style="flex:4"><i style="width:50%"></i><span>Tuần 1 2/4 · 2 trễ</span></div><div class="seg late" style="flex:3"><i style="width:0"></i><span>Tuần 2–3 0/3 · 1 trễ</span></div><span class="today" style="left:64%"></span></div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><b>45%</b><span class="lz lz-err">4 trễ</span></div></div>
+      <div class="lane"><div class="who" style="display:flex;gap:10px;align-items:center"><div class="av" style="background:#D7801D">LM</div><div><b>Lê Minh</b><div class="meta">Kế toán · ngày 3/10</div></div></div>
+        <div class="segs"><div class="seg" style="flex:2"><i style="width:50%"></i><span>Ngày đầu 1/2</span></div><div class="seg" style="flex:5"><i style="width:0"></i><span>Tuần 1 0/5</span></div><div class="seg" style="flex:3"><i style="width:0"></i><span>Tuần 2 0/3</span></div><span class="today" style="left:20%"></span></div>
+        <div style="display:flex;gap:6px;align-items:center;justify-content:flex-end"><b>10%</b><span class="lz lz-warn">2 sắp hạn</span></div></div>
+      <div class="legend" style="padding-top:12px"><span><i></i>Đã xong</span><span><i style="background:var(--err)"></i>Giai đoạn có việc quá hạn</span><span><i style="background:var(--ok)"></i>Giai đoạn đã xong</span><span><em style="background:#fff"></em>Hôm nay</span></div>
+    </section>
+    <p class="meta" style="margin-top:10px">Mỗi hàng đọc list lộ trình riêng của người đó; màn này tải song song tối đa 4 list một lúc.</p>
+  </div>
+
+  <div data-p4="late" style="display:none">
+    <div class="toolbar"><div class="select">Người làm: Tất cả</div><div class="select">Nhân sự: Tất cả</div><span class="sp"></span><span class="meta">Sắp xếp theo số ngày trễ</span></div>
+    <section class="panel">
+      <table>
+        <thead><tr><th style="width:36px"></th><th>Việc</th><th>Nhân sự</th><th>Giai đoạn</th><th>Người làm</th><th>Hạn</th><th>Trễ</th></tr></thead>
+        <tbody>
+          <tr><td><div class="cb"></div></td><td><b>Ký cam kết bảo mật (NDA)</b></td><td><div class="who"><div class="av sm" style="background:#32AAF0">TB</div>Trần Bình</div></td><td>Chuẩn bị</td><td><span class="lz lz-hr">HR</span></td><td class="num">T5 17/09</td><td><span class="lz lz-err">2 ngày</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>Đọc tài liệu kiến trúc hệ thống</b></td><td><div class="who"><div class="av sm" style="background:#7f61fe">NA</div>Nguyễn An</div></td><td>Tuần đầu</td><td><span class="lz lz-ns">Nhân sự</span></td><td class="num">T5 17/09</td><td><span class="lz lz-err">2 ngày</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>Viết test case đầu tiên</b></td><td><div class="who"><div class="av sm" style="background:#32AAF0">TB</div>Trần Bình</div></td><td>Tuần 1</td><td><span class="lz lz-ns">Nhân sự</span></td><td class="num">T5 17/09</td><td><span class="lz lz-err">2 ngày</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>Cấp laptop và tài khoản VPN</b></td><td><div class="who"><div class="av sm" style="background:#7f61fe">NA</div>Nguyễn An</div></td><td>Tuần đầu</td><td><span class="lz lz-hr">HR</span></td><td class="num">T6 18/09</td><td><span class="lz lz-err">1 ngày</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>Pair programming với mentor</b></td><td><div class="who"><div class="av sm" style="background:#7f61fe">NA</div>Nguyễn An</div></td><td>Tuần đầu</td><td><span class="lz lz-ns">Nhân sự</span></td><td class="num">T6 18/09</td><td><span class="lz lz-err">1 ngày</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>Thêm vào nhóm chat phòng ban</b></td><td><div class="who"><div class="av sm" style="background:#32AAF0">TB</div>Trần Bình</div></td><td>Tuần 1</td><td><span class="lz lz-hr">HR</span></td><td class="num">T6 18/09</td><td><span class="lz lz-err">1 ngày</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>Đọc quy trình release</b></td><td><div class="who"><div class="av sm" style="background:#32AAF0">TB</div>Trần Bình</div></td><td>Tuần 2–3</td><td><span class="lz lz-ns">Nhân sự</span></td><td class="num">T6 18/09</td><td><span class="lz lz-err">1 ngày</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <div data-p4="week" style="display:none">
+    <section class="panel">
+      <table>
+        <thead><tr><th style="width:36px"></th><th>Ngày</th><th>Việc</th><th>Nhân sự</th><th>Người làm</th></tr></thead>
+        <tbody>
+          <tr><td><div class="cb"></div></td><td><b>Hôm nay · T2 21/09</b></td><td>Thiết lập máy chấm công</td><td><div class="who"><div class="av sm" style="background:#7f61fe">NA</div>Nguyễn An</div></td><td><span class="lz lz-hr">HR</span></td></tr>
+          <tr><td><div class="cb"></div></td><td class="meta">T2 21/09</td><td>Đọc sơ đồ tổ chức</td><td><div class="who"><div class="av sm" style="background:#7f61fe">NA</div>Nguyễn An</div></td><td><span class="lz lz-ns">Nhân sự</span></td></tr>
+          <tr><td><div class="cb"></div></td><td class="meta">T2 21/09</td><td>Chạy bộ test regression</td><td><div class="who"><div class="av sm" style="background:#32AAF0">TB</div>Trần Bình</div></td><td><span class="lz lz-ns">Nhân sự</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>T3 22/09</b></td><td>Học phần mềm kế toán nội bộ</td><td><div class="who"><div class="av sm" style="background:#D7801D">LM</div>Lê Minh</div></td><td><span class="lz lz-ns">Nhân sự</span></td></tr>
+          <tr><td><div class="cb"></div></td><td><b>T4 23/09</b></td><td>Ngày đầu tiên · 3 việc</td><td><div class="who"><div class="av sm" style="background:#1DD787;color:#0b0c10">HT</div>Hoàng Thu</div></td><td><span class="lz lz-hr">HR</span> <span class="lz lz-ns">Nhân sự</span></td></tr>
+          <tr><td><div class="cb"></div></td><td class="meta">T4 23/09</td><td>Review code đầu tiên</td><td><div class="who"><div class="av sm" style="background:#7f61fe">NA</div>Nguyễn An</div></td><td><span class="lz lz-ns">Nhân sự</span></td></tr>
+          <tr><td colspan="5" class="meta" style="text-align:center">… 5 việc nữa đến thứ Sáu 25/09</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</section>
+
+<!-- =============== 5. TEMPLATE =============== -->
+<section class="screen" id="s5">
+  <div class="top"><div><h1>Template theo vị trí</h1><p>Mỗi vị trí là một list. Chỉ Admin, Owner và HR của room tạo và sửa được.</p></div><span class="sp"></span><div class="input" style="min-width:220px"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Tìm vị trí</div><span class="btn btn-p" data-go="s6">+ Tạo template vị trí</span></div>
+  <div class="tgrid">
+    <div class="tcard" data-go="s6">
+      <div style="display:flex;align-items:center;gap:8px"><h4>Kỹ sư Backend</h4><span class="sp"></span><span class="lz lz-info">2 đang dùng</span></div>
+      <div class="meta">3 giai đoạn · lộ trình 20 ngày làm việc</div>
+      <div class="mini"><i style="flex:3"></i><i style="flex:6"></i><i style="flex:5"></i></div>
+      <div class="tstats"><div><b>14</b>task</div><div><b>5</b>của HR</div><div><b>9</b>của nhân sự</div></div>
+      <div style="display:flex;gap:6px"><span class="btn btn-s btn-sm">Sửa</span><span class="btn btn-s btn-sm">Nhân bản</span><span class="sp"></span><span class="meta" style="align-self:center">1 người đã xong</span></div>
+    </div>
+    <div class="tcard">
+      <div style="display:flex;align-items:center;gap:8px"><h4>QA Engineer</h4><span class="sp"></span><span class="lz lz-info">1 đang dùng</span></div>
+      <div class="meta">3 giai đoạn · lộ trình 15 ngày làm việc</div>
+      <div class="mini"><i style="flex:4"></i><i style="flex:4"></i><i style="flex:3"></i></div>
+      <div class="tstats"><div><b>11</b>task</div><div><b>4</b>của HR</div><div><b>7</b>của nhân sự</div></div>
+      <div style="display:flex;gap:6px"><span class="btn btn-s btn-sm">Sửa</span><span class="btn btn-s btn-sm">Nhân bản</span></div>
+    </div>
+    <div class="tcard">
+      <div style="display:flex;align-items:center;gap:8px"><h4>Kế toán</h4><span class="sp"></span><span class="lz lz-info">1 đang dùng</span></div>
+      <div class="meta">3 giai đoạn · lộ trình 10 ngày làm việc</div>
+      <div class="mini"><i style="flex:2"></i><i style="flex:5"></i><i style="flex:3"></i></div>
+      <div class="tstats"><div><b>10</b>task</div><div><b>1</b>của HR</div><div><b>9</b>của nhân sự</div></div>
+      <div style="display:flex;gap:6px"><span class="btn btn-s btn-sm">Sửa</span><span class="btn btn-s btn-sm">Nhân bản</span></div>
+    </div>
+    <div class="tcard">
+      <div style="display:flex;align-items:center;gap:8px"><h4>Designer</h4><span class="sp"></span><span class="lz lz-mute">Chưa ai dùng</span></div>
+      <div class="meta">4 giai đoạn · lộ trình 18 ngày làm việc</div>
+      <div class="mini"><i style="flex:2"></i><i style="flex:5"></i><i style="flex:5"></i><i style="flex:4"></i></div>
+      <div class="tstats"><div><b>16</b>task</div><div><b>4</b>của HR</div><div><b>12</b>của nhân sự</div></div>
+      <div style="display:flex;gap:6px"><span class="btn btn-s btn-sm">Sửa</span><span class="btn btn-s btn-sm">Nhân bản</span></div>
+    </div>
+    <div class="tcard">
+      <div style="display:flex;align-items:center;gap:8px"><h4>Sales Executive</h4><span class="sp"></span><span class="lz lz-warn">Có lỗi cấu trúc</span></div>
+      <div class="meta">2 giai đoạn · 1 giai đoạn chưa có task</div>
+      <div class="mini"><i style="flex:12"></i><i style="flex:1;background:var(--warn)"></i></div>
+      <div class="tstats"><div><b>12</b>task</div><div><b>3</b>của HR</div><div><b>9</b>của nhân sự</div></div>
+      <div style="display:flex;gap:6px"><span class="btn btn-s btn-sm">Sửa</span><span class="btn btn-s btn-sm">Nhân bản</span></div>
+    </div>
+    <div class="tcard new" data-go="s6"><div class="plus">+</div><b>Tạo template vị trí</b><span class="meta">Bắt đầu từ bộ giai đoạn gợi ý hoặc trống</span></div>
+  </div>
+</section>
+
+<!-- =============== 6. TẠO / SỬA TEMPLATE =============== -->
+<section class="screen" id="s6">
+  <div class="crumb"><a data-go="s5">Template</a> › Kỹ sư Backend</div>
+  <div class="top"><div><h1>Kỹ sư Backend</h1><p>Sửa template không đổi lộ trình của 2 người đang dùng: mỗi lộ trình là bản sao riêng.</p></div><span class="sp"></span><span class="meta">Đã lưu 14:02</span><span class="btn btn-s" data-go="s5">Đóng</span><span class="btn btn-p">Lưu thay đổi</span></div>
+  <div class="editor">
+    <div>
+      <section class="panel" style="padding:14px 16px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="field"><label>Tên vị trí</label><div class="inp">Kỹ sư Backend</div></div>
+        <div class="field"><label>Bộ giai đoạn</label><div class="inp" style="justify-content:space-between">Ngày đầu · Tuần đầu · Tuần 2–4 <span class="meta">Đổi bộ gợi ý ▾</span></div></div>
+      </section>
+      <div class="warnbox"><span>⚠</span><div><b>Hạn đi ngược thứ tự:</b> task "Đọc quy trình release" ở giai đoạn Tuần 2 – 4 có hạn D+3, sớm hơn task cuối của Tuần đầu (D+4). Kiểm tra lại nếu không cố ý.</div></div>
+
+      <div class="estage">
+        <div class="estage-h"><span class="grip">⋮⋮</span><b>Ngày đầu</b><span class="meta">3 task · D+0</span><span class="sp"></span><span class="btn btn-ghost btn-sm">Đổi tên</span><span class="kebab">⋯</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp">Nhận bàn làm việc, thẻ ra vào</div><div class="ownsel"><span class="on">HR</span><span>Nhân sự</span></div><div class="dn"><span>D+</span><b>0</b></div><span class="kebab">✕</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp">Gặp quản lý trực tiếp</div><div class="ownsel"><span>HR</span><span class="on">Nhân sự</span></div><div class="dn"><span>D+</span><b>0</b></div><span class="kebab">✕</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp">Đọc sổ tay nhân viên</div><div class="ownsel"><span>HR</span><span class="on">Nhân sự</span></div><div class="dn"><span>D+</span><b>0</b></div><span class="kebab">✕</span></div>
+        <div class="addrow">+ Thêm task</div>
+      </div>
+      <div class="estage">
+        <div class="estage-h"><span class="grip">⋮⋮</span><b>Tuần đầu</b><span class="meta">6 task · D+1 → D+4</span><span class="sp"></span><span class="btn btn-ghost btn-sm">Đổi tên</span><span class="kebab">⋯</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp">Tạo tài khoản Git, CI, Jira</div><div class="ownsel"><span class="on">HR</span><span>Nhân sự</span></div><div class="dn"><span>D+</span><b>1</b></div><span class="kebab">✕</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp">Cài môi trường phát triển</div><div class="ownsel"><span>HR</span><span class="on">Nhân sự</span></div><div class="dn"><span>D+</span><b>2</b></div><span class="kebab">✕</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp">Đọc tài liệu kiến trúc hệ thống</div><div class="ownsel"><span>HR</span><span class="on">Nhân sự</span></div><div class="dn"><span>D+</span><b>3</b></div><span class="kebab">✕</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp">Cấp laptop và tài khoản VPN</div><div class="ownsel"><span class="on">HR</span><span>Nhân sự</span></div><div class="dn"><span>D+</span><b>4</b></div><span class="kebab">✕</span></div>
+        <div class="erow"><span class="grip">⋮⋮</span><div class="inp ph">Tên task mới…</div><div class="ownsel"><span>HR</span><span class="on">Nhân sự</span></div><div class="dn" style="border-color:var(--err)"><span>D+</span><b style="color:var(--err-text)">—</b></div><span class="kebab">✕</span></div>
+        <div style="padding:0 12px 8px 40px;font-size:11px;color:var(--err-text)">Nhập hạn: số ngày làm việc (0 trở lên).</div>
+        <div class="addrow">+ Thêm task</div>
+      </div>
+      <div class="estage">
+        <div class="estage-h"><span class="grip">⋮⋮</span><b>Tuần 2 – 4</b><span class="meta">5 task · D+5 → D+19</span><span class="sp"></span><span class="btn btn-ghost btn-sm">Đổi tên</span><span class="kebab">⋯</span></div>
+        <div class="addrow" style="color:var(--text-3)">▸ Mở 5 task</div>
+      </div>
+      <span class="btn btn-s">+ Thêm giai đoạn</span>
+    </div>
+
+    <aside>
+      <section class="panel" style="position:sticky;top:0">
+        <div class="ph"><h3>Xem trước lộ trình</h3></div>
+        <div style="padding:12px 16px">
+          <div class="field"><label>Nếu bắt đầu vào</label><div class="inp">Thứ Hai 05/10/2026</div></div>
+          <div class="meta" style="margin-top:6px">Bỏ thứ Bảy và Chủ nhật. Không tính ngày lễ.</div>
+          <div class="pv-st">Ngày đầu</div>
+          <div class="pv-task"><span>Nhận bàn, thẻ ra vào</span><span class="meta">T2 05/10</span></div>
+          <div class="pv-task"><span>Gặp quản lý trực tiếp</span><span class="meta">T2 05/10</span></div>
+          <div class="pv-task"><span>Đọc sổ tay nhân viên</span><span class="meta">T2 05/10</span></div>
+          <div class="pv-st">Tuần đầu</div>
+          <div class="pv-task"><span>Tạo tài khoản Git, CI</span><span class="meta">T3 06/10</span></div>
+          <div class="pv-task"><span>Cài môi trường</span><span class="meta">T4 07/10</span></div>
+          <div class="pv-task"><span>Đọc tài liệu kiến trúc</span><span class="meta">T5 08/10</span></div>
+          <div class="pv-task"><span>Cấp laptop, VPN</span><span class="meta">T6 09/10</span></div>
+          <div class="pv-st">Tuần 2 – 4</div>
+          <div class="pv-task"><span>… 5 task</span><span class="meta">12/10 → 30/10</span></div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line-soft);display:flex;justify-content:space-between"><span class="meta">Kết thúc dự kiến</span><b>T6 30/10/2026</b></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+</section>
+
+<!-- =============== 7. KHỞI TẠO =============== -->
+<section class="screen" id="s7">
+  <div class="crumb"><a data-go="s2">Nhân sự</a> › Khởi tạo onboarding</div>
+  <div class="top"><div><h1>Khởi tạo onboarding</h1><p>Tạo lộ trình riêng cho một nhân sự từ template vị trí.</p></div></div>
+  <div class="stepper">
+    <div class="step done"><div class="c">✓</div><div class="s"><b>Nhân sự</b><small>Hoàng Thu</small></div><div class="line"></div></div>
+    <div class="step done"><div class="c">✓</div><div class="s"><b>Vị trí và ngày bắt đầu</b><small>Kỹ sư Frontend · T4 23/09</small></div><div class="line"></div></div>
+    <div class="step cur"><div class="c">3</div><div class="s"><b>Xem trước và tạo</b><small>13 task</small></div></div>
+  </div>
+  <div class="two" style="grid-template-columns:1fr 340px">
+    <section class="panel">
+      <div class="ph"><h3>Lộ trình sẽ được tạo</h3><span class="n">13 task</span><span class="sp"></span><span class="meta">Hạn đã quy ra ngày thật</span></div>
+      <div class="stage-h" style="border-bottom:1px solid var(--line-soft)"><h4>Ngày đầu</h4><span class="range">T4 23/09</span></div>
+      <div class="task" style="grid-template-columns:1fr 110px 150px"><div class="tn">Nhận bàn làm việc, thẻ ra vào</div><span class="lz lz-hr">HR</span><div class="due"><b>T4 23/09</b><small>D+0</small></div></div>
+      <div class="task" style="grid-template-columns:1fr 110px 150px"><div class="tn">Gặp quản lý trực tiếp</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T4 23/09</b><small>D+0</small></div></div>
+      <div class="task" style="grid-template-columns:1fr 110px 150px"><div class="tn">Đọc sổ tay nhân viên</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T4 23/09</b><small>D+0</small></div></div>
+      <div class="stage-h" style="border-bottom:1px solid var(--line-soft);border-top:1px solid var(--line-soft)"><h4>Tuần đầu</h4><span class="range">24/09 – 29/09</span></div>
+      <div class="task" style="grid-template-columns:1fr 110px 150px"><div class="tn">Cài Node, pnpm, Storybook</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T5 24/09</b><small>D+1</small></div></div>
+      <div class="task" style="grid-template-columns:1fr 110px 150px"><div class="tn">Cấp tài khoản Figma, Git</div><span class="lz lz-hr">HR</span><div class="due"><b>T6 25/09</b><small>D+2</small></div></div>
+      <div class="task" style="grid-template-columns:1fr 110px 150px"><div class="tn">Đọc design system</div><span class="lz lz-ns">Nhân sự</span><div class="due"><b>T2 28/09</b><small>D+3 · qua cuối tuần</small></div></div>
+      <div class="stage-h" style="border-top:1px solid var(--line-soft)"><h4 class="meta" style="font-weight:600">Tuần 2 – 4</h4><span class="range">7 task · 30/09 – 20/10</span></div>
+    </section>
+    <div class="stack">
+      <section class="panel">
+        <div class="ph"><h3>Tóm tắt</h3></div>
+        <div class="sum"><span class="k">Nhân sự</span><div class="who" style="display:flex;gap:8px;align-items:center"><div class="av sm" style="background:#1DD787;color:#0b0c10">HT</div><b>Hoàng Thu</b></div></div>
+        <div class="sum"><span class="k">Vị trí</span><b>Kỹ sư Frontend</b></div>
+        <div class="sum"><span class="k">Bắt đầu</span><b>Thứ Tư 23/09/2026</b></div>
+        <div class="sum"><span class="k">Kết thúc dự kiến</span><b>Thứ Ba 20/10/2026</b></div>
+        <div class="sum" style="border-bottom:0"><span class="k">Việc</span><span><b>13</b> · 2 của HR · 11 của nhân sự</span></div>
+      </section>
+      <section class="panel">
+        <div class="ph"><h3>Kiểm tra trước khi tạo</h3></div>
+        <div class="check"><svg viewBox="0 0 24 24" stroke="var(--ok)"><path d="M5 12l5 5 9-10"/></svg>Bạn là admin của room</div>
+        <div class="check"><svg viewBox="0 0 24 24" stroke="var(--ok)"><path d="M5 12l5 5 9-10"/></svg>Template đúng cấu trúc</div>
+        <div class="check"><svg viewBox="0 0 24 24" stroke="var(--ok)"><path d="M5 12l5 5 9-10"/></svg>Hoàng Thu chưa có onboarding đang chạy</div>
+        <div class="check" style="padding-bottom:12px"><svg viewBox="0 0 24 24" stroke="var(--ok)"><path d="M5 12l5 5 9-10"/></svg>Ngày bắt đầu là ngày làm việc</div>
+      </section>
+      <section class="panel" style="padding:14px 16px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><b>Đang tạo task…</b><span class="meta">7 / 13</span></div>
+        <div class="bar"><i style="width:54%"></i></div>
+        <div class="meta" style="margin-top:6px">Trạng thái khi bấm Tạo. Không đóng tab cho tới khi xong; nếu lỡ đóng, hồ sơ chuyển "Khởi tạo lỗi" và chạy tiếp được.</div>
+      </section>
+      <div style="display:flex;gap:8px"><span class="btn btn-s" style="flex:1">← Quay lại</span><span class="btn btn-p" style="flex:2">Tạo lộ trình</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =============== 8. LỘ TRÌNH CỦA TÔI (nhân sự) =============== -->
+<section class="screen" id="s8">
+  <div class="h-wrap">
+    <div class="welcome">
+      <div>
+        <div class="meta" style="color:var(--primary-text);font-weight:600">NGÀY THỨ 6 / 20</div>
+        <h1>Chào An, tuần thứ hai rồi đấy</h1>
+        <p>Lộ trình onboarding Kỹ sư Backend · bắt đầu thứ Hai 14/09</p>
+        <div class="mini-stats"><span><b>6/14</b> việc xong</span><span><b style="color:var(--err-text)">2</b> việc của bạn đã quá hạn</span><span>Dự kiến xong <b>09/10</b></span></div>
+      </div>
+      <div class="ring">
+        <svg width="112" height="112" viewBox="0 0 112 112"><circle cx="56" cy="56" r="48" stroke="#3a3d4c" stroke-width="10" fill="none"/><circle cx="56" cy="56" r="48" stroke="#5b6ee1" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="171.9"/></svg>
+        <div><span><b>43%</b><small>hoàn thành</small></span></div>
+      </div>
+    </div>
+
+    <section class="panel" style="margin-bottom:16px">
+      <div class="ph"><h3>Hôm nay cần làm</h3><span class="n">3</span><span class="sp"></span><span class="meta">Việc quá hạn và đến hạn hôm nay</span></div>
+      <div class="htask"><div class="cb"></div><div><div class="tn">Đọc tài liệu kiến trúc hệ thống</div><div class="meta">Tuần đầu · hạn thứ Năm 17/09</div></div><span class="lz lz-err">Trễ 2 ngày</span></div>
+      <div class="htask"><div class="cb"></div><div><div class="tn">Pair programming với mentor</div><div class="meta">Tuần đầu · hạn thứ Sáu 18/09</div></div><span class="lz lz-err">Trễ 1 ngày</span></div>
+      <div class="htask"><div class="cb"></div><div><div class="tn">Đọc sơ đồ tổ chức</div><div class="meta">Tuần 2 – 4 · hạn hôm nay</div></div><span class="lz lz-warn">Hôm nay</span></div>
+    </section>
+
+    <section class="panel stage">
+      <div class="stage-h"><span class="chev">▸</span><h4>Ngày đầu</h4><span class="range">14/09</span><span class="sp"></span><span class="lz lz-ok">Đã xong 3/3</span></div>
+    </section>
+    <section class="panel stage">
+      <div class="stage-h"><span class="chev">▾</span><h4>Tuần đầu</h4><span class="range">15/09 – 18/09</span><span class="sp"></span><span class="meta">3/6</span><div class="bar"><i style="width:50%"></i></div></div>
+      <div class="htask done"><div class="cb on"></div><div class="tn">Cài môi trường phát triển</div><span class="meta">Xong</span></div>
+      <div class="htask done"><div class="cb on"></div><div class="tn">Hoàn thành khoá bảo mật thông tin</div><span class="meta">Xong</span></div>
+      <div class="htask"><div class="cb"></div><div class="tn">Đọc tài liệu kiến trúc hệ thống</div><span class="lz lz-err">Trễ 2 ngày</span></div>
+      <div class="htask"><div class="cb"></div><div class="tn">Pair programming với mentor</div><span class="lz lz-err">Trễ 1 ngày</span></div>
+      <div class="htask hr done"><div class="cb on dis"></div><div><div class="tn">Tạo tài khoản Git, CI, Jira</div><div class="meta">HR đã làm xong</div></div><span class="lz lz-hr">HR phụ trách</span></div>
+      <div class="htask hr"><div class="cb dis"></div><div><div class="tn">Cấp laptop và tài khoản VPN</div><div class="meta">HR đang lo việc này, bạn không cần làm gì</div></div><span class="lz lz-hr">HR phụ trách</span></div>
+    </section>
+    <section class="panel stage future">
+      <div class="stage-h"><span class="chev">▸</span><h4>Tuần 2 – 4</h4><span class="range">21/09 – 09/10</span><span class="sp"></span><span class="meta">5 việc · bắt đầu tuần này</span></div>
+    </section>
+
+    <div class="celebrate"><div class="badge"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div><div><b style="color:var(--text)">Khi xong 100%</b>: màn này thay bằng lời chúc mừng, tóm tắt thời gian hoàn thành lộ trình, và danh sách việc đã làm.</div></div>
+  </div>
+</section>
+
+  </main>
+</div>
+
+<script>
+  const app = document.getElementById('app');
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id));
+    document.querySelectorAll('.side .nav').forEach(n => n.classList.toggle('on', n.dataset.go === id || n.dataset.also === id));
+    document.querySelectorAll('.jump span').forEach(n => n.classList.toggle('on', n.dataset.go === id));
+    const hire = id === 's8';
+    app.classList.toggle('hire', hire);
+    document.querySelectorAll('.seg span').forEach(r => r.classList.toggle('on', (r.dataset.role === 'hire') === hire));
+    window.scrollTo(0, 0);
+  }
+  document.addEventListener('click', e => {
+    const t4 = e.target.closest('[data-t4]');
+    if (t4) {
+      document.querySelectorAll('[data-t4]').forEach(x => x.classList.toggle('on', x === t4));
+      document.querySelectorAll('[data-p4]').forEach(p => p.style.display = p.dataset.p4 === t4.dataset.t4 ? '' : 'none');
+      return;
+    }
+    const role = e.target.closest('[data-role]');
+    if (role) { show(role.dataset.role === 'hire' ? 's8' : 's1'); return; }
+    const go = e.target.closest('[data-go]');
+    if (go) {
+      show(go.dataset.go);
+      if (go.dataset.tab) { const t = document.querySelector('[data-t4="' + go.dataset.tab + '"]'); if (t) t.click(); }
+    }
+  });
+  show('s1');
+</script>
+</body>
+</html>

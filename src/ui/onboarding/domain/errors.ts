@@ -1,13 +1,18 @@
 // src/ui/onboarding/domain/errors.ts
 import { OptionalFeatureUnavailableError, PrivosRestError } from '../../privos-rest';
 
-export type OnboardingErrorCode = 'NOT_ADMIN' | 'TEMPLATE_INVALID' | 'HIRE_EXISTS' | 'SCHEMA_DRIFT' | 'START_NOT_WORKING_DAY' | 'PROVISION_FAILED';
+export type OnboardingErrorCode = 'NOT_ADMIN' | 'TEMPLATE_INVALID' | 'HIRE_EXISTS' | 'SCHEMA_DRIFT' | 'SCHEMA_MIGRATION_REQUIRED' | 'SCORES_INVALID' | 'ROOM_NOT_CONFIGURED' | 'PAGINATION_INVALID' | 'FILTER_INVALID' | 'START_NOT_WORKING_DAY' | 'PROVISION_FAILED';
 
 const ONBOARDING_MESSAGES: Record<OnboardingErrorCode, string> = {
   NOT_ADMIN: 'Chỉ owner/admin của room mới làm được việc này.',
   TEMPLATE_INVALID: 'Template không hợp lệ hoặc thiếu field bắt buộc.',
   HIRE_EXISTS: 'Nhân sự này đã có lộ trình onboarding đang chạy.',
   SCHEMA_DRIFT: 'Cấu trúc list bị sửa ngoài app. Kiểm tra lại field bắt buộc.',
+  SCHEMA_MIGRATION_REQUIRED: 'List cũ cần được chuyển sang cấu trúc v2 trước khi dùng.',
+  SCORES_INVALID: 'Dữ liệu điểm không hợp lệ. Dừng cập nhật để tránh mất lịch sử.',
+  ROOM_NOT_CONFIGURED: 'Room chưa có cấu hình list onboarding.',
+  PAGINATION_INVALID: 'Phân trang không còn hợp lệ. Tải lại danh sách.',
+  FILTER_INVALID: 'Bộ lọc không hợp lệ. Tải lại danh sách.',
   START_NOT_WORKING_DAY: 'Ngày bắt đầu phải là ngày làm việc (thứ 2 đến thứ 6).',
   PROVISION_FAILED: 'Khởi tạo lộ trình bị lỗi giữa chừng. Bạn có thể tiếp tục hoặc hủy.',
 };
@@ -34,7 +39,8 @@ export function describeError(err: unknown): { message: string; code: string } {
   if (err instanceof OnboardingError) return { code: err.code, message: ONBOARDING_MESSAGES[err.code] };
   if (err instanceof OptionalFeatureUnavailableError) return { code: 'SCOPE_MISSING', message: 'App chưa được cấp quyền cần thiết. Hãy nhờ admin bật quyền trong cài đặt app.' };
   if (err instanceof PrivosRestError) {
-    if (err.code === 'error-not-allowed' || err.code === 'error-unauthorized' || err.statusCode === 401) {
+    if (err.statusCode === 429) return { code: 'RATE_LIMITED', message: 'Đang có quá nhiều yêu cầu. Thử lại sau.' };
+    if (err.code === 'error-not-allowed' || err.code === 'error-unauthorized' || err.statusCode === 401 || err.statusCode === 403) {
       return { code: 'NOT_ALLOWED', message: 'Bạn không có quyền thực hiện thao tác này.' };
     }
     // Never echo the Hub's own `errorType`: it is a server-internal identifier, and it also lands in

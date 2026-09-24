@@ -49,10 +49,10 @@ describe('describeError', () => {
 });
 
 describe('isRoomAdmin', () => {
-  it('owner/admin/moderator là admin, user thường không', () => {
+  it('chỉ owner/admin là admin', () => {
     expect(isRoomAdmin(['owner'])).toBe(true);
     expect(isRoomAdmin(['user', 'admin'])).toBe(true);
-    expect(isRoomAdmin(['moderator'])).toBe(true);
+    expect(isRoomAdmin(['moderator'])).toBe(false);
     expect(isRoomAdmin(['user'])).toBe(false);
     expect(isRoomAdmin([])).toBe(false);
   });

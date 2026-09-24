@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { PrivosAppProvider, usePrivosContext } from '@privos_ai/app-react';
-import { ThemeProvider, ThemeToggle } from './theme-provider';
+import { ThemeProvider } from './theme-provider';
 import { LazyBoundary } from './lazy-boundary';
 import OnboardingPanel from './onboarding/views/OnboardingPanel';
 
@@ -15,9 +15,6 @@ function ThemedApp() {
   const { theme } = usePrivosContext();
   return (
     <ThemeProvider hostTheme={theme}>
-      <div className="app-header">
-        <ThemeToggle />
-      </div>
       <LazyBoundary>
         <OnboardingPanel />
       </LazyBoundary>

@@ -32,12 +32,11 @@
     },
     {
       "scope": "lists:query",
-      "requirement": "optional",
+      "requirement": "required",
       "context": "room",
       "executionContext": "user",
       "feature": "onboarding.query",
-      "reason": "Page through onboarding lists without reading the whole list at once.",
-      "degradedBehavior": "Lists fall back to the unpaged list route, which returns at most 500 items, and the app says so instead of showing a silent subset."
+      "reason": "Filter and page onboarding items without a capped list fallback."
     },
     {
       "scope": "lists:write",
@@ -46,6 +45,22 @@
       "executionContext": "user",
       "feature": "onboarding.manage",
       "reason": "Create template lists, hire records and per-hire roadmap lists, and let each hire mark their own tasks done."
+    },
+    {
+      "scope": "files:read",
+      "requirement": "required",
+      "context": "room",
+      "executionContext": "user",
+      "feature": "onboarding.files.read",
+      "reason": "Read onboarding file metadata and open linked documents."
+    },
+    {
+      "scope": "files:write",
+      "requirement": "required",
+      "context": "room",
+      "executionContext": "user",
+      "feature": "onboarding.files.write",
+      "reason": "Upload onboarding documents to the room Files area."
     },
     {
       "scope": "rooms:read",

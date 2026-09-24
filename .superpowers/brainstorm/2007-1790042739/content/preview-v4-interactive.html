@@ -1,0 +1,1829 @@
+<!doctype html>
+<html lang="vi" data-theme-mode="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrivOS Onboarding — Interactive UX Prototype</title>
+  <meta name="description" content="Interactive UI/UX prototype for the PrivOS onboarding app v2.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%2300050a%22/><path d=%22M9 9h14v4H9zm0 7h9v4H9zm0 7h14v2H9z%22 fill=%22%23fff%22/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-50:#eaf3f9; --primary-100:#d6e6f2; --primary-300:#83b5d9; --primary-500:#3084c0; --primary-600:#266a9a; --primary-800:#13354d;
+      --red:#e62d2d; --orange:#d7801d; --green:#17ac6c; --blue:#32aaf0;
+      --radius:12px; --radius-lg:16px; --radius-xl:24px; --radius-full:999px;
+      --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px; --s7:28px; --s8:32px;
+      --shadow-sm:0 2px 8px rgba(0,5,10,.05); --shadow-md:0 16px 40px rgba(0,5,10,.09);
+      --transition:180ms cubic-bezier(.4,0,.2,1);
+    }
+    html[data-theme-mode="light"] {
+      --bg:#fcfcfe; --surface:#f1f4f8; --surface-2:#e3e8f3; --surface-glass:rgba(252,252,254,.88);
+      --text:#0b1113; --text-2:#27373f; --text-3:#536068; --border:#d6dbeb; --border-2:#a3b0c2; --accent-text:#266a9a; --danger-text:#c91f1f;
+      --primary:var(--primary-600); --primary-hover:var(--primary-800); --on-primary:#fff; --hero:#0a2230; --green:#06633c; --red:#a91515;
+    }
+    html[data-theme-mode="dark"] {
+      --bg:#080d0f; --surface:#121a1f; --surface-2:#1c282e; --surface-glass:rgba(8,13,15,.88);
+      --text:#e8e9e8; --text-2:#b6b9bb; --text-3:#93989a; --border:#1c282e; --border-2:#434b4f; --accent-text:#83b5d9; --danger-text:#ff8585;
+      --primary:var(--primary-500); --primary-hover:var(--primary-300); --on-primary:#fff; --hero:#eaf6fe;
+      --shadow-sm:0 4px 12px rgba(0,0,0,.2); --shadow-md:0 20px 50px rgba(0,0,0,.36);
+    }
+    html[data-theme-mode="brand"] {
+      --bg:#00050a; --surface:#000f1d; --surface-2:#001930; --surface-glass:rgba(0,5,10,.88);
+      --text:#e6e8eb; --text-2:#cdd1d6; --text-3:#9ba3ad; --border:#001930; --border-2:#38475b; --accent-text:#ffe27e; --danger-text:#ff8585;
+      --primary:#ffc814; --primary-hover:#ffe27e; --on-primary:#00050a; --hero:#ffc814;
+      --shadow-sm:0 4px 12px rgba(0,0,0,.3); --shadow-md:0 20px 50px rgba(0,0,0,.52);
+    }
+    * { box-sizing:border-box; }
+    html { background:var(--bg); color-scheme:light; }
+    html[data-theme-mode="dark"], html[data-theme-mode="brand"] { color-scheme:dark; }
+    body { margin:0; min-width:320px; min-height:100vh; background:var(--bg); color:var(--text); font-family:Montserrat,sans-serif; font-size:14px; line-height:1.55; }
+    button,input,select,textarea { font:inherit; }
+    button { color:inherit; }
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible { outline:3px solid color-mix(in srgb,var(--primary) 35%,transparent); outline-offset:2px; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    .icon { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
+    .eyebrow { margin:0 0 var(--s2); color:var(--text-3); font-family:"DM Mono",monospace; font-size:11px; font-weight:500; letter-spacing:.12em; text-transform:uppercase; }
+    h1,h2,h3,p { margin-top:0; }
+    h1 { margin-bottom:var(--s2); font-size:clamp(26px,3vw,42px); line-height:1.08; letter-spacing:-.04em; font-weight:600; }
+    h2 { margin-bottom:var(--s2); font-size:22px; line-height:1.2; letter-spacing:-.025em; }
+    h3 { margin-bottom:var(--s1); font-size:16px; }
+    .muted { color:var(--text-3); }
+    .mono { font-family:"DM Mono",monospace; }
+    .app { display:grid; grid-template-columns:264px minmax(0,1fr); min-height:100vh; }
+    .sidebar { position:sticky; top:0; height:100vh; display:flex; flex-direction:column; gap:var(--s6); padding:var(--s5) var(--s4); background:var(--surface); border-right:1px solid var(--border); z-index:20; }
+    .brand { display:flex; align-items:center; gap:var(--s3); padding:0 var(--s2); }
+    .brand-mark { position:relative; width:38px; height:38px; border:1px solid var(--border-2); border-radius:14px; background:var(--bg); overflow:hidden; }
+    .brand-mark::before { content:""; position:absolute; width:22px; height:22px; left:7px; top:6px; border:5px solid var(--primary); border-left-color:transparent; border-radius:50%; transform:rotate(-18deg); }
+    .brand-mark::after { content:""; position:absolute; width:12px; height:5px; left:3px; bottom:4px; background:var(--primary); transform:skewX(-20deg); }
+    .brand-name { display:block; font-size:14px; letter-spacing:-.01em; }
+    .brand-sub { display:block; color:var(--text-3); font-size:11px; }
+    .role-switch { display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); padding:var(--s1); border:1px solid var(--border); border-radius:var(--radius-full); background:var(--bg); }
+    .role-switch button { border:0; border-radius:var(--radius-full); padding:7px 8px; background:transparent; color:var(--text-3); cursor:pointer; font-size:12px; font-weight:500; transition:var(--transition); }
+    .role-switch button.active { background:var(--text); color:var(--bg); }
+    .nav-label { padding:0 var(--s3); color:var(--text-3); font-family:"DM Mono",monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; }
+    .nav-list { display:flex; flex-direction:column; gap:var(--s1); }
+    .nav-btn { position:relative; display:flex; align-items:center; gap:var(--s3); width:100%; min-height:42px; padding:0 var(--s3); border:0; border-radius:var(--radius); background:transparent; color:var(--text-3); text-align:left; cursor:pointer; transition:var(--transition); }
+    .nav-btn:hover { background:var(--bg); color:var(--text); }
+    .nav-btn.active { background:var(--bg); color:var(--text); box-shadow:var(--shadow-sm); }
+    .nav-btn.active::before { content:""; position:absolute; left:-4px; width:4px; height:22px; border-radius:0 3px 3px 0; background:var(--primary); }
+    .nav-btn .count { margin-left:auto; min-width:22px; padding:1px 6px; border-radius:var(--radius-full); background:var(--surface-2); color:var(--text-2); font:10px "DM Mono",monospace; text-align:center; }
+    .side-note { margin-top:auto; padding:var(--s3); border:1px solid var(--border); border-radius:var(--radius); color:var(--text-3); font-size:11px; }
+    .side-note strong { display:block; margin-bottom:2px; color:var(--text-2); font-size:12px; }
+    .shell { min-width:0; }
+    .topbar { position:sticky; top:0; z-index:15; display:flex; align-items:center; justify-content:space-between; min-height:64px; padding:0 clamp(20px,4vw,52px); border-bottom:1px solid var(--border); background:var(--surface-glass); backdrop-filter:blur(18px); }
+    .context { display:flex; align-items:center; gap:var(--s2); color:var(--text-3); font-size:12px; }
+    .context strong { color:var(--text); font-weight:600; }
+    .top-actions { display:flex; align-items:center; gap:var(--s3); }
+    .language,.themes { display:flex; gap:2px; padding:3px; border:1px solid var(--border); border-radius:var(--radius-full); background:var(--surface); }
+    .language button,.theme-dot { border:0; border-radius:var(--radius-full); background:transparent; color:var(--text-3); cursor:pointer; }
+    .language button { min-width:34px; padding:4px 8px; font-size:11px; }
+    .language button.active { background:var(--text); color:var(--bg); }
+    .theme-dot { width:24px; height:24px; padding:5px; }
+    .theme-dot::after { content:""; display:block; width:12px; height:12px; border-radius:50%; border:1px solid var(--border-2); background:#fcfcfe; }
+    .theme-dot[data-theme="dark"]::after { background:#080d0f; }
+    .theme-dot[data-theme="brand"]::after { background:linear-gradient(135deg,#ffc814 48%,#001930 49%); }
+    .theme-dot.active { box-shadow:inset 0 0 0 1px var(--primary); }
+    main { padding:clamp(24px,4vw,52px); }
+    .screen { display:none; max-width:1280px; margin:0 auto; animation:screen-in 260ms ease both; }
+    .screen.active { display:block; }
+    @keyframes screen-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
+    .page-head { display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s6); margin-bottom:var(--s7); }
+    .page-head p { max-width:680px; margin-bottom:0; color:var(--text-3); }
+    .actions { display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:var(--s2); min-height:40px; padding:0 var(--s4); border:1px solid var(--border); border-radius:var(--radius-full); background:var(--surface); color:var(--text); cursor:pointer; font-weight:500; transition:var(--transition); }
+    .btn:hover:not(:disabled) { border-color:var(--text); transform:translateY(-1px); }
+    .btn-primary { border-color:transparent; background:var(--primary); color:var(--on-primary); }
+    .btn-primary:hover:not(:disabled) { border-color:transparent; background:var(--primary-hover); }
+    .btn-danger { color:var(--red); border-color:color-mix(in srgb,var(--red) 35%,var(--border)); background:transparent; }
+    .btn-ghost { border-color:transparent; background:transparent; color:var(--text-3); }
+    .btn-sm { min-height:32px; padding:0 var(--s3); font-size:12px; }
+    .btn:disabled { opacity:.42; cursor:not-allowed; }
+    .icon-btn { width:40px; padding:0; }
+    .card { border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); overflow:hidden; }
+    .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); padding:var(--s5); border-bottom:1px solid var(--border); }
+    .card-body { padding:var(--s5); }
+    .card-title { font-weight:600; }
+    .card-sub { color:var(--text-3); font-size:12px; }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:var(--s3); margin-bottom:var(--s5); }
+    .stat { width:100%; min-height:132px; padding:var(--s4); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); color:var(--text); text-align:left; cursor:pointer; transition:var(--transition); }
+    .stat:hover { border-color:var(--border-2); transform:translateY(-2px); box-shadow:var(--shadow-sm); }
+    .stat[aria-pressed="true"] { border-color:var(--primary); box-shadow:inset 0 0 0 1px var(--primary); }
+    .stat-label { display:flex; align-items:center; gap:var(--s2); color:var(--text-3); font-size:12px; }
+    .stat-value { display:flex; align-items:baseline; gap:8px; margin-top:var(--s3); }
+    .stat-value strong { font:500 30px/1 "DM Mono",monospace; }
+    .stat-value span { color:var(--text-2); font-size:12px; font-weight:600; }
+    .stat-help { margin:10px 0 0; color:var(--text-3); font-size:11px; line-height:1.45; }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--primary); }
+    .toolbar { display:grid; grid-template-columns:minmax(220px,1fr) 190px 220px auto; gap:var(--s2); margin-bottom:var(--s4); }
+    .field { display:flex; flex-direction:column; gap:var(--s2); }
+    .field label,.field-label { color:var(--text-2); font-size:12px; font-weight:500; }
+    .input,.select,.textarea { width:100%; min-height:40px; border:1.5px solid var(--border); border-radius:var(--radius); background:var(--surface); color:var(--text); padding:0 var(--s3); transition:var(--transition); }
+    .textarea { min-height:96px; padding:var(--s3); resize:vertical; }
+    .input:hover,.select:hover,.textarea:hover,.input:focus,.select:focus,.textarea:focus { border-color:var(--text); outline:none; }
+    .search-wrap { position:relative; }
+    .search-wrap .icon { position:absolute; left:13px; top:11px; color:var(--text-3); }
+    .search-wrap .input { padding-left:40px; }
+    .table-wrap { overflow:auto; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); }
+    table { width:100%; border-collapse:collapse; min-width:1120px; }
+    th { padding:14px 16px; border-bottom:1px solid var(--border); color:var(--text-3); font:500 10px "DM Mono",monospace; letter-spacing:.09em; text-align:left; text-transform:uppercase; white-space:nowrap; }
+    td { padding:15px 16px; border-bottom:1px solid color-mix(in srgb,var(--border) 68%,transparent); color:var(--text-2); }
+    tbody tr:last-child td { border-bottom:0; }
+    tbody tr { cursor:pointer; transition:var(--transition); }
+    tbody tr:hover { background:var(--bg); }
+    .person { display:flex; align-items:center; gap:var(--s3); min-width:190px; }
+    .avatar { display:grid; place-items:center; width:36px; height:36px; border-radius:50%; background:var(--primary-100); color:var(--primary-800); font:500 11px "DM Mono",monospace; }
+    html[data-theme-mode="dark"] .avatar,html[data-theme-mode="brand"] .avatar { background:var(--surface-2); color:var(--text); }
+    .person strong { display:block; color:var(--text); font-size:13px; }
+    .person small { color:var(--text-3); }
+    .badge { display:inline-flex; align-items:center; gap:6px; padding:3px 9px; border:1px solid transparent; border-radius:var(--radius-full); font-size:11px; font-weight:500; white-space:nowrap; }
+    .badge::before { content:""; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .badge-success { background:color-mix(in srgb,var(--green) 13%,transparent); color:var(--green); }
+    .badge-info { background:color-mix(in srgb,var(--primary) 13%,transparent); color:var(--primary); }
+    .badge-warning { background:color-mix(in srgb,var(--orange) 13%,transparent); color:var(--orange); }
+    .badge-danger { background:color-mix(in srgb,var(--red) 13%,transparent); color:var(--red); }
+    .badge-muted { background:var(--surface-2); color:var(--text-3); }
+    .list-meta { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); margin:0 2px var(--s3); color:var(--text-3); font-size:12px; }
+    .filter-summary { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:var(--radius-full); background:var(--surface-2); color:var(--text-2); }
+    .progress-cell { min-width:150px; }
+    .progress-copy { display:flex; justify-content:space-between; gap:var(--s2); margin-bottom:7px; font-size:11px; }
+    .progress-copy strong { color:var(--text); }
+    .mini-progress { height:5px; overflow:hidden; border-radius:var(--radius-full); background:var(--surface-2); }
+    .mini-progress span { display:block; height:100%; border-radius:inherit; background:var(--primary); }
+    .score-strip { display:flex; gap:5px; min-width:230px; }
+    .score { min-width:62px; padding:5px 7px; border-radius:7px; background:var(--bg); color:var(--text-2); font:10px "DM Mono",monospace; text-align:center; }
+    .score sup { color:var(--text-3); }
+    .row-action { white-space:nowrap; }
+    .pager { display:flex; justify-content:flex-end; gap:var(--s2); margin-top:var(--s3); }
+    .empty-row { display:none; padding:48px 20px; color:var(--text-3); text-align:center; }
+    .drawer-scrim { position:fixed; inset:0; z-index:50; display:flex; justify-content:flex-end; background:rgba(0,5,10,.35); opacity:0; pointer-events:none; transition:opacity var(--transition); }
+    .drawer-scrim.open { opacity:1; pointer-events:auto; }
+    .drawer { width:min(620px,100%); height:100%; overflow:auto; background:var(--bg); border-left:1px solid var(--border); transform:translateX(100%); transition:transform 260ms cubic-bezier(.4,0,.2,1); }
+    .drawer-scrim.open .drawer { transform:none; }
+    .drawer-top { position:sticky; top:0; z-index:2; display:flex; align-items:flex-start; justify-content:space-between; padding:var(--s6); border-bottom:1px solid var(--border); background:var(--surface-glass); backdrop-filter:blur(18px); }
+    .drawer-content { padding:var(--s6); }
+    .day-summary { display:grid; grid-template-columns:42px 1fr auto; gap:var(--s3); align-items:center; padding:var(--s4) 0; border-bottom:1px solid var(--border); }
+    .day-index { display:grid; place-items:center; width:36px; height:36px; border-radius:50%; background:var(--surface); color:var(--text-3); font:500 11px "DM Mono",monospace; }
+    .day-summary.done .day-index { background:color-mix(in srgb,var(--green) 14%,transparent); color:var(--green); }
+    .day-summary strong { display:block; font-size:13px; }
+    .day-summary small { color:var(--text-3); }
+    .split { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr); gap:var(--s5); }
+    .form-card { padding:var(--s6); }
+    .form-grid { display:grid; gap:var(--s5); }
+    .typeahead { position:relative; }
+    .typeahead-list { display:none; position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:5; padding:var(--s2); border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow-md); }
+    .typeahead-list.open { display:block; }
+    .typeahead-list button { display:block; width:100%; padding:10px; border:0; border-radius:8px; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .typeahead-list button:hover { background:var(--bg); }
+    .summary-list { display:grid; gap:var(--s3); }
+    .summary-line { display:flex; justify-content:space-between; gap:var(--s5); padding-bottom:var(--s3); border-bottom:1px solid var(--border); }
+    .summary-line span:first-child { color:var(--text-3); }
+    .preflight { display:grid; gap:var(--s3); margin-top:var(--s5); }
+    .checkline { display:flex; align-items:center; gap:var(--s2); color:var(--text-2); font-size:12px; }
+    .checkmark { display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:color-mix(in srgb,var(--green) 15%,transparent); color:var(--green); }
+    .stepper { display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s2); margin-bottom:var(--s6); }
+    .step { position:relative; padding-top:15px; color:var(--text-3); font-size:11px; }
+    .step::before { content:""; position:absolute; left:0; right:0; top:0; height:3px; border-radius:3px; background:var(--border); }
+    .step.active { color:var(--text); }
+    .step.active::before,.step.done::before { background:var(--primary); }
+    .progress { height:7px; overflow:hidden; border-radius:var(--radius-full); background:var(--surface-2); }
+    .progress span { display:block; height:100%; border-radius:inherit; background:var(--primary); transition:width 350ms ease; }
+    .alert { display:flex; gap:var(--s3); padding:var(--s3); border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); }
+    .alert-danger { border-color:color-mix(in srgb,var(--red) 38%,var(--border)); background:color-mix(in srgb,var(--red) 7%,var(--bg)); }
+    .alert-warning { border-color:color-mix(in srgb,var(--orange) 38%,var(--border)); background:color-mix(in srgb,var(--orange) 7%,var(--bg)); }
+    .alert strong { display:block; margin-bottom:2px; }
+    .alert p { margin:0; color:var(--text-3); font-size:12px; }
+    .template-create-head { align-items:flex-start; }
+    .template-create-head .actions { justify-content:flex-end; }
+    .template-builder { display:grid; grid-template-columns:220px minmax(0,1fr) 260px; gap:var(--s4); align-items:start; padding-bottom:88px; }
+    .builder-rail,.publish-panel { position:sticky; top:84px; }
+    .builder-rail { overflow:visible; }
+    .builder-rail::after { display:none; }
+    .builder-rail .card-head { position:relative; z-index:1; }
+    .builder-days { position:relative; z-index:1; display:grid; gap:var(--s2); max-height:calc(100vh - 290px); padding:var(--s2); overflow:auto; }
+    .builder-week-group { border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); overflow:hidden; transition:var(--transition); }
+    .builder-week-group.active { border-color:color-mix(in srgb,var(--primary) 52%,var(--border)); box-shadow:inset 3px 0 0 var(--primary); }
+    .builder-week-head { display:grid; grid-template-columns:34px minmax(0,1fr) auto; gap:var(--s2); align-items:center; width:100%; padding:11px 10px; border:0; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .builder-week-head:hover { background:var(--surface); }
+    .builder-stage-mark { display:grid; place-items:center; width:32px; height:32px; border-radius:9px; background:var(--text); color:var(--bg); font:500 9px "DM Mono",monospace; letter-spacing:.06em; }
+    .builder-week-copy strong,.builder-week-copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .builder-week-copy strong { font-size:11px; }
+    .builder-week-copy small { color:var(--text-3); font-size:10px; }
+    .builder-week-toggle { color:var(--text-3); transition:transform var(--transition); }
+    .builder-week-group.active .builder-week-toggle { transform:rotate(90deg); }
+    .builder-week-days { display:none; gap:var(--s1); padding:0 7px 7px 16px; }
+    .builder-week-group.active .builder-week-days { display:grid; }
+    .builder-day { display:grid; grid-template-columns:38px 1fr; gap:var(--s2); align-items:center; width:100%; min-height:64px; padding:8px; border:1px solid transparent; border-radius:var(--radius); background:transparent; color:var(--text-2); text-align:left; cursor:pointer; }
+    .builder-day:hover { background:var(--bg); }
+    .builder-day.active { border-color:color-mix(in srgb,var(--primary) 36%,var(--border)); background:color-mix(in srgb,var(--primary) 9%,var(--bg)); color:var(--text); }
+    .builder-day-index { display:grid; place-items:center; width:34px; height:34px; border:1px solid var(--border-2); border-radius:50%; background:var(--surface); color:var(--text-3); font:500 10px "DM Mono",monospace; }
+    html[data-theme-mode="light"] .badge-warning { color:#854a00; }
+    html[data-theme-mode="light"] .badge-info { color:var(--primary-800); }
+    .builder-day.active .builder-day-index { border-color:var(--text); background:var(--text); color:var(--bg); }
+    .builder-day-copy strong,.builder-day-copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .builder-day-copy strong { font-size:12px; }
+    .builder-day-copy small { color:var(--text-3); font-size:10px; }
+    .builder-add-day { width:100%; margin-top:4px; border-style:dashed; }
+    .builder-add-week { width:calc(100% - 16px); margin:0 8px 8px; }
+    .builder-workspace { display:grid; gap:var(--s4); min-width:0; }
+    .builder-stage-editor { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--s4); align-items:end; padding:var(--s5); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); overflow:hidden; }
+    .builder-stage-editor::before { content:"STAGE"; position:absolute; right:16px; top:-10px; color:var(--text); opacity:.035; font:600 64px/1 "DM Mono",monospace; pointer-events:none; }
+    .builder-stage-editor .field { position:relative; z-index:1; }
+    .stage-meta { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:var(--s2); color:var(--text-3); font:10px "DM Mono",monospace; white-space:nowrap; }
+    .stage-meta code { padding:5px 8px; border:1px solid var(--border); border-radius:var(--radius-full); background:var(--bg); color:var(--accent-text); }
+    .builder-week-empty { padding:48px var(--s5); border:1px dashed var(--border-2); border-radius:var(--radius-lg); background:var(--surface); text-align:center; }
+    .builder-week-empty h2 { margin-bottom:6px; }
+    .builder-intro { position:relative; overflow:hidden; padding:var(--s6); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--hero); color:var(--bg); }
+    .builder-intro::after { content:"DRAFT"; position:absolute; right:-8px; bottom:-22px; opacity:.08; font:500 72px/1 "DM Mono",monospace; letter-spacing:-.08em; }
+    .builder-intro .eyebrow,.builder-intro p { color:currentColor; opacity:.66; }
+    .builder-intro .input { position:relative; z-index:1; max-width:600px; border-color:color-mix(in srgb,currentColor 30%,transparent); background:color-mix(in srgb,var(--bg) 92%,transparent); color:var(--text); font-size:18px; font-weight:600; }
+    .builder-day-form { display:none; gap:var(--s4); }
+    .builder-day-form.active { display:grid; }
+    .builder-section { border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); overflow:hidden; }
+    .builder-section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s4); padding:var(--s5); border-bottom:1px solid var(--border); }
+    .builder-section-number { margin-bottom:6px; color:var(--accent-text); font:500 10px "DM Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .builder-section-body { display:grid; gap:var(--s4); padding:var(--s5); }
+    .lesson-editor,.question-editor { display:grid; gap:var(--s4); padding:var(--s4); border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); }
+    .editor-row-head { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); }
+    .editor-row-head strong { display:flex; align-items:center; gap:var(--s2); }
+    .editor-count { display:grid; place-items:center; width:26px; height:26px; border-radius:50%; background:var(--surface-2); color:var(--text-2); font:500 10px "DM Mono",monospace; }
+    .asset-grid { display:grid; grid-template-columns:1fr 1fr; gap:var(--s3); }
+    .asset-box { min-height:112px; padding:var(--s4); border:1px dashed var(--border-2); border-radius:var(--radius); background:var(--surface); }
+    .asset-box strong { display:block; margin-bottom:4px; font-size:12px; }
+    .asset-box p { margin-bottom:var(--s3); color:var(--text-3); font-size:11px; }
+    .asset-files { display:grid; gap:var(--s2); margin-top:var(--s3); }
+    .builder-option { display:grid; grid-template-columns:22px 1fr auto 32px; gap:var(--s2); align-items:center; }
+    .builder-option .answer-key { width:17px; height:17px; accent-color:var(--primary); }
+    .builder-option-letter { color:var(--text-3); font:500 11px "DM Mono",monospace; text-align:center; }
+    .question-hint { color:var(--text-3); font-size:11px; }
+    .publish-panel .card-body { display:grid; gap:var(--s4); }
+    .readiness-score { display:flex; align-items:end; justify-content:space-between; gap:var(--s3); }
+    .readiness-score strong { font:500 34px/1 "DM Mono",monospace; }
+    .readiness-list { display:grid; gap:var(--s2); }
+    .readiness-item { display:grid; grid-template-columns:24px 1fr; gap:var(--s2); align-items:start; padding:10px; border-radius:var(--radius); background:var(--bg); color:var(--text-2); font-size:11px; }
+    .readiness-icon { display:grid; place-items:center; width:20px; height:20px; border-radius:50%; background:color-mix(in srgb,var(--orange) 14%,transparent); color:var(--orange); }
+    .readiness-item.done .readiness-icon { background:color-mix(in srgb,var(--green) 14%,transparent); color:var(--green); }
+    .readiness-item strong,.readiness-item small { display:block; }
+    .readiness-item small { color:var(--text-3); }
+    .builder-actionbar { position:fixed; left:264px; right:0; bottom:0; z-index:14; display:flex; align-items:center; justify-content:space-between; gap:var(--s4); min-height:72px; padding:12px clamp(20px,4vw,52px); border-top:1px solid var(--border); background:var(--surface-glass); backdrop-filter:blur(18px); box-shadow:0 -8px 30px rgba(0,5,10,.05); }
+    .builder-save-state { display:flex; align-items:center; gap:var(--s2); color:var(--text-3); font-size:12px; }
+    .builder-save-dot { width:8px; height:8px; border-radius:50%; background:var(--orange); }
+    .builder-save-state.saved .builder-save-dot { background:var(--green); }
+    .field-error { border-color:var(--red)!important; }
+    .inline-error { margin-top:-2px; color:var(--danger-text); font-size:11px; }
+    .builder-intro .inline-error { color:#ff9a9a; }
+    .template-layout { display:grid; grid-template-columns:220px minmax(280px,.75fr) minmax(360px,1.25fr); gap:var(--s4); align-items:start; }
+    .days-panel,.items-panel,.editor-panel { min-height:580px; }
+    .day-list { padding:var(--s2); }
+    .day-button { display:flex; align-items:center; justify-content:space-between; width:100%; padding:11px var(--s3); border:0; border-radius:var(--radius); background:transparent; color:var(--text-2); text-align:left; cursor:pointer; }
+    .day-button:hover { background:var(--bg); }
+    .day-button.active { background:color-mix(in srgb,var(--primary) 12%,transparent); color:var(--primary); }
+    .day-button small { color:var(--text-3); font:10px "DM Mono",monospace; }
+    .item-list { padding:var(--s3); }
+    .item { display:flex; align-items:center; gap:var(--s2); margin-bottom:var(--s2); padding:11px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); cursor:pointer; }
+    .item:hover,.item.active { border-color:var(--primary); }
+    .item.error { border-color:color-mix(in srgb,var(--red) 55%,var(--border)); }
+    .item-kind { padding:2px 6px; border-radius:5px; background:var(--surface-2); color:var(--text-3); font:9px "DM Mono",monospace; text-transform:uppercase; }
+    .drag { color:var(--text-3); letter-spacing:-2px; }
+    .editor-panel .card-body { display:grid; gap:var(--s4); }
+    .option-edit { display:grid; grid-template-columns:20px 22px 1fr 24px; gap:var(--s2); align-items:center; }
+    .option-edit input[type="checkbox"] { width:17px; height:17px; accent-color:var(--primary); }
+    .file-row { display:flex; align-items:center; justify-content:space-between; gap:var(--s3); padding:10px 12px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); }
+    .preview-box { padding:var(--s4); border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); color:var(--text-2); }
+    .preview-box h3 { margin-top:0; }
+    dialog { width:min(520px,calc(100% - 32px)); padding:0; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-glass); color:var(--text); box-shadow:var(--shadow-md); backdrop-filter:blur(24px); }
+    dialog::backdrop { background:rgba(0,5,10,.45); backdrop-filter:blur(4px); }
+    .dialog-head,.dialog-body,.dialog-foot { padding:var(--s5); }
+    .dialog-head { display:flex; justify-content:space-between; border-bottom:1px solid var(--border); }
+    .dialog-body { display:grid; gap:var(--s4); }
+    .dialog-foot { display:flex; justify-content:flex-end; gap:var(--s2); }
+    .choice { display:flex; align-items:center; gap:var(--s2); color:var(--text-2); }
+    .choice input { accent-color:var(--primary); }
+    .roadmap-hero { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:var(--s6); min-height:230px; margin-bottom:var(--s5); padding:clamp(24px,5vw,56px); border-radius:var(--radius-xl); background:var(--hero); color:var(--bg); overflow:hidden; }
+    html[data-theme-mode="dark"] .roadmap-hero { color:var(--bg); }
+    html[data-theme-mode="brand"] .roadmap-hero { background:linear-gradient(135deg,#ffc814,#dcdcdc); color:#00050a; }
+    .roadmap-hero::after { content:"25"; position:absolute; right:-12px; bottom:-72px; color:currentColor; opacity:.08; font:500 210px/1 "DM Mono",monospace; letter-spacing:-.12em; }
+    .roadmap-hero h1 { max-width:720px; font-size:clamp(36px,6vw,76px); }
+    .hero-meta { display:flex; gap:var(--s4); flex-wrap:wrap; opacity:.72; }
+    .hero-score { align-self:start; position:relative; z-index:1; min-width:150px; padding:var(--s4); border:1px solid currentColor; border-radius:var(--radius-lg); }
+    .hero-score strong { display:block; font:500 34px "DM Mono",monospace; }
+    .hero-score small { opacity:.7; }
+    .roadmap-grid { display:grid; grid-template-columns:minmax(260px,.72fr) minmax(0,1.28fr); gap:var(--s5); align-items:start; }
+    .rail { position:relative; padding:var(--s5); }
+    .rail::before { content:""; position:absolute; left:43px; top:50px; bottom:50px; width:2px; background:var(--border); }
+    .rail-progress { position:absolute; left:43px; top:50px; width:2px; height:52%; background:var(--primary); }
+    .rail-day { position:relative; display:grid; grid-template-columns:44px 1fr auto; gap:var(--s3); align-items:center; width:100%; min-height:76px; padding:8px 0; border:0; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .rail-node { position:relative; z-index:1; display:grid; place-items:center; width:38px; height:38px; border:2px solid var(--border); border-radius:50%; background:var(--surface); color:var(--text-3); font:500 11px "DM Mono",monospace; }
+    .rail-day.done .rail-node { border-color:var(--green); background:var(--green); color:#fff; }
+    .rail-day.current .rail-node { border-color:var(--primary); box-shadow:0 0 0 7px color-mix(in srgb,var(--primary) 13%,transparent); color:var(--primary); }
+    .rail-copy strong { display:block; }
+    .rail-copy small { color:var(--text-3); }
+    .rail-day:hover .rail-copy strong { color:var(--primary); }
+    .employee-week-list { padding:10px; }
+    .employee-week { border-bottom:1px solid var(--border); }
+    .employee-week:last-child { border-bottom:0; }
+    .employee-week-toggle { display:grid; grid-template-columns:42px minmax(0,1fr) auto; gap:var(--s3); align-items:center; width:100%; min-height:72px; padding:10px; border:0; border-radius:var(--radius); background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+    .employee-week-toggle:hover,.employee-week.open .employee-week-toggle { background:var(--bg); }
+    .employee-week-stage { display:grid; place-items:center; width:36px; height:36px; border:1px solid var(--border); border-radius:11px; color:var(--text-3); font:500 10px "DM Mono",monospace; }
+    .employee-week.done .employee-week-stage { border-color:var(--green); background:var(--green); color:#fff; }
+    .employee-week.current .employee-week-stage { border-color:var(--primary); color:var(--primary); box-shadow:0 0 0 5px color-mix(in srgb,var(--primary) 10%,transparent); }
+    .employee-week-copy strong,.employee-week-copy small { display:block; }
+    .employee-week-copy small { margin-top:2px; color:var(--text-3); font-size:11px; }
+    .employee-week-chevron { color:var(--text-3); transition:transform var(--transition); }
+    .employee-week.open .employee-week-chevron { transform:rotate(90deg); }
+    .employee-week-days { display:none; gap:4px; padding:0 10px 12px 58px; }
+    .employee-week.open .employee-week-days { display:grid; }
+    .employee-day-link { display:grid; grid-template-columns:32px minmax(0,1fr) auto; gap:8px; align-items:center; width:100%; padding:8px; border:0; border-radius:9px; background:transparent; color:var(--text-2); text-align:left; cursor:pointer; }
+    .employee-day-link:hover,.employee-day-link.active { background:color-mix(in srgb,var(--primary) 10%,var(--bg)); color:var(--text); }
+    .employee-day-link > span:first-child { color:var(--text-3); font:10px "DM Mono",monospace; }
+    .employee-day-link small { color:var(--text-3); font-size:10px; }
+    .focus-card { padding:var(--s6); }
+    .focus-number { margin-bottom:var(--s3); color:var(--primary); font:500 12px "DM Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .lesson-layout { display:grid; grid-template-columns:240px minmax(0,760px); gap:clamp(20px,4vw,52px); justify-content:center; align-items:start; }
+    .compact-rail { position:sticky; top:92px; }
+    .lesson-card { margin-bottom:var(--s4); }
+    .lesson-content { padding:var(--s6); color:var(--text-2); line-height:1.8; }
+    .lesson-content h2 { color:var(--text); }
+    .lesson-content code { padding:2px 6px; border-radius:5px; background:var(--surface-2); font-family:"DM Mono",monospace; font-size:12px; }
+    .video { display:grid; place-items:center; aspect-ratio:16/7; margin:var(--s5) 0; border-radius:var(--radius); background:#001426; color:#e6e8eb; }
+    .video button { width:54px; height:54px; border:1px solid #38475b; border-radius:50%; background:#ffc814; color:#00050a; cursor:pointer; }
+    .quiz-shell { max-width:820px; margin:0 auto; }
+    .quiz-sticky { position:sticky; top:80px; z-index:8; display:flex; align-items:center; justify-content:space-between; gap:var(--s4); margin-bottom:var(--s4); padding:var(--s3) var(--s4); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface-glass); backdrop-filter:blur(18px); box-shadow:var(--shadow-sm); }
+    .question { margin-bottom:var(--s3); padding:var(--s5); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); }
+    .question-number { margin-bottom:var(--s2); color:var(--primary); font:500 10px "DM Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+    .question h3 { margin-bottom:var(--s4); font-size:17px; }
+    .option { display:flex; align-items:flex-start; gap:var(--s3); margin-top:var(--s2); padding:12px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); cursor:pointer; transition:var(--transition); }
+    .option:hover { border-color:var(--text); }
+    .option:has(input:checked) { border-color:var(--primary); background:color-mix(in srgb,var(--primary) 8%,var(--bg)); }
+    .option input { margin-top:3px; accent-color:var(--primary); }
+    .option-letter { color:var(--text-3); font:12px "DM Mono",monospace; }
+    .result-hero { display:flex; align-items:center; justify-content:space-between; gap:var(--s5); margin-bottom:var(--s5); padding:var(--s6); border:1px solid var(--border); border-radius:var(--radius-xl); background:color-mix(in srgb,var(--primary) 10%,var(--surface)); }
+    .result-score { font:500 clamp(44px,8vw,84px)/1 "DM Mono",monospace; letter-spacing:-.08em; }
+    .result-detail { margin-bottom:var(--s3); padding:var(--s5); border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--surface); }
+    .result-detail.correct { border-left:4px solid var(--green); }
+    .result-detail.wrong { border-left:4px solid var(--red); }
+    .toast { position:fixed; right:var(--s5); bottom:var(--s5); z-index:100; display:flex; align-items:center; gap:var(--s2); max-width:360px; padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-full); background:var(--text); color:var(--bg); box-shadow:var(--shadow-md); opacity:0; transform:translateY(12px); pointer-events:none; transition:var(--transition); }
+    .toast.show { opacity:1; transform:none; }
+    .mobile-only { display:none; }
+    [hidden] { display:none!important; }
+    @media (max-width:1050px) {
+      .app { grid-template-columns:86px minmax(0,1fr); }
+      .sidebar { padding-inline:12px; }
+      .brand-copy,.nav-btn span:not(.count),.side-note,.nav-label,.role-switch { display:none; }
+      .brand { justify-content:center; padding:0; }
+      .nav-btn { justify-content:center; padding:0; }
+      .nav-btn .count { position:absolute; right:3px; top:2px; min-width:17px; }
+      .toolbar { grid-template-columns:1fr 1fr; }
+      .template-builder { grid-template-columns:190px minmax(0,1fr); }
+      .publish-panel { position:static; grid-column:1/-1; }
+      .builder-actionbar { left:86px; }
+      .template-layout { grid-template-columns:180px 1fr; }
+      .editor-panel { grid-column:1/-1; min-height:auto; }
+      .stats { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width:760px) {
+      .app { display:block; }
+      .sidebar { position:fixed; left:0; right:0; top:auto; bottom:0; width:100%; height:68px; flex-direction:row; align-items:center; justify-content:space-around; padding:8px; border:0; border-top:1px solid var(--border); }
+      .brand,.side-note,.role-switch,.nav-label { display:none; }
+      .nav-list { display:contents; }
+      .nav-btn { width:52px; min-height:50px; }
+      .nav-btn.active::before { left:12px; right:12px; top:-8px; width:auto; height:3px; border-radius:0 0 3px 3px; }
+      .employee-nav .nav-btn:not(:first-child) { display:none; }
+      .topbar { min-height:58px; padding:0 14px; }
+      .context span { display:none; }
+      .themes { display:none; }
+      main { padding:20px 14px 92px; }
+      .page-head { align-items:flex-start; flex-direction:column; margin-bottom:20px; }
+      .stats,.toolbar,.split,.roadmap-grid,.lesson-layout,.template-layout { grid-template-columns:1fr; }
+      .template-builder { display:block; padding-bottom:108px; }
+      .builder-rail,.publish-panel { position:static; margin-bottom:var(--s3); }
+      .builder-days { display:flex; max-height:none; overflow:auto; }
+      .builder-week-group { min-width:280px; }
+      .builder-stage-editor { grid-template-columns:1fr; }
+      .stage-meta { justify-content:flex-start; }
+      .builder-day { min-width:168px; }
+      .builder-rail::after { display:none; }
+      .builder-workspace { margin-bottom:var(--s3); }
+      .asset-grid { grid-template-columns:1fr; }
+      .builder-option { grid-template-columns:20px 1fr 26px; }
+      .builder-option .answer-key { grid-column:3; grid-row:1; }
+      .builder-option .remove-option { grid-column:1/-1; justify-self:start; }
+      .builder-actionbar { left:0; bottom:68px; min-height:64px; padding:10px 14px; }
+      .builder-actionbar .builder-save-state { display:none; }
+      .builder-actionbar .actions { width:100%; flex-wrap:nowrap; }
+      .builder-actionbar .actions .btn { flex:1; padding-inline:10px; }
+      .stats { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; }
+      .stat { min-width:210px; scroll-snap-align:start; }
+      .toolbar { display:flex; flex-direction:column; }
+      .toolbar .btn { width:100%; }
+      .roadmap-hero { grid-template-columns:1fr; min-height:280px; padding:28px 22px; }
+      .roadmap-hero h1 { font-size:42px; }
+      .hero-score { max-width:170px; }
+      .focus-card { display:block; }
+      .compact-rail { position:static; }
+      .lesson-layout { display:block; }
+      .compact-rail .rail-day:not(.current) { display:none; }
+      .template-layout { display:block; }
+      .days-panel,.items-panel,.editor-panel { min-height:auto; margin-bottom:12px; }
+      .day-list { display:flex; overflow:auto; }
+      .day-button { min-width:130px; }
+      .items-panel .item-list { max-height:300px; overflow:auto; }
+      .result-hero { align-items:flex-start; flex-direction:column; }
+      .mobile-only { display:inline-flex; }
+      .toast { left:14px; right:14px; bottom:82px; border-radius:var(--radius); }
+    }
+  </style>
+</head>
+<body>
+<svg class="sr-only" aria-hidden="true">
+  <symbol id="i-people" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M6 16V8a3 3 0 0 1 3-3h6M18 8v8a3 3 0 0 1-3 3H9"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5z"/><path d="M4 6.5v13"/></symbol>
+</svg>
+
+<div class="app">
+  <aside class="sidebar" aria-label="Điều hướng chính">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div class="brand-copy"><strong class="brand-name">PrivOS Onboarding</strong><span class="brand-sub">Learning workspace</span></div>
+    </div>
+    <div class="role-switch" aria-label="Chọn vai trò">
+      <button class="active" type="button" data-role="admin">Admin</button>
+      <button type="button" data-role="employee">Nhân sự</button>
+    </div>
+    <div class="nav-label">Quản trị</div>
+    <nav class="nav-list admin-nav">
+      <button class="nav-btn active" type="button" data-screen="admin-hires" aria-label="Nhân sự"><svg class="icon"><use href="#i-people"/></svg><span data-i18n="people">Nhân sự</span><span class="count">24</span></button>
+      <button class="nav-btn" type="button" data-screen="admin-provision" aria-label="Onboarding mới"><svg class="icon"><use href="#i-plus"/></svg><span data-i18n="newOnboarding">Onboarding mới</span></button>
+      <button class="nav-btn" type="button" data-screen="admin-templates" aria-label="Template"><svg class="icon"><use href="#i-layout"/></svg><span data-i18n="templates">Template</span><span class="count">12</span></button>
+    </nav>
+    <nav class="nav-list employee-nav" hidden>
+      <button class="nav-btn active" type="button" data-screen="employee-roadmap" aria-label="Lộ trình của tôi"><svg class="icon"><use href="#i-route"/></svg><span data-i18n="myRoadmap">Lộ trình của tôi</span></button>
+    </nav>
+    <div class="side-note"><strong>Room: Acme Vietnam</strong><span id="session-role-note">Phiên owner/admin · dữ liệu demo</span></div>
+  </aside>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="context"><strong id="context-label">Nhân sự</strong><span>Acme Vietnam / Onboarding</span></div>
+      <div class="top-actions">
+        <div class="language" aria-label="Ngôn ngữ"><button class="active" type="button" data-lang="vi">VI</button><button type="button" data-lang="en">EN</button></div>
+        <div class="themes" aria-label="Giao diện">
+          <button class="theme-dot active" type="button" data-theme="light" aria-label="Light theme"></button>
+          <button class="theme-dot" type="button" data-theme="dark" aria-label="Dark theme"></button>
+          <button class="theme-dot" type="button" data-theme="brand" aria-label="Brand theme"></button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="screen active" id="admin-hires" aria-labelledby="hires-title">
+        <div class="page-head">
+          <div><p class="eyebrow">24 hồ sơ · cập nhật hôm nay</p><h1 id="hires-title">Quản lý onboarding</h1><p>Xem ai đang học, ai cần hỗ trợ và kết quả quiz của từng nhân sự.</p></div>
+          <button class="btn btn-primary" type="button" data-screen="admin-provision"><svg class="icon"><use href="#i-plus"/></svg><span data-i18n="createRoadmap">Tạo onboarding</span></button>
+        </div>
+        <div class="stats" aria-label="Tổng quan">
+          <button class="stat" type="button" data-summary-filter="learning" aria-pressed="false"><div class="stat-label"><span class="dot"></span>Đang onboarding</div><div class="stat-value"><strong>14</strong><span>nhân sự</span></div><p class="stat-help">Có lộ trình đang học</p></button>
+          <button class="stat" type="button" data-summary-filter="done" aria-pressed="false"><div class="stat-label"><span class="dot" style="background:var(--green)"></span>Hoàn tất tháng 9</div><div class="stat-value"><strong>8</strong><span>nhân sự</span></div><p class="stat-help">Hoàn tất trong tháng 09/2026</p></button>
+          <button class="stat" type="button" data-summary-filter="quiz-pending" aria-pressed="false"><div class="stat-label"><span class="dot" style="background:var(--orange)"></span>Chưa nộp quiz đầu tiên</div><div class="stat-value"><strong>5</strong><span>nhân sự</span></div><p class="stat-help">Đã bắt đầu học nhưng chưa có điểm</p></button>
+          <button class="stat" type="button" data-summary-filter="error" aria-pressed="false"><div class="stat-label"><span class="dot" style="background:var(--red)"></span>Cần xử lý</div><div class="stat-value"><strong>1</strong><span>hồ sơ</span></div><p class="stat-help">Khởi tạo lộ trình bị gián đoạn</p></button>
+        </div>
+        <div class="toolbar">
+          <div class="search-wrap"><svg class="icon"><use href="#i-search"/></svg><label class="sr-only" for="hire-search">Tìm nhân sự</label><input class="input" id="hire-search" placeholder="Tìm theo tên hoặc email"></div>
+          <select class="select" id="status-filter" aria-label="Lọc trạng thái"><option value="all">Mọi trạng thái</option><option value="learning">Đang học</option><option value="done">Hoàn tất</option><option value="error">Khởi tạo lỗi</option><option value="cancelled">Đã huỷ</option></select>
+          <select class="select" id="position-filter" aria-label="Lọc vị trí"><option value="all">Mọi vị trí</option><option value="accounting">Kế toán tổng hợp</option><option value="support">Chăm sóc khách hàng</option><option value="backend">Intern Backend Python/Odoo</option></select>
+          <button class="btn" type="button" id="clear-filters">Đặt lại</button>
+        </div>
+        <div class="list-meta"><span id="hire-result-count" aria-live="polite">Đang hiển thị 5 hồ sơ mẫu</span><span class="filter-summary" id="active-summary-filter">Tất cả trạng thái</span></div>
+        <div class="table-wrap">
+          <table aria-label="Danh sách nhân sự">
+            <thead><tr><th>Nhân sự</th><th>Vị trí</th><th>Bắt đầu</th><th>Tiến độ lộ trình</th><th>Điểm quiz gần nhất</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody id="hire-rows">
+              <tr data-hire-row data-hire-id="minh-anh" data-name="trần minh anh minh.anh@acme.vn" data-status="learning" data-position="backend" data-quiz="started">
+                <td><div class="person"><span class="avatar">MA</span><span><strong>Trần Minh Anh</strong><small>minh.anh@acme.vn</small></span></div></td><td>Intern Backend Python/Odoo</td><td>15/09/2026</td><td><div class="progress-cell"><div class="progress-copy"><strong>8/25 ngày · 32%</strong><span>Tuần 1</span></div><div class="mini-progress"><span style="width:32%"></span></div></div></td><td><div class="score-strip"><span class="score">Ngày 1 · 2/2</span><span class="score">Ngày 2 · 2/2<sup>×2</sup></span><span class="score">Ngày 3 · 1/2</span></div></td><td><span class="badge badge-info">Đang học</span></td><td class="row-action"><button class="btn btn-sm" type="button" data-view-roadmap>Xem lộ trình</button></td>
+              </tr>
+              <tr data-hire-row data-hire-id="quoc-bao" data-name="lê quốc bảo bao.le@acme.vn" data-status="done" data-position="support" data-quiz="started">
+                <td><div class="person"><span class="avatar">QB</span><span><strong>Lê Quốc Bảo</strong><small>bao.le@acme.vn</small></span></div></td><td>Chăm sóc khách hàng</td><td>08/09/2026</td><td><div class="progress-cell"><div class="progress-copy"><strong>4/4 ngày · 100%</strong><span>Hoàn tất</span></div><div class="mini-progress"><span style="width:100%"></span></div></div></td><td><div class="score-strip"><span class="score">Ngày 2 · 5/5</span><span class="score">Ngày 3 · 6/6</span><span class="score">Ngày 4 · 7/8</span></div></td><td><span class="badge badge-success">Hoàn tất</span></td><td class="row-action"><button class="btn btn-sm" type="button">Xem chi tiết</button></td>
+              </tr>
+              <tr data-hire-row data-hire-id="thu-ha" data-name="phạm thu hà ha.pham@acme.vn" data-status="error" data-position="support" data-quiz="pending">
+                <td><div class="person"><span class="avatar">TH</span><span><strong>Phạm Thu Hà</strong><small>ha.pham@acme.vn</small></span></div></td><td>Chăm sóc khách hàng</td><td>22/09/2026</td><td><div class="progress-cell"><div class="progress-copy"><strong>0/4 ngày · 0%</strong><span>Chưa tạo xong</span></div><div class="mini-progress"><span style="width:0"></span></div></div></td><td><span class="muted">Chưa có điểm</span></td><td><span class="badge badge-danger">Khởi tạo lỗi</span></td><td class="row-action"><button class="btn btn-sm" type="button">Xử lý lỗi</button></td>
+              </tr>
+              <tr data-hire-row data-hire-id="hoang-long" data-name="nguyễn hoàng long long.nguyen@acme.vn" data-status="learning" data-position="backend" data-quiz="started">
+                <td><div class="person"><span class="avatar">HL</span><span><strong>Nguyễn Hoàng Long</strong><small>long.nguyen@acme.vn</small></span></div></td><td>Intern Backend Python/Odoo</td><td>01/09/2026</td><td><div class="progress-cell"><div class="progress-copy"><strong>18/25 ngày · 72%</strong><span>Tuần 3</span></div><div class="mini-progress"><span style="width:72%"></span></div></div></td><td><div class="score-strip"><span class="score">Ngày 16 · 2/2</span><span class="score">Ngày 17 · 2/2</span><span class="score">Ngày 18 · 1/2</span></div></td><td><span class="badge badge-info">Đang học</span></td><td class="row-action"><button class="btn btn-sm" type="button">Xem chi tiết</button></td>
+              </tr>
+              <tr data-hire-row data-hire-id="ngoc-linh" data-name="vũ ngọc linh linh.vu@acme.vn" data-status="learning" data-position="backend" data-quiz="pending">
+                <td><div class="person"><span class="avatar">NL</span><span><strong>Vũ Ngọc Linh</strong><small>linh.vu@acme.vn</small></span></div></td><td>Intern Backend Python/Odoo</td><td>22/09/2026</td><td><div class="progress-cell"><div class="progress-copy"><strong>1/25 ngày · 4%</strong><span>Tuần 0</span></div><div class="mini-progress"><span style="width:4%"></span></div></div></td><td><span class="muted">Chưa nộp quiz đầu tiên</span></td><td><span class="badge badge-info">Đang học</span></td><td class="row-action"><button class="btn btn-sm" type="button">Xem chi tiết</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty-row" id="hire-empty">Không có hồ sơ phù hợp với bộ lọc.</div>
+        </div>
+        <div class="pager"><button class="btn btn-sm" type="button" disabled>Trước</button><button class="btn btn-sm" type="button">Sau</button></div>
+      </section>
+
+      <section class="screen" id="admin-provision" aria-labelledby="provision-title">
+        <div class="page-head"><div><p class="eyebrow">Provision roadmap / B1–B5</p><h1 id="provision-title">Onboarding nhân sự mới</h1><p>Chọn nhân sự và template vị trí. App kiểm tra trước rồi copy thành lộ trình riêng.</p></div></div>
+        <div class="stepper" aria-label="Tiến trình"><div class="step active" id="step-one">01 · Thông tin</div><div class="step" id="step-two">02 · Kiểm tra</div><div class="step" id="step-three">03 · Khởi tạo</div></div>
+        <div class="split">
+          <section class="card form-card" id="provision-form-card">
+            <div class="form-grid">
+              <div class="field"><label for="employee-select">Nhân sự</label><select class="select" id="employee-select"><option>Phạm Thu Hà · ha.pham@acme.vn</option><option>Vũ Ngọc Linh · linh.vu@acme.vn</option></select></div>
+              <div class="field typeahead"><label for="position-input">Vị trí</label><input class="input" id="position-input" value="Intern Backend Developer — Python &amp; Odoo" autocomplete="off"><div class="typeahead-list" id="position-options"><button type="button">Intern Backend Developer — Python &amp; Odoo</button><button type="button">Chăm sóc khách hàng</button><button type="button">Kế toán tổng hợp</button></div></div>
+              <div class="field"><label for="start-date">Ngày bắt đầu</label><input class="input" id="start-date" type="date" value="2026-09-22"></div>
+              <div class="alert"><svg class="icon" style="color:var(--primary)"><use href="#i-route"/></svg><div><strong>5 Stage tuần · 25 item ngày · 25 bài học · 50 câu hỏi</strong><p>Mọi ngày mở ngay. Điểm chính thức lấy từ lần làm đầu tiên.</p></div></div>
+              <button class="btn btn-primary" type="button" id="review-provision">Kiểm tra trước khi tạo<svg class="icon"><use href="#i-arrow"/></svg></button>
+            </div>
+          </section>
+          <aside class="card">
+            <div class="card-head"><div><div class="card-title">Tóm tắt lộ trình</div><div class="card-sub">Template đang ở trạng thái Sẵn sàng</div></div><span class="badge badge-success">Sẵn sàng</span></div>
+            <div class="card-body summary-list">
+              <div class="summary-line"><span>Nhân sự</span><strong>Phạm Thu Hà</strong></div>
+              <div class="summary-line"><span>Vị trí</span><strong id="summary-position">Chăm sóc khách hàng</strong></div>
+              <div class="summary-line"><span>Bắt đầu</span><strong>22/09/2026</strong></div>
+              <div class="summary-line"><span>Nội dung</span><strong>37 mục</strong></div>
+              <div class="preflight" id="preflight" hidden>
+                <div class="checkline"><span class="checkmark"><svg class="icon"><use href="#i-check"/></svg></span>Bạn là owner/admin của room</div>
+                <div class="checkline"><span class="checkmark"><svg class="icon"><use href="#i-check"/></svg></span>Vị trí đang Sẵn sàng</div>
+                <div class="checkline"><span class="checkmark"><svg class="icon"><use href="#i-check"/></svg></span>Không có câu hỏi thiếu đáp án</div>
+                <div class="checkline"><span class="checkmark"><svg class="icon"><use href="#i-check"/></svg></span>Chưa có onboarding đang chạy</div>
+                <div class="checkline"><span class="checkmark"><svg class="icon"><use href="#i-check"/></svg></span>File nằm trong Files/Onboarding</div>
+              </div>
+            </div>
+          </aside>
+        </div>
+        <section class="card" id="provision-progress" style="margin-top:20px" hidden>
+          <div class="card-head"><div><div class="card-title" id="progress-title">Đang tạo lộ trình</div><div class="card-sub" id="progress-copy">B1 · Ghi hồ sơ nhân sự</div></div><span class="mono" id="progress-value">0%</span></div>
+          <div class="card-body"><div class="progress"><span id="progress-bar" style="width:0"></span></div><div class="actions" style="margin-top:16px"><button class="btn btn-ghost btn-sm" type="button" id="simulate-error">Mô phỏng lỗi kết nối</button></div></div>
+        </section>
+        <section class="alert alert-danger" id="provision-error" style="margin-top:20px" hidden><svg class="icon"><use href="#i-close"/></svg><div style="flex:1"><strong>Khởi tạo bị gián đoạn ở mục 24/37</strong><p>Hồ sơ đã chuyển sang “Khởi tạo lỗi”. Tiếp tục chỉ tạo phần còn thiếu.</p><div class="actions" style="margin-top:12px"><button class="btn btn-primary btn-sm" type="button" id="retry-provision">Tiếp tục</button><button class="btn btn-danger btn-sm" type="button" id="cancel-provision">Hủy</button></div></div></section>
+      </section>
+
+      <section class="screen" id="admin-templates" aria-labelledby="templates-title">
+        <div class="page-head"><div><p class="eyebrow">Position templates / không giới hạn</p><h1 id="templates-title">Template theo vị trí</h1><p>Mỗi tuần là một Stage trong PrivOS List; các ngày là item nằm trong Stage tuần tương ứng.</p></div><button class="btn btn-primary" type="button" id="open-template-create"><svg class="icon"><use href="#i-plus"/></svg>Tạo template</button></div>
+        <div class="toolbar" style="grid-template-columns:1fr 200px auto"><div class="search-wrap"><svg class="icon"><use href="#i-search"/></svg><input class="input" id="template-search" placeholder="Tìm vị trí" aria-label="Tìm vị trí"></div><select class="select" id="template-status-filter" name="template-status-filter" aria-label="Trạng thái template"><option>Mọi trạng thái</option><option>Sẵn sàng</option><option>Đang soạn</option><option>Ngừng dùng</option></select><button class="btn" type="button">Nhập Markdown</button></div>
+        <div class="table-wrap"><table aria-label="Danh sách template"><thead><tr><th>Vị trí</th><th>Stage tuần</th><th>Item ngày</th><th>Bài học</th><th>Câu hỏi</th><th>Thiếu đáp án</th><th>Đang dùng</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+          <tr data-template-row data-name="kế toán tổng hợp"><td><strong>Kế toán tổng hợp</strong></td><td>1</td><td>5</td><td>14</td><td>31</td><td>0</td><td>12</td><td><span class="badge badge-success">Sẵn sàng</span></td><td><button class="btn btn-sm" type="button" data-open-editor>Mở</button></td></tr>
+          <tr data-template-row data-name="chăm sóc khách hàng"><td><strong>Chăm sóc khách hàng</strong></td><td>1</td><td>4</td><td>11</td><td>26</td><td>0</td><td>8</td><td><span class="badge badge-success">Sẵn sàng</span></td><td><button class="btn btn-sm" type="button" data-open-editor>Mở</button></td></tr>
+          <tr data-template-row data-name="intern backend developer python odoo"><td><strong>Intern Backend Developer — Python &amp; Odoo</strong></td><td>5</td><td>25</td><td>25</td><td>50</td><td>0</td><td>5</td><td><span class="badge badge-success">Sẵn sàng</span></td><td><button class="btn btn-sm" type="button" id="open-backend-template">Mở</button></td></tr>
+          <tr data-template-row data-name="nhân viên kho"><td><strong>Nhân viên kho</strong></td><td>1</td><td>3</td><td>7</td><td>15</td><td>0</td><td>0</td><td><span class="badge badge-muted">Ngừng dùng</span></td><td><button class="btn btn-sm" type="button" data-open-editor>Mở</button></td></tr>
+        </tbody></table></div>
+        <div class="pager"><button class="btn btn-sm" type="button" disabled>Trước</button><button class="btn btn-sm" type="button">Sau</button></div>
+      </section>
+
+      <section class="screen" id="admin-template-create" aria-labelledby="create-template-title">
+        <div class="page-head template-create-head">
+          <div>
+            <button class="btn btn-ghost btn-sm" type="button" data-screen="admin-templates">Trở lại danh sách</button>
+            <p class="eyebrow" style="margin-top:16px">Template studio / tạo mới</p>
+            <h1 id="create-template-title">Tạo template onboarding</h1>
+            <p>Biên soạn từng ngày theo thứ tự: nội dung học, tài liệu đính kèm, sau đó là câu hỏi ôn tập.</p>
+          </div>
+          <span class="badge badge-warning" id="builder-status">Bản nháp</span>
+        </div>
+
+        <div class="template-builder" id="template-builder">
+          <aside class="card builder-rail" aria-label="Danh sách ngày onboarding">
+            <div class="card-head"><div><div class="card-title">Stage theo tuần</div><div class="card-sub">Mỗi tuần chứa các item ngày</div></div><span class="mono" id="builder-day-count">01</span></div>
+            <div class="builder-days" id="builder-days">
+              <section class="builder-week-group active" data-builder-week="week-0">
+                <button class="builder-week-head" type="button" data-select-week="week-0"><span class="builder-stage-mark">S01</span><span class="builder-week-copy"><strong>Tuần 0</strong><small>1 item ngày</small></span><span class="builder-week-toggle">›</span></button>
+                <div class="builder-week-days"><button class="builder-day active" type="button" data-builder-day="1" data-day-week="week-0"><span class="builder-day-index">01</span><span class="builder-day-copy"><strong>Ngày 1</strong><small>Đang biên soạn</small></span></button><button class="btn btn-ghost btn-sm builder-add-day" type="button" data-add-day-week="week-0"><svg class="icon"><use href="#i-plus"/></svg>Thêm ngày vào tuần</button></div>
+              </section>
+            </div>
+            <button class="btn btn-ghost btn-sm builder-add-week" type="button" id="builder-add-week"><svg class="icon"><use href="#i-plus"/></svg>Thêm Stage tuần</button>
+          </aside>
+
+          <div class="builder-workspace">
+            <section class="builder-intro" aria-labelledby="template-name-label">
+              <p class="eyebrow">01 / Thông tin template</p>
+              <h2 id="template-name-label">Template này dành cho vị trí nào?</h2>
+              <p>Tên này sẽ xuất hiện khi HR tạo lộ trình cho nhân sự.</p>
+              <input class="input" id="template-name" placeholder="Ví dụ: Intern Backend Developer" aria-label="Tên template">
+              <div class="inline-error" id="template-name-error">Nhập tên template để tiếp tục.</div>
+            </section>
+
+            <section class="builder-stage-editor" aria-labelledby="builder-week-heading">
+              <div class="field"><label for="builder-week-name" id="builder-week-heading">Tên Stage tuần</label><input class="input" id="builder-week-name" name="builder-week-name" value="Tuần 0" aria-describedby="builder-week-help"><small class="muted" id="builder-week-help">Stage này sẽ trở thành một cột tuần trong PrivOS Lists.</small></div>
+              <div class="stage-meta"><code id="builder-week-key">week-0</code><span id="builder-week-item-count">1 item ngày</span><button class="btn btn-danger btn-sm" type="button" id="builder-delete-week">Xóa tuần</button></div>
+            </section>
+
+            <section class="builder-week-empty" id="builder-week-empty" hidden><p class="eyebrow">Stage chưa có item</p><h2>Tuần này chưa có ngày học</h2><p class="muted">Thêm item ngày đầu tiên, sau đó biên soạn bài học và quiz bên trong ngày.</p><button class="btn btn-primary" type="button" id="empty-week-add-day"><svg class="icon"><use href="#i-plus"/></svg>Thêm ngày vào tuần</button></section>
+
+            <div id="builder-day-forms">
+              <div class="builder-day-form active" data-builder-day-form="1">
+                <section class="builder-section">
+                  <div class="builder-section-head">
+                    <div><div class="builder-section-number">02 / Ngày học</div><h2>Đặt tên cho Ngày 1</h2><div class="card-sub">Một tên ngắn giúp nhân sự biết họ sắp học gì.</div></div>
+                    <span class="badge badge-info">Ngày 01</span>
+                  </div>
+                  <div class="builder-section-body">
+                    <div class="field"><label>Tên ngày</label><input class="input builder-day-title" value="Ngày 1" aria-label="Tên Ngày 1"></div>
+                    <div class="field"><label>Mô tả ngắn</label><textarea class="textarea builder-day-description" placeholder="Mục tiêu học tập của ngày này"></textarea></div>
+                  </div>
+                </section>
+
+                <section class="builder-section">
+                  <div class="builder-section-head">
+                    <div><div class="builder-section-number">03 / Nội dung học</div><h2>Bài học và tài liệu</h2><div class="card-sub">Mỗi ngày cần ít nhất một bài học có nội dung.</div></div>
+                    <button class="btn btn-sm add-lesson" type="button"><svg class="icon"><use href="#i-plus"/></svg>Thêm bài học</button>
+                  </div>
+                  <div class="builder-section-body lesson-list">
+                    <article class="lesson-editor">
+                      <div class="editor-row-head"><strong><span class="editor-count">01</span>Bài học</strong><button class="btn btn-ghost btn-sm remove-editor" type="button">Xóa</button></div>
+                      <div class="field"><label>Tiêu đề bài học</label><input class="input lesson-title" placeholder="Ví dụ: Tổng quan quy trình khai thuế"></div>
+                      <div class="field"><label>Nội dung Markdown</label><textarea class="textarea lesson-content" rows="7" placeholder="Nhập nội dung nhân sự cần đọc..."></textarea><span class="inline-error lesson-error">Bài học cần có nội dung.</span></div>
+                      <div class="asset-grid">
+                        <div class="asset-box">
+                          <strong>File đính kèm</strong><p>PDF, tài liệu hoặc hình ảnh từ Files/Onboarding.</p>
+                          <input class="sr-only lesson-file-input" type="file" multiple aria-label="Chọn file đính kèm cho bài học">
+                          <button class="btn btn-sm choose-file" type="button">Chọn file</button>
+                          <div class="asset-files" aria-live="polite"></div>
+                        </div>
+                        <div class="asset-box">
+                          <strong>Video</strong><p>YouTube, Vimeo hoặc Google Drive.</p>
+                          <input class="input lesson-video" type="url" placeholder="Dán liên kết video" aria-label="Liên kết video">
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+                </section>
+
+                <section class="builder-section">
+                  <div class="builder-section-head">
+                    <div><div class="builder-section-number">04 / Câu hỏi ôn tập</div><h2>Quiz trong ngày</h2><div class="card-sub">Chọn một hoặc nhiều đáp án đúng; hệ thống chấm tất cả hoặc không.</div></div>
+                    <button class="btn btn-sm add-question" type="button"><svg class="icon"><use href="#i-plus"/></svg>Thêm câu hỏi</button>
+                  </div>
+                  <div class="builder-section-body question-list">
+                    <article class="question-editor">
+                      <div class="editor-row-head"><strong><span class="editor-count">01</span>Câu hỏi</strong><button class="btn btn-ghost btn-sm remove-editor" type="button">Xóa</button></div>
+                      <div class="field"><label>Nội dung câu hỏi</label><textarea class="textarea question-prompt" placeholder="Nhập câu hỏi..."></textarea></div>
+                      <div class="field"><div class="field-label">Các lựa chọn</div><div class="question-hint">Đánh dấu ô tròn bên phải để chọn đáp án đúng.</div></div>
+                      <div class="question-options">
+                        <div class="builder-option"><span class="builder-option-letter">a</span><input class="input option-copy" placeholder="Lựa chọn A" aria-label="Lựa chọn A"><input class="answer-key" type="checkbox" aria-label="A là đáp án đúng"><button class="btn btn-ghost btn-sm remove-option" type="button" aria-label="Xóa lựa chọn A">×</button></div>
+                        <div class="builder-option"><span class="builder-option-letter">b</span><input class="input option-copy" placeholder="Lựa chọn B" aria-label="Lựa chọn B"><input class="answer-key" type="checkbox" aria-label="B là đáp án đúng"><button class="btn btn-ghost btn-sm remove-option" type="button" aria-label="Xóa lựa chọn B">×</button></div>
+                      </div>
+                      <button class="btn btn-ghost btn-sm add-option" type="button" style="justify-self:start"><svg class="icon"><use href="#i-plus"/></svg>Thêm lựa chọn</button>
+                      <div class="inline-error question-error">Chọn ít nhất một đáp án đúng.</div>
+                      <div class="field"><label>Giải thích sau khi nộp</label><textarea class="textarea question-explanation" placeholder="Giải thích vì sao đáp án đúng"></textarea></div>
+                    </article>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+
+          <aside class="card publish-panel" aria-label="Kiểm tra template">
+            <div class="card-head"><div><div class="card-title">Kiểm tra trước khi dùng</div><div class="card-sub">Lưu nháp bất kỳ lúc nào</div></div></div>
+            <div class="card-body">
+              <div class="readiness-score"><div><strong id="readiness-percent">0%</strong><div class="card-sub">đủ điều kiện</div></div><span class="badge badge-warning" id="readiness-badge">Cần bổ sung</span></div>
+              <div class="progress"><span id="readiness-progress" style="width:0"></span></div>
+              <div class="readiness-list">
+                <div class="readiness-item" data-readiness="name"><span class="readiness-icon">1</span><span><strong>Tên template</strong><small>Cho biết vị trí áp dụng</small></span></div>
+                <div class="readiness-item" data-readiness="structure"><span class="readiness-icon">2</span><span><strong>Stage và item ngày</strong><small>Mỗi tuần có ít nhất một ngày</small></span></div>
+                <div class="readiness-item" data-readiness="lesson"><span class="readiness-icon">3</span><span><strong>Nội dung mỗi ngày</strong><small>Ít nhất một bài học</small></span></div>
+                <div class="readiness-item" data-readiness="answer"><span class="readiness-icon">4</span><span><strong>Đáp án quiz</strong><small>Mọi câu đều có đáp án</small></span></div>
+              </div>
+              <div class="alert alert-warning" id="builder-warning"><svg class="icon"><use href="#i-close"/></svg><div><strong>Template chưa sẵn sàng</strong><p id="builder-warning-copy">Còn 4 mục cần hoàn thiện.</p></div></div>
+            </div>
+          </aside>
+
+        </div>
+      </section>
+
+      <section class="screen" id="admin-template-editor" aria-labelledby="editor-title">
+        <div class="page-head"><div><button class="btn btn-ghost btn-sm" type="button" data-screen="admin-templates">Trở lại danh sách</button><p class="eyebrow" style="margin-top:16px">Template editor / autosave</p><h1 id="editor-title">Lập trình viên backend</h1><p>10 ngày · 32 bài · 74 câu · <span style="color:var(--red)">2 câu thiếu đáp án</span></p></div><div class="actions"><span class="muted" id="save-status">Đã lưu 14:02</span><button class="btn" type="button" id="save-template">Lưu</button><button class="btn btn-primary" type="button" id="mark-ready">Đánh dấu Sẵn sàng</button></div></div>
+        <div class="alert alert-warning" id="template-warning" style="margin-bottom:16px"><svg class="icon"><use href="#i-close"/></svg><div><strong>Chưa thể đánh dấu Sẵn sàng</strong><p>Ngày 3 còn 2 câu hỏi thiếu đáp án. Chọn câu được viền đỏ để bổ sung.</p></div></div>
+        <div class="template-layout">
+          <section class="card days-panel"><div class="card-head"><div><div class="card-title">Ngày học</div><div class="card-sub">Tự do, không khóa ngày</div></div></div><div class="day-list" id="editor-days"><button class="day-button" type="button" data-day="1"><span>Ngày 1</span><small>3 · 5</small></button><button class="day-button" type="button" data-day="2"><span>Ngày 2</span><small>4 · 6</small></button><button class="day-button active" type="button" data-day="3"><span>Ngày 3</span><small>3 · 8</small></button><button class="day-button" type="button" data-day="4"><span>Ngày 4</span><small>2 · 12</small></button><button class="day-button" type="button" data-day="5"><span>Ngày 5</span><small>2 · 9</small></button><button class="day-button" type="button" id="add-day"><span>Thêm ngày</span><small>+</small></button></div></section>
+          <section class="card items-panel"><div class="card-head"><div><div class="card-title" id="editor-day-title">Ngày 3 · Kiến trúc dịch vụ</div><div class="card-sub">Kéo để sắp xếp</div></div></div><div class="item-list"><div class="item"><span class="drag">::</span><span class="item-kind">Bài</span><span>Tổng quan các service</span></div><div class="item"><span class="drag">::</span><span class="item-kind">Bài</span><span>Quy ước API nội bộ</span></div><div class="item"><span class="drag">::</span><span class="item-kind">Bài</span><span>Chạy môi trường local</span></div><div class="item active"><span class="drag">::</span><span class="item-kind">Câu</span><span>Service nào giữ phiên đăng nhập?</span></div><div class="item error" id="missing-answer-item"><span class="drag">::</span><span class="item-kind">Câu</span><span>Những header bắt buộc...</span><span style="margin-left:auto;color:var(--red);font-size:10px">Thiếu đáp án</span></div><div class="actions" style="margin-top:12px"><button class="btn btn-sm" type="button">Thêm bài</button><button class="btn btn-sm" type="button">Thêm câu hỏi</button></div></div></section>
+          <section class="card editor-panel"><div class="card-head"><div><div class="card-title">Câu hỏi</div><div class="card-sub">Chọn một hoặc nhiều đáp án đúng</div></div><span class="badge badge-warning" id="question-state">Chưa hoàn tất</span></div><div class="card-body">
+            <div class="field"><label for="question-copy">Nội dung câu hỏi</label><textarea class="textarea" id="question-copy">Những header nào bắt buộc khi gọi API nội bộ?</textarea></div>
+            <div class="option-edit"><span class="drag">::</span><span class="mono">a</span><input class="input" id="editor-option-a" name="editor-option-a" value="X-Request-Id" aria-label="Lựa chọn a"><input class="answer-key" id="editor-answer-a" name="editor-answer-a" type="checkbox" aria-label="a là đáp án đúng"></div>
+            <div class="option-edit"><span class="drag">::</span><span class="mono">b</span><input class="input" id="editor-option-b" name="editor-option-b" value="Authorization" aria-label="Lựa chọn b"><input class="answer-key" id="editor-answer-b" name="editor-answer-b" type="checkbox" aria-label="b là đáp án đúng"></div>
+            <div class="option-edit"><span class="drag">::</span><span class="mono">c</span><input class="input" id="editor-option-c" name="editor-option-c" value="Content-Type" aria-label="Lựa chọn c"><input class="answer-key" id="editor-answer-c" name="editor-answer-c" type="checkbox" aria-label="c là đáp án đúng"></div>
+            <div class="option-edit"><span class="drag">::</span><span class="mono">d</span><input class="input" id="editor-option-d" name="editor-option-d" value="X-Debug" aria-label="Lựa chọn d"><input class="answer-key" id="editor-answer-d" name="editor-answer-d" type="checkbox" aria-label="d là đáp án đúng"></div>
+            <button class="btn btn-ghost btn-sm" type="button" style="justify-self:start">Thêm lựa chọn</button>
+            <div class="field"><label for="explanation">Giải thích</label><textarea class="textarea" id="explanation" placeholder="Hiện sau khi nhân sự nộp bài"></textarea></div>
+            <div class="actions" style="justify-content:space-between"><button class="btn btn-danger btn-sm" type="button">Xóa câu</button><button class="btn btn-primary btn-sm" type="button" id="save-question">Lưu câu hỏi</button></div>
+            <div class="preview-box"><h3>Bài học mẫu</h3><p>Nội dung Markdown được sanitize trước khi hiển thị. File nằm tại <code>Files/Onboarding/&lt;id vị trí&gt;/</code>.</p><div class="file-row"><span>so-do-local.png</span><button class="btn btn-sm" type="button">Mở</button></div></div>
+          </div></section>
+        </div>
+      </section>
+
+      <section class="screen" id="employee-roadmap" aria-labelledby="roadmap-title">
+        <div class="roadmap-hero">
+          <div style="position:relative;z-index:1"><p class="eyebrow" style="color:currentColor;opacity:.66">Lộ trình của Trần Minh Anh</p><h1 id="roadmap-title">Intern Backend Developer — Python &amp; Odoo</h1><div class="hero-meta"><span>Bắt đầu 15/09/2026</span><span>8/25 ngày hoàn tất · 32%</span><span>5 tuần · mọi ngày đều mở</span></div></div>
+          <div class="hero-score"><strong>82%</strong><small>Điểm trung bình lần đầu</small></div>
+        </div>
+        <div class="roadmap-grid">
+          <section class="card employee-week-list" id="employee-week-list" aria-label="Lộ trình theo tuần"></section>
+          <section class="card focus-card"><p class="focus-number" id="focus-day-number">Tuần 1 · Ngày 08 / 25</p><h2 id="focus-day-title">Control Structures</h2><p class="muted" id="focus-day-objective">Làm chủ if/else, vòng lặp for và while qua bài thực hành trò chơi đoán số.</p><div class="progress" style="margin:24px 0 10px"><span id="focus-day-progress" style="width:50%"></span></div><div class="muted" style="display:flex;justify-content:space-between;font-size:12px"><span id="focus-learning-state">Đã đọc 1/2 bài</span><span id="focus-quiz-state">Quiz chưa làm</span></div><button class="btn btn-primary" type="button" id="open-focus-day" style="margin-top:28px">Tiếp tục Ngày 08<svg class="icon"><use href="#i-arrow"/></svg></button></section>
+        </div>
+      </section>
+
+      <section class="screen" id="employee-day" aria-labelledby="day-title">
+        <div class="page-head"><div><button class="btn btn-ghost btn-sm" type="button" data-screen="employee-roadmap">Trở lại lộ trình</button><p class="eyebrow" id="day-eyebrow" style="margin-top:16px">Tuần 1 · Ngày 08 / 25</p><h1 id="day-title">Control Structures</h1><p id="day-intro">Hai bài học và một bài quiz. Bạn có thể làm quiz bất kỳ lúc nào.</p></div><button class="btn btn-primary mobile-only open-selected-quiz" type="button">Làm quiz</button></div>
+        <div class="lesson-layout">
+          <aside class="card rail compact-rail"><div class="rail-progress" style="height:64%"></div><button class="rail-day done" type="button"><span class="rail-node"><svg class="icon"><use href="#i-check"/></svg></span><span class="rail-copy"><strong>Ngày 01–07</strong><small>Đã hoàn tất</small></span></button><button class="rail-day current" type="button"><span class="rail-node" id="compact-day-number">08</span><span class="rail-copy"><strong id="compact-day-title">Control Structures</strong><small id="compact-day-state">Đang học</small></span></button></aside>
+          <div>
+            <article class="card lesson-card"><div class="card-head"><div><div class="card-title" id="lesson-one-title">Bài 1 · Mục tiêu và nền tảng</div><div class="card-sub">Khoảng 4 phút đọc</div></div><span class="badge badge-success">Đã đọc</span></div><div class="lesson-content"><h2 id="lesson-one-heading">Điều khiển luồng chương trình</h2><p id="lesson-one-copy">Dùng if/else và vòng lặp để điều khiển luồng chương trình Python.</p></div></article>
+            <article class="card lesson-card"><div class="card-head"><div><div class="card-title" id="lesson-two-title">Bài 2 · Thực hành có hướng dẫn</div><div class="card-sub">Khoảng 7 phút · có video và tài liệu</div></div><span class="badge badge-muted" id="lesson-status">Chưa đọc</span></div><div class="lesson-content"><h2 id="lesson-two-heading">Bài thực hành trong ngày</h2><p id="lesson-two-copy">Xây dựng trò chơi đoán số có giới hạn số lượt và thông báo kết quả.</p><div class="video"><button type="button" id="play-video" aria-label="Phát video"><svg class="icon" style="margin:auto"><path d="m9 7 8 5-8 5z"/></svg></button></div><div class="file-row"><span><strong id="lesson-attachment">week-1-day-3-worksheet.pdf</strong><br><small class="muted">PDF · tài liệu thực hành</small></span><button class="btn btn-sm" type="button" id="open-file">Mở tài liệu</button></div><div class="actions" style="justify-content:flex-end;margin-top:20px"><button class="btn" type="button" id="mark-read">Đánh dấu đã đọc</button></div></div></article>
+            <div class="card" style="padding:20px;display:flex;align-items:center;justify-content:space-between;gap:16px"><div><strong id="day-quiz-title">Quiz Ngày 08</strong><div class="muted" id="day-quiz-meta">3 câu · một và nhiều đáp án</div></div><button class="btn btn-primary open-selected-quiz" type="button">Làm quiz<svg class="icon"><use href="#i-arrow"/></svg></button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="employee-quiz" aria-labelledby="quiz-title">
+        <div class="quiz-shell">
+          <div class="page-head"><div><button class="btn btn-ghost btn-sm" type="button" data-screen="employee-day">Trở lại bài học</button><p class="eyebrow" id="quiz-eyebrow" style="margin-top:16px">Ngày 08 · Quiz</p><h1 id="quiz-title">Kiểm tra nhanh · Control Structures</h1><p>Với câu nhiều đáp án, chỉ được tính đúng khi chọn đủ và không chọn thừa.</p></div></div>
+          <div class="quiz-sticky"><span>Đã trả lời <strong id="answered-count">0/3</strong></span><button class="btn btn-primary" id="submit-quiz" type="button" disabled>Nộp bài</button></div>
+          <form id="quiz-form">
+            <fieldset class="question" data-question="q1"><legend class="sr-only">Câu 1</legend><div class="question-number">Câu 01 · Một đáp án</div><h3>Cấu trúc nào phù hợp để duyệt lần lượt từng phần tử trong một list?</h3><label class="option"><input type="radio" name="q1" value="a"><span class="option-letter">A</span><span>if</span></label><label class="option"><input type="radio" name="q1" value="b"><span class="option-letter">B</span><span>for</span></label><label class="option"><input type="radio" name="q1" value="c"><span class="option-letter">C</span><span>try/except</span></label></fieldset>
+            <fieldset class="question" data-question="q2"><legend class="sr-only">Câu 2</legend><div class="question-number">Câu 02 · Nhiều đáp án</div><h3>Kiểu dữ liệu Python nào có thể thay đổi sau khi tạo?</h3><label class="option"><input type="checkbox" name="q2" value="a"><span class="option-letter">A</span><span>list</span></label><label class="option"><input type="checkbox" name="q2" value="b"><span class="option-letter">B</span><span>tuple</span></label><label class="option"><input type="checkbox" name="q2" value="c"><span class="option-letter">C</span><span>dict</span></label><label class="option"><input type="checkbox" name="q2" value="d"><span class="option-letter">D</span><span>set</span></label></fieldset>
+            <fieldset class="question" data-question="q3"><legend class="sr-only">Câu 3</legend><div class="question-number">Câu 03 · Một đáp án</div><h3>Lệnh <code>break</code> làm gì trong vòng lặp?</h3><label class="option"><input type="radio" name="q3" value="a"><span class="option-letter">A</span><span>Thoát vòng lặp gần nhất</span></label><label class="option"><input type="radio" name="q3" value="b"><span class="option-letter">B</span><span>Chạy lại vòng lặp từ đầu</span></label><label class="option"><input type="radio" name="q3" value="c"><span class="option-letter">C</span><span>Bỏ qua lần hiện tại như continue</span></label></fieldset>
+          </form>
+        </div>
+      </section>
+
+      <section class="screen" id="employee-result" aria-labelledby="result-title"><div class="quiz-shell"><div class="page-head"><div><p class="eyebrow" id="result-eyebrow">Ngày 08 · Kết quả</p><h1 id="result-title">Kết quả lần làm</h1><p>Lần đầu là điểm chính thức. Những lần sau vẫn được lưu để bạn theo dõi tiến bộ.</p></div></div><div class="result-hero"><div><div class="result-score" id="result-score">0/3</div><div class="muted">Lần 1 · điểm chính thức</div></div><div class="actions"><button class="btn" type="button" id="retake-quiz">Làm lại</button><button class="btn btn-primary" type="button" data-screen="employee-roadmap">Về lộ trình</button></div></div><div id="result-details"></div></div></section>
+    </main>
+    <div class="builder-actionbar" hidden>
+      <div class="builder-save-state" id="builder-save-state"><span class="builder-save-dot"></span><span>Chưa lưu thay đổi</span></div>
+      <div class="actions"><button class="btn" type="button" id="save-template-draft">Lưu bản nháp</button><button class="btn btn-primary" type="button" id="mark-template-ready" disabled>Đánh dấu Sẵn sàng</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="drawer-scrim" id="hire-drawer" aria-hidden="true" inert>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <div class="drawer-top"><div><p class="eyebrow">Hồ sơ nhân sự</p><h2 id="drawer-title">Trần Minh Anh</h2><span class="badge badge-info" id="drawer-status">Đang học</span></div><button class="btn icon-btn" type="button" id="close-drawer" aria-label="Đóng"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <div class="drawer-content">
+      <div class="summary-list"><div class="summary-line"><span>Vị trí</span><strong>Intern Backend Python/Odoo</strong></div><div class="summary-line"><span>Bắt đầu</span><strong>15/09/2026</strong></div><div class="summary-line"><span>Tiến độ</span><strong>8/25 ngày</strong></div></div>
+      <h3 style="margin-top:28px">Tiến độ theo tuần</h3>
+      <div class="day-summary done"><span class="day-index"><svg class="icon"><use href="#i-check"/></svg></span><span><strong>Week 0 · Git Basic</strong><small>5/5 ngày · hoàn tất</small></span><span class="badge badge-success">Xong</span></div>
+      <div class="day-summary"><span class="day-index">01</span><span><strong>Week 1 · Python Basics</strong><small>3/5 ngày · đang học</small></span></div>
+      <div class="day-summary"><span class="day-index">02</span><span><strong>Week 2 · Intermediate Python</strong><small>Chưa bắt đầu</small></span></div>
+      <div class="day-summary"><span class="day-index">03</span><span><strong>Week 3 · SQL &amp; Databases</strong><small>Chưa bắt đầu</small></span></div>
+      <div class="day-summary"><span class="day-index">04</span><span><strong>Tuần 4 · Odoo Backend</strong><small>Chưa bắt đầu · 5 ngày</small></span></div>
+      <div class="actions" style="justify-content:flex-end;margin-top:28px"><button class="btn btn-danger" type="button" id="open-cancel-hire">Huỷ onboarding</button></div>
+    </div>
+  </aside>
+</div>
+
+<dialog id="cancel-dialog"><div class="dialog-head"><div><h2>Huỷ onboarding?</h2><div class="muted">Lộ trình sẽ bị xoá. Hồ sơ và điểm đã ghi được giữ lại với trạng thái Đã huỷ.</div></div></div><div class="dialog-foot"><button class="btn" type="button" data-close-dialog>Quay lại</button><button class="btn btn-danger" type="button" id="confirm-cancel">Xác nhận huỷ</button></div></dialog>
+<dialog id="delete-builder-week-dialog" aria-labelledby="delete-builder-week-title" aria-describedby="delete-builder-week-description"><div class="dialog-head"><h2 id="delete-builder-week-title">Xóa tuần khỏi template?</h2></div><div class="dialog-body"><p id="delete-builder-week-description"></p></div><div class="dialog-foot"><button class="btn" type="button" data-close-dialog>Giữ lại</button><button class="btn btn-danger" type="button" id="confirm-delete-builder-week">Xóa tuần</button></div></dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><svg class="icon"><use href="#i-check"/></svg><span id="toast-copy">Đã lưu thay đổi</span></div>
+
+<script id="prototype-logic">
+(function (global) {
+  "use strict";
+
+  function screenForRole(role) {
+    return role === "employee" ? "employee-roadmap" : "admin-hires";
+  }
+
+  function answeredCount(answers) {
+    return Object.values(answers).filter(function (selected) {
+      return Array.isArray(selected) && selected.length > 0;
+    }).length;
+  }
+
+  function canSubmit(questions, answers) {
+    return questions.every(function (question) {
+      return Array.isArray(answers[question.id]) && answers[question.id].length > 0;
+    });
+  }
+
+  function sameSet(left, right) {
+    if (left.length !== right.length) return false;
+    var a = left.slice().sort();
+    var b = right.slice().sort();
+    return a.every(function (value, index) { return value === b[index]; });
+  }
+
+  function gradeQuiz(questions, answers) {
+    var details = questions.map(function (question) {
+      return { id: question.id, isCorrect: sameSet(answers[question.id] || [], question.correct) };
+    });
+    return {
+      correct: details.filter(function (detail) { return detail.isCorrect; }).length,
+      total: questions.length,
+      details: details
+    };
+  }
+
+  function progressPercent(completed, total) {
+    if (!Number.isFinite(completed) || !Number.isFinite(total) || total <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((completed / total) * 100)));
+  }
+
+  function normalizedSearch(value) {
+    return String(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("vi");
+  }
+
+  function filterHireRows(rows, filters) {
+    const query = normalizedSearch(filters.query).trim();
+    return rows.filter(function (row) {
+      const matchesQuery = normalizedSearch(row.name).includes(query);
+      const matchesStatus = filters.status === "all" || row.status === filters.status;
+      const matchesPosition = filters.position === "all" || row.position === filters.position;
+      const matchesSummary = filters.summary === "all"
+        || (filters.summary === "quiz-pending" ? row.status === "learning" && row.quiz === "pending" : row.status === filters.summary);
+      return matchesQuery && matchesStatus && matchesPosition && matchesSummary;
+    }).map(function (row) { return row.id; });
+  }
+
+  function createBackendRoadmapDemo() {
+    const pythonDocs = { label:"Python Official Tutorial", url:"https://docs.python.org/3/tutorial/" };
+    const automatePython = { label:"Automate the Boring Stuff", url:"https://automatetheboringstuff.com/" };
+    const realPython = { label:"Real Python Tutorials", url:"https://realpython.com/" };
+    const pythonJson = { label:"Python JSON Documentation", url:"https://docs.python.org/3/library/json.html" };
+    const sqlZoo = { label:"SQLZoo", url:"https://sqlzoo.net/" };
+    const sqliteTutorial = { label:"SQLite Tutorial", url:"https://www.sqlitetutorial.net/" };
+    const odooDocs = { label:"Odoo Developer Documentation", url:"https://www.odoo.com/documentation/19.0/developer.html" };
+    const weeks = [
+      {
+        id:"week-0", title:"Tuần 0 · Git cơ bản", days:[
+          { title:"Git Basics", objective:"Hiểu Git, GitHub và quản lý phiên bản trong repository cục bộ.", topics:["Git và GitHub", "Cài đặt và cấu hình Git", "init, add, commit, status, log"], activity:"Cài Git, cấu hình người dùng, tạo repository và ghi commit đầu tiên.", resources:[{ label:"Git documentation", url:"https://git-scm.com/doc" }] },
+          { title:"Branching and Working with History", objective:"Làm việc an toàn với nhánh, lịch sử và xung đột merge.", topics:["branch, checkout, merge", "Merge conflicts", "reset và revert"], activity:"Tạo hai nhánh, tạo xung đột, giải quyết xung đột và xem lại lịch sử commit.", resources:[{ label:"Pro Git — Branching", url:"https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell" }] },
+          { title:"GitHub and Remote Repositories", objective:"Kết nối repository cục bộ với GitHub và đồng bộ thay đổi.", topics:["remote, push, pull, clone", "SSH và HTTPS", "GitHub UI"], activity:"Tạo repository GitHub, kết nối remote, push, pull và clone repository.", resources:[{ label:"GitHub Git guide", url:"https://docs.github.com/en/get-started/using-git/about-git" }] },
+          { title:"Collaboration and Pull Requests", objective:"Thực hành quy trình cộng tác thông qua fork, issue và pull request.", topics:["Fork và clone", "Tạo và review Pull Request", "Issues và Discussions"], activity:"Fork repository công khai, thay đổi nội dung, mở pull request và review một pull request.", resources:[{ label:"GitHub Pull Requests", url:"https://docs.github.com/en/pull-requests" }] },
+          { title:"Git Capstone and Review", objective:"Tổng hợp các quy trình Git vào một bài đánh giá thực hành.", topics:["Ôn tập lệnh Git", "Git aliases", "Team workflow"], activity:"Hoàn thành First Contributions, gửi pull request và trình bày lại workflow đã dùng.", resources:[{ label:"First Contributions", url:"https://github.com/firstcontributions/first-contributions" }] }
+        ]
+      },
+      {
+        id:"week-1", title:"Tuần 1 · Python cơ bản", days:[
+          { title:"Python Setup, Variables and Data Types", objective:"Thiết lập Ubuntu, PyCharm, virtual environment và nắm các kiểu dữ liệu Python cơ bản.", topics:["Ubuntu và PyCharm", "Virtual environments", "int, float, string, boolean"], activity:"Viết chương trình tính diện tích hình chữ nhật và in kết quả có định dạng.", resources:[pythonDocs, automatePython] },
+          { title:"Python Collections", objective:"Sử dụng list, tuple và dictionary để tổ chức dữ liệu.", topics:["Lists", "Tuples", "Dictionaries", "Indexing và slicing"], activity:"Tạo danh sách dữ liệu mẫu rồi thực hành truy cập, cắt lát và cập nhật phần tử.", resources:[pythonDocs, { label:"W3Schools Python", url:"https://www.w3schools.com/python/" }] },
+          { title:"Control Structures", objective:"Điều khiển luồng chương trình bằng điều kiện và vòng lặp.", topics:["if và else", "for loop", "while loop", "break và continue"], activity:"Xây dựng trò chơi đoán số có giới hạn số lượt và thông báo kết quả.", resources:[pythonDocs, automatePython] },
+          { title:"Functions and Modular Code", objective:"Tách chương trình thành các hàm có tham số và giá trị trả về.", topics:["Định nghĩa hàm", "Parameters", "Return values", "Modular code"], activity:"Viết các hàm tính giai thừa, tổng và giá trị lớn nhất của danh sách.", resources:[pythonDocs] },
+          { title:"Error Handling and Python Exercise", objective:"Xử lý dữ liệu nhập sai và tổng hợp kiến thức Python cơ bản.", topics:["try và except", "Validation", "Formatted strings"], activity:"Nhập danh sách số, tính trung bình và lớn nhất, đồng thời xử lý giá trị không hợp lệ.", resources:[pythonDocs, automatePython] }
+        ]
+      },
+      {
+        id:"week-2", title:"Tuần 2 · Python nâng cao và file", days:[
+          { title:"List Comprehensions and Lambda", objective:"Biến đổi và lọc dữ liệu Python bằng cú pháp ngắn gọn.", topics:["List comprehensions", "Lambda functions", "Filtering và mapping"], activity:"Lọc số chẵn và chuyển đổi một danh sách dữ liệu bằng comprehension và lambda.", resources:[realPython, pythonDocs] },
+          { title:"Modules and Standard Libraries", objective:"Tổ chức code theo module và sử dụng thư viện chuẩn.", topics:["Modules", "math", "random", "datetime"], activity:"Viết script tạo một tập ngày ngẫu nhiên và tính khoảng cách giữa các ngày.", resources:[pythonDocs, realPython] },
+          { title:"File Input and Output", objective:"Đọc, ghi và quản lý lỗi khi làm việc với file văn bản.", topics:["Đọc file", "Ghi file", "Context manager", "File errors"], activity:"Tạo chương trình ghi input của người dùng vào file log rồi đọc lại dữ liệu.", resources:[realPython, automatePython] },
+          { title:"Object-Oriented Programming", objective:"Mô hình hóa dữ liệu bằng class, object, thuộc tính và phương thức.", topics:["Classes", "Objects", "Attributes", "Methods"], activity:"Tạo class Student có tên, điểm và phương thức tính trạng thái đạt hoặc chưa đạt.", resources:[pythonDocs, realPython] },
+          { title:"JSON and Product Exercise", objective:"Kết hợp OOP, file handling và JSON trong một chương trình hoàn chỉnh.", topics:["JSON parsing", "JSON serialization", "Product class", "Validation"], activity:"Đọc danh sách Product từ file, chuyển thành JSON và xử lý dữ liệu sai định dạng.", resources:[pythonJson, realPython] }
+        ]
+      },
+      {
+        id:"week-3", title:"Tuần 3 · SQL và cơ sở dữ liệu", days:[
+          { title:"Database Concepts and SQLite Setup", objective:"Hiểu bảng, hàng, cột, khóa và thiết lập SQLite.", topics:["Tables, rows, columns", "Primary và foreign keys", "SQLite setup"], activity:"Cài SQLite hoặc DBeaver và tạo bảng Employees đầu tiên.", resources:[sqliteTutorial, sqlZoo] },
+          { title:"SQL CRUD Queries", objective:"Thao tác dữ liệu bằng SELECT, INSERT, UPDATE và DELETE.", topics:["SELECT", "INSERT", "UPDATE", "DELETE"], activity:"Tạo dữ liệu mẫu và thực hiện đầy đủ bốn thao tác CRUD trên bảng Employees.", resources:[sqlZoo, { label:"W3Schools SQL", url:"https://www.w3schools.com/sql/" }] },
+          { title:"Filtering and Sorting", objective:"Lọc và sắp xếp kết quả truy vấn theo điều kiện nghiệp vụ.", topics:["WHERE", "ORDER BY", "Comparison operators"], activity:"Truy vấn nhân viên có lương trên 50000 và sắp xếp giảm dần theo lương.", resources:[sqlZoo, sqliteTutorial] },
+          { title:"SQL Aggregations", objective:"Tổng hợp dữ liệu bằng hàm thống kê và GROUP BY.", topics:["COUNT", "SUM", "AVG", "GROUP BY"], activity:"Tính tổng và mức lương trung bình theo từng phòng ban.", resources:[sqlZoo, { label:"Mode SQL Tutorial", url:"https://mode.com/sql-tutorial/" }] },
+          { title:"Joins and SQL Exercise", objective:"Kết nối dữ liệu quan hệ và hoàn thành bài thực hành SQL tuần.", topics:["INNER JOIN", "LEFT JOIN", "Customers và Orders"], activity:"Tạo Customers và Orders, thêm dữ liệu, JOIN tên khách hàng và tính tổng đơn theo khách.", resources:[sqlZoo, sqliteTutorial] }
+        ]
+      },
+      {
+        id:"week-4", title:"Tuần 4 · Odoo Backend", days:[
+          { title:"Odoo Architecture and Module Setup", objective:"Hiểu kiến trúc Odoo và tạo module backend có thể cài đặt.", topics:["Odoo server và addons", "Module manifest", "Models và module structure"], activity:"Tạo module academy_training, khai báo manifest và cài module trên database phát triển.", resources:[odooDocs, pythonDocs] },
+          { title:"Odoo ORM Models and Fields", objective:"Mô hình hóa dữ liệu nghiệp vụ bằng Odoo ORM.", topics:["models.Model", "Char, Integer, Date", "Many2one và One2many"], activity:"Tạo model training.course và training.session cùng quan hệ giữa khóa học và buổi học.", resources:[odooDocs] },
+          { title:"Business Logic, Computed Fields and Constraints", objective:"Viết nghiệp vụ an toàn bằng model methods, computed fields và constraints.", topics:["@api.depends", "@api.constrains", "create và write", "Recordsets"], activity:"Tính số chỗ còn lại và chặn số người đăng ký vượt sức chứa của buổi học.", resources:[odooDocs, pythonDocs] },
+          { title:"Access Rights, Record Rules and Views", objective:"Cấu hình quyền truy cập và giao diện quản trị tối thiểu cho module.", topics:["ir.model.access.csv", "Record rules", "Tree và form views", "Actions và menus"], activity:"Tạo nhóm Training User/Manager, phân quyền model và thêm menu quản lý khóa học.", resources:[odooDocs] },
+          { title:"Odoo Mini Module Capstone", objective:"Hoàn thiện và kiểm thử một module Odoo backend nhỏ theo yêu cầu nghiệp vụ.", topics:["Module upgrade", "Demo data", "TransactionCase", "Code review"], activity:"Hoàn thiện module quản lý khóa học, thêm demo data, kiểm thử ORM và trình bày luồng nghiệp vụ.", resources:[odooDocs, { label:"Odoo Testing Reference", url:"https://www.odoo.com/documentation/19.0/developer/reference/backend/testing.html" }] }
+        ]
+      }
+    ];
+    let dayNumber = 0;
+    return {
+      templateName:"Intern Backend Developer — Python & Odoo",
+      weeks:weeks.map(function (week, weekIndex) {
+        return {
+          id:week.id,
+          title:week.title,
+          days:week.days.map(function (day, dayIndex) {
+            dayNumber += 1;
+            return {
+              id:"day-" + dayNumber,
+              title:day.title,
+              objective:day.objective,
+              topics:day.topics,
+              activity:day.activity,
+              resources:day.resources,
+              attachment:"week-" + weekIndex + "-day-" + (dayIndex + 1) + "-worksheet.pdf",
+              questions:[
+                {
+                  prompt:"Mục tiêu chính của “" + day.title + "” là gì?",
+                  explanation:"Mục tiêu của ngày học là: " + day.objective,
+                  options:[
+                    { text:day.objective, correct:true },
+                    { text:"Chỉ đọc tài liệu mà không cần thực hành.", correct:false },
+                    { text:"Bỏ qua chủ đề và chuyển thẳng sang bài cuối khóa.", correct:false }
+                  ]
+                },
+                {
+                  prompt:"Hoạt động thực hành của ngày này là gì?",
+                  explanation:"Hoạt động được yêu cầu: " + day.activity,
+                  options:[
+                    { text:day.activity, correct:true },
+                    { text:"Chỉ ghi chú lý thuyết, không chạy code hoặc câu lệnh.", correct:false },
+                    { text:"Không cần nộp hoặc trình bày kết quả.", correct:false }
+                  ]
+                }
+              ]
+            };
+          })
+        };
+      })
+    };
+  }
+
+  function createPrivosWeekStages(roadmap) {
+    return roadmap.weeks.map(function (week, stageOrder) {
+      return {
+        key:week.id,
+        name:week.title,
+        order:stageOrder,
+        items:week.days.map(function (day, dayOrder) {
+          return {
+            key:day.id,
+            name:day.title,
+            kind:"day",
+            parentKey:"overview",
+            stageKey:week.id,
+            order:dayOrder
+          };
+        })
+      };
+    });
+  }
+
+  function createTemplateDraft() {
+    return {
+      name: "",
+      status: "draft",
+      days: [
+        {
+          id: "day-1",
+          title: "Ngày 1",
+          lessons: [],
+          questions: []
+        }
+      ]
+    };
+  }
+
+  function validateTemplateDraft(draft) {
+    const issues = [];
+    if (!draft.name.trim()) issues.push({ code: "template_name_required", path: "name" });
+    draft.days.forEach(function (day) {
+      const dayPath = "days." + day.id;
+      if (!day.lessons.some(function (lesson) { return lesson.content.trim().length > 0; })) {
+        issues.push({ code: "lesson_required", path: dayPath + ".lessons" });
+      }
+      day.questions.forEach(function (question, index) {
+        const questionPath = dayPath + ".questions." + index;
+        if (!question.prompt.trim()) {
+          issues.push({ code: "question_prompt_required", path: questionPath + ".prompt" });
+        }
+        if (question.options.filter(function (option) { return option.text.trim().length > 0; }).length < 2) {
+          issues.push({ code: "question_options_required", path: questionPath + ".options" });
+        }
+        if (!question.options.some(function (option) { return option.correct && option.text.trim().length > 0; })) {
+          issues.push({ code: "question_answer_required", path: questionPath });
+        }
+      });
+    });
+    return { ready: issues.length === 0, issues: issues };
+  }
+
+  function removeTemplateWeek(weeks, weekId) {
+    if (weeks.length <= 1) return null;
+    const index = weeks.findIndex(function (week) { return week.id === weekId; });
+    if (index < 0) return null;
+    return {
+      weeks: weeks.filter(function (week) { return week.id !== weekId; }),
+      removedDayNumbers: weeks[index].dayNumbers.slice(),
+      selectedWeekId: weeks[index + 1]?.id || weeks[index - 1].id
+    };
+  }
+
+  global.OnboardingPrototypeLogic = Object.freeze({
+    screenForRole: screenForRole,
+    answeredCount: answeredCount,
+    canSubmit: canSubmit,
+    gradeQuiz: gradeQuiz,
+    createBackendRoadmapDemo: createBackendRoadmapDemo,
+    createPrivosWeekStages: createPrivosWeekStages,
+    createTemplateDraft: createTemplateDraft,
+    validateTemplateDraft: validateTemplateDraft,
+    progressPercent: progressPercent,
+    filterHireRows: filterHireRows,
+    removeTemplateWeek: removeTemplateWeek
+  });
+})(globalThis);
+</script>
+
+<script>
+(function () {
+  "use strict";
+  const logic = globalThis.OnboardingPrototypeLogic;
+  const state = { role:"admin", adminScreen:"admin-hires", language:"vi", answers:{}, attempt:1, hireSummary:"all", selectedDay:8 };
+  const controlStructureQuestions = [
+    { id:"q1", prompt:"Cấu trúc nào phù hợp để duyệt lần lượt từng phần tử trong một list?", correct:["b"], explanation:"Vòng lặp for duyệt lần lượt từng phần tử trong một iterable như list.", options:["if", "for", "try/except"] },
+    { id:"q2", prompt:"Kiểu dữ liệu Python nào có thể thay đổi sau khi tạo?", correct:["a","c","d"], explanation:"List, dict và set là mutable; tuple là immutable.", options:["list", "tuple", "dict", "set"] },
+    { id:"q3", prompt:"Lệnh break làm gì trong vòng lặp?", correct:["a"], explanation:"break kết thúc ngay vòng lặp gần nhất; continue chỉ bỏ qua lần lặp hiện tại.", options:["Thoát vòng lặp gần nhất", "Chạy lại vòng lặp từ đầu", "Bỏ qua lần hiện tại như continue"] }
+  ];
+  let questions = controlStructureQuestions;
+  const roadmapDemo = logic.createBackendRoadmapDemo();
+  const roadmapDays = [];
+  roadmapDemo.weeks.forEach((week, weekIndex) => week.days.forEach((day) => roadmapDays.push({ day, week, weekIndex, dayNumber:roadmapDays.length + 1 })));
+  const translations = {
+    vi:{ people:"Nhân sự", newOnboarding:"Onboarding mới", templates:"Template", myRoadmap:"Lộ trình của tôi", createRoadmap:"Tạo onboarding" },
+    en:{ people:"People", newOnboarding:"New onboarding", templates:"Templates", myRoadmap:"My roadmap", createRoadmap:"Create onboarding" }
+  };
+  const contextNames = {
+    "admin-hires":"Nhân sự", "admin-provision":"Onboarding nhân sự mới", "admin-templates":"Template", "admin-template-create":"Tạo template", "admin-template-editor":"Sửa template",
+    "employee-roadmap":"Lộ trình của tôi", "employee-day":"Ngày 8 · Control Structures", "employee-quiz":"Quiz ngày 8", "employee-result":"Kết quả"
+  };
+
+  const one = (selector, root=document) => root.querySelector(selector);
+  const all = (selector, root=document) => Array.from(root.querySelectorAll(selector));
+
+  function showScreen(id) {
+    all(".screen").forEach((screen) => screen.classList.toggle("active", screen.id === id));
+    all(".nav-btn").forEach((button) => button.classList.toggle("active", button.dataset.screen === id || (["admin-template-create","admin-template-editor"].includes(id) && button.dataset.screen === "admin-templates") || (state.role === "employee" && button.dataset.screen === "employee-roadmap")));
+    one(".builder-actionbar").hidden = id !== "admin-template-create";
+    one("#context-label").textContent = contextNames[id] || "Onboarding";
+    if (id.startsWith("admin-")) state.adminScreen = id;
+    window.scrollTo({ top:0, behavior:"smooth" });
+  }
+
+  function setRole(role) {
+    state.role = role;
+    all("[data-role]").forEach((button) => button.classList.toggle("active", button.dataset.role === role));
+    one(".admin-nav").hidden = role !== "admin";
+    one(".employee-nav").hidden = role !== "employee";
+    one(".nav-label").textContent = role === "admin" ? "Quản trị" : "Học tập";
+    one("#session-role-note").textContent = role === "admin" ? "Phiên owner/admin · dữ liệu demo" : "Phiên nhân sự · Trần Minh Anh";
+    showScreen(role === "admin" ? state.adminScreen : logic.screenForRole("employee"));
+  }
+
+  function toast(message) {
+    one("#toast-copy").textContent = message;
+    one("#toast").classList.add("show");
+    window.clearTimeout(toast.timer);
+    toast.timer = window.setTimeout(() => one("#toast").classList.remove("show"), 2200);
+  }
+
+  function closeDialog(button) {
+    const dialog = button.closest("dialog");
+    if (dialog) dialog.close();
+  }
+
+  all("[data-screen]").forEach((button) => button.addEventListener("click", () => showScreen(button.dataset.screen)));
+  all("[data-role]").forEach((button) => button.addEventListener("click", () => setRole(button.dataset.role)));
+  all("[data-theme]").forEach((button) => button.addEventListener("click", () => {
+    document.documentElement.dataset.themeMode = button.dataset.theme;
+    all("[data-theme]").forEach((item) => item.classList.toggle("active", item === button));
+  }));
+  all("[data-lang]").forEach((button) => button.addEventListener("click", () => {
+    state.language = button.dataset.lang;
+    document.documentElement.lang = state.language;
+    all("[data-lang]").forEach((item) => item.classList.toggle("active", item === button));
+    all("[data-i18n]").forEach((item) => { item.textContent = translations[state.language][item.dataset.i18n]; });
+    toast(state.language === "vi" ? "Đã chuyển sang tiếng Việt" : "Interface switched to English");
+  }));
+
+  const summaryLabels = { all:"Tất cả trạng thái", learning:"Đang onboarding", done:"Hoàn tất tháng 9", "quiz-pending":"Chưa nộp quiz đầu tiên", error:"Cần xử lý" };
+  const filterHires = () => {
+    const rows = all("[data-hire-row]");
+    const visibleIds = new Set(logic.filterHireRows(rows.map((row) => ({
+      id:row.dataset.hireId,
+      name:row.dataset.name,
+      status:row.dataset.status,
+      position:row.dataset.position,
+      quiz:row.dataset.quiz
+    })), {
+      query:one("#hire-search").value,
+      status:one("#status-filter").value,
+      position:one("#position-filter").value,
+      summary:state.hireSummary
+    }));
+    rows.forEach((row) => { row.hidden = !visibleIds.has(row.dataset.hireId); });
+    one("#hire-empty").style.display = visibleIds.size ? "none" : "block";
+    one("#hire-result-count").textContent = `Đang hiển thị ${visibleIds.size} hồ sơ mẫu`;
+    one("#active-summary-filter").textContent = summaryLabels[state.hireSummary];
+  };
+  ["#hire-search","#status-filter","#position-filter"].forEach((selector) => one(selector).addEventListener("input", filterHires));
+  all("[data-summary-filter]").forEach((button) => button.addEventListener("click", () => {
+    state.hireSummary = state.hireSummary === button.dataset.summaryFilter ? "all" : button.dataset.summaryFilter;
+    all("[data-summary-filter]").forEach((item) => item.setAttribute("aria-pressed", String(item.dataset.summaryFilter === state.hireSummary)));
+    filterHires();
+  }));
+  one("#clear-filters").addEventListener("click", () => {
+    one("#hire-search").value="";
+    one("#status-filter").value="all";
+    one("#position-filter").value="all";
+    state.hireSummary="all";
+    all("[data-summary-filter]").forEach((item) => item.setAttribute("aria-pressed", "false"));
+    filterHires();
+  });
+
+  all("[data-hire-row]").forEach((row) => row.addEventListener("click", (event) => { if (event.target.closest("button")) return; one("#hire-drawer").inert=false; one("#hire-drawer").classList.add("open"); one("#hire-drawer").setAttribute("aria-hidden","false"); }));
+  all("[data-view-roadmap]").forEach((button) => button.addEventListener("click", (event) => { event.stopPropagation(); setRole("employee"); }));
+  one("#close-drawer").addEventListener("click", () => { one("#hire-drawer").classList.remove("open"); one("#hire-drawer").setAttribute("aria-hidden","true"); one("#hire-drawer").inert=true; });
+  one("#hire-drawer").addEventListener("click", (event) => { if (event.target === one("#hire-drawer")) one("#close-drawer").click(); });
+  one("#open-cancel-hire").addEventListener("click", () => one("#cancel-dialog").showModal());
+  one("#confirm-cancel").addEventListener("click", () => { one("#cancel-dialog").close(); one("#drawer-status").className="badge badge-muted"; one("#drawer-status").textContent="Đã huỷ"; toast("Đã huỷ onboarding và giữ lại hồ sơ điểm"); });
+
+  one("#position-input").addEventListener("focus", () => one("#position-options").classList.add("open"));
+  one("#position-input").addEventListener("input", () => one("#position-options").classList.add("open"));
+  all("#position-options button").forEach((button) => button.addEventListener("click", () => { one("#position-input").value=button.textContent; one("#summary-position").textContent=button.textContent; one("#position-options").classList.remove("open"); }));
+  document.addEventListener("click", (event) => { if (!event.target.closest(".typeahead")) one("#position-options").classList.remove("open"); });
+
+  let provisionTimer;
+  function runProvision(startAt=0) {
+    one("#provision-progress").hidden=false; one("#provision-error").hidden=true; one("#step-three").classList.add("active");
+    let progress=startAt;
+    const stages=[[18,"B1 · Ghi hồ sơ nhân sự"],[38,"B2 · Tạo list lộ trình"],[75,"B3 · Copy đủ bài, câu hỏi và đáp án"],[90,"B4 · Gán nhân sự vào lộ trình"],[100,"B5 · Cập nhật số người đang dùng vị trí"]];
+    window.clearInterval(provisionTimer);
+    provisionTimer=window.setInterval(() => {
+      progress=Math.min(100,progress+4); one("#progress-bar").style.width=progress+"%"; one("#progress-value").textContent=progress+"%";
+      const current=stages.find((stage)=>progress<=stage[0]) || stages[stages.length-1]; one("#progress-copy").textContent=current[1];
+      if(progress===100){ window.clearInterval(provisionTimer); one("#progress-title").textContent="Lộ trình đã sẵn sàng"; one("#progress-copy").textContent="Phạm Thu Hà đã được gán vào lộ trình"; toast("Đã tạo lộ trình onboarding"); }
+    },120);
+  }
+  one("#review-provision").addEventListener("click", () => { one("#preflight").hidden=false; one("#step-one").classList.add("done"); one("#step-two").classList.add("active"); one("#review-provision").textContent="Tạo lộ trình"; one("#review-provision").onclick=()=>runProvision(0); });
+  one("#simulate-error").addEventListener("click", () => { window.clearInterval(provisionTimer); one("#provision-progress").hidden=true; one("#provision-error").hidden=false; });
+  one("#retry-provision").addEventListener("click", () => runProvision(62));
+  one("#cancel-provision").addEventListener("click", () => { one("#provision-error").hidden=true; toast("Đã xoá lộ trình lỗi, hồ sơ chuyển sang Đã huỷ"); });
+
+  one("#template-search").addEventListener("input", (event) => { const query=event.target.value.trim().toLocaleLowerCase("vi"); all("[data-template-row]").forEach((row)=>row.hidden=!row.dataset.name.includes(query)); });
+  all("[data-open-editor]").forEach((button)=>button.addEventListener("click",()=>showScreen("admin-template-editor")));
+  one("#open-template-create").addEventListener("click",()=>{ showScreen("admin-template-create"); one("#template-name").focus(); });
+  one("#open-backend-template").addEventListener("click",()=>{ showScreen("admin-template-create"); selectBuilderDay(1); });
+  all("[data-close-dialog]").forEach((button)=>button.addEventListener("click",()=>closeDialog(button)));
+
+  const templateBuilder = one("#template-builder");
+  const builderDayFormTemplate = one('[data-builder-day-form="1"]', templateBuilder).cloneNode(true);
+  let builderDayCount = 1;
+  let builderWeekSerial = 0;
+  let builderStatus = "draft";
+  let builderWeeks = [{ id:"week-0", title:"Tuần 0", dayNumbers:[1] }];
+  let selectedBuilderWeekId = "week-0";
+  let pendingBuilderWeekId = null;
+
+  function syncBuilderDayCount() {
+    const total = builderWeeks.reduce((count, week) => count + week.dayNumbers.length, 0);
+    one("#builder-day-count").textContent = String(total).padStart(2,"0");
+  }
+
+  function collectTemplateDraft() {
+    return {
+      name: one("#template-name").value,
+      status: builderStatus,
+      days: all("[data-builder-day-form]", templateBuilder).map((form) => ({
+        id: `day-${form.dataset.builderDayForm}`,
+        title: one(".builder-day-title", form).value,
+        lessons: all(".lesson-editor", form).map((lesson) => ({ content: one(".lesson-content", lesson).value })),
+        questions: all(".question-editor", form).map((question) => ({
+          prompt: one(".question-prompt", question).value,
+          options: all(".builder-option", question).map((option) => ({
+            text: one(".option-copy", option).value,
+            correct: one(".answer-key", option).checked
+          }))
+        }))
+      }))
+    };
+  }
+
+  function setReadinessItem(name, done) {
+    const item = one(`[data-readiness="${name}"]`, templateBuilder);
+    item.classList.toggle("done", done);
+    item.querySelector(".readiness-icon").innerHTML = done ? '<svg class="icon"><use href="#i-check"/></svg>' : ({ name:"1", structure:"2", lesson:"3", answer:"4" }[name] || "·");
+  }
+
+  function updateTemplateReadiness() {
+    const draft = collectTemplateDraft();
+    const result = logic.validateTemplateDraft(draft);
+    const hasIssue = (prefix) => result.issues.some((issue) => issue.code.startsWith(prefix));
+    const complete = {
+      name: !hasIssue("template_name"),
+      structure: builderWeeks.length > 0 && builderWeeks.every((week) => week.title.trim().length > 0 && week.dayNumbers.length > 0),
+      lesson: !hasIssue("lesson"),
+      answer: !hasIssue("question")
+    };
+    const completed = Object.values(complete).filter(Boolean).length;
+    const percent = Math.round((completed / 4) * 100);
+    const ready = result.ready && complete.structure;
+    one("#readiness-percent").textContent = `${percent}%`;
+    one("#readiness-progress").style.width = `${percent}%`;
+    Object.entries(complete).forEach(([name, done]) => setReadinessItem(name, done));
+    one("#readiness-badge").className = `badge ${ready ? "badge-success" : "badge-warning"}`;
+    one("#readiness-badge").textContent = ready ? "Đã hoàn thiện" : "Cần bổ sung";
+    one("#builder-warning").hidden = ready;
+    one("#builder-warning-copy").textContent = ready ? "Template có thể đưa vào sử dụng." : `Còn ${4 - completed} nhóm thông tin cần hoàn thiện.`;
+    one("#mark-template-ready").disabled = !ready;
+    one("#builder-week-name").classList.toggle("field-error", !complete.structure);
+
+    const nameInput = one("#template-name");
+    nameInput.classList.toggle("field-error", !complete.name);
+    one("#template-name-error").hidden = complete.name;
+
+    all("[data-builder-day-form]", templateBuilder).forEach((form) => {
+      const number = form.dataset.builderDayForm;
+      const day = draft.days.find((item) => item.id === `day-${number}`);
+      const nav = one(`[data-builder-day="${number}"]`, templateBuilder);
+      const title = one(".builder-day-title", form).value.trim() || `Ngày ${number}`;
+      if (nav) one(".builder-day-copy strong", nav).textContent = title;
+      const dayHasLesson = day.lessons.some((lesson) => lesson.content.trim());
+      const dayHasQuestionIssue = result.issues.some((issue) => issue.path.startsWith(`days.day-${number}.questions`));
+      if (nav) one(".builder-day-copy small", nav).textContent = !dayHasLesson ? "Cần nội dung" : dayHasQuestionIssue ? "Cần hoàn thiện quiz" : "Đã hoàn thiện";
+      all(".lesson-editor", form).forEach((lesson) => {
+        const filled = one(".lesson-content", lesson).value.trim().length > 0;
+        one(".lesson-content", lesson).classList.toggle("field-error", !filled);
+        one(".lesson-error", lesson).hidden = filled;
+      });
+      all(".question-editor", form).forEach((question, index) => {
+        const path = `days.day-${number}.questions.${index}`;
+        const codes = result.issues.filter((issue) => issue.path.startsWith(path)).map((issue) => issue.code);
+        const error = one(".question-error", question);
+        error.hidden = codes.length === 0;
+        error.textContent = codes.includes("question_prompt_required") ? "Nhập nội dung câu hỏi." : codes.includes("question_options_required") ? "Nhập ít nhất hai lựa chọn." : "Chọn ít nhất một đáp án đúng.";
+        one(".question-prompt", question).classList.toggle("field-error", codes.includes("question_prompt_required"));
+      });
+    });
+    return { ...result, ready };
+  }
+
+  function markBuilderDirty() {
+    builderStatus = "draft";
+    one("#builder-status").className = "badge badge-warning";
+    one("#builder-status").textContent = "Bản nháp";
+    const saveState = one("#builder-save-state");
+    saveState.classList.remove("saved");
+    saveState.querySelector("span:last-child").textContent = "Chưa lưu thay đổi";
+    updateTemplateReadiness();
+  }
+
+  function renumberEditors(form) {
+    all(".lesson-editor", form).forEach((editor, index) => { one(".editor-count", editor).textContent = String(index + 1).padStart(2,"0"); });
+    all(".question-editor", form).forEach((editor, index) => {
+      one(".editor-count", editor).textContent = String(index + 1).padStart(2,"0");
+      all(".builder-option", editor).forEach((option, optionIndex) => {
+        const letter = String.fromCharCode(97 + optionIndex);
+        one(".builder-option-letter", option).textContent = letter;
+        one(".option-copy", option).setAttribute("aria-label", `Lựa chọn ${letter.toUpperCase()}`);
+        one(".answer-key", option).setAttribute("aria-label", `${letter.toUpperCase()} là đáp án đúng`);
+        one(".remove-option", option).setAttribute("aria-label", `Xóa lựa chọn ${letter.toUpperCase()}`);
+      });
+    });
+  }
+
+  function clearClonedEditor(editor) {
+    all("input,textarea", editor).forEach((field) => {
+      if (field.type === "checkbox") field.checked = false;
+      else field.value = "";
+    });
+    all(".asset-files", editor).forEach((list) => { list.innerHTML = ""; });
+  }
+
+  function syncBuilderWeekEditor() {
+    const week = builderWeeks.find((item) => item.id === selectedBuilderWeekId);
+    if (!week) return;
+    one("#builder-week-name").value = week.title;
+    one("#builder-week-key").textContent = week.id;
+    one("#builder-week-item-count").textContent = `${week.dayNumbers.length} item ngày`;
+    one("#builder-delete-week").disabled = builderWeeks.length <= 1;
+    one("#builder-delete-week").title = builderWeeks.length <= 1 ? "Template cần ít nhất một tuần" : `Xóa ${week.title}`;
+    one("#builder-week-empty").hidden = week.dayNumbers.length > 0;
+    one("#builder-day-forms").hidden = week.dayNumbers.length === 0;
+  }
+
+  function renderBuilderWeekRail() {
+    const rail = one("#builder-days");
+    rail.replaceChildren();
+    builderWeeks.forEach((week, weekIndex) => {
+      const group = document.createElement("section");
+      group.className = `builder-week-group${week.id === selectedBuilderWeekId ? " active" : ""}`;
+      group.dataset.builderWeek = week.id;
+
+      const head = document.createElement("button");
+      head.className = "builder-week-head";
+      head.type = "button";
+      head.dataset.selectWeek = week.id;
+      head.setAttribute("aria-expanded", String(week.id === selectedBuilderWeekId));
+      head.innerHTML = '<span class="builder-stage-mark"></span><span class="builder-week-copy"><strong></strong><small></small></span><span class="builder-week-toggle">›</span>';
+      one(".builder-stage-mark", head).textContent = `S${String(weekIndex + 1).padStart(2,"0")}`;
+      one(".builder-week-copy strong", head).textContent = week.title || `Tuần ${weekIndex + 1}`;
+      one(".builder-week-copy small", head).textContent = `${week.dayNumbers.length} item ngày`;
+
+      const days = document.createElement("div");
+      days.className = "builder-week-days";
+      week.dayNumbers.forEach((number) => {
+        const form = one(`[data-builder-day-form="${number}"]`, templateBuilder);
+        const title = form ? one(".builder-day-title", form).value.trim() : "";
+        const button = document.createElement("button");
+        button.className = "builder-day";
+        button.type = "button";
+        button.dataset.builderDay = String(number);
+        button.dataset.dayWeek = week.id;
+        button.innerHTML = '<span class="builder-day-index"></span><span class="builder-day-copy"><strong></strong><small>Đã hoàn thiện</small></span>';
+        one(".builder-day-index", button).textContent = String(number).padStart(2,"0");
+        one(".builder-day-copy strong", button).textContent = title || `Ngày ${number}`;
+        days.append(button);
+      });
+      const addDay = document.createElement("button");
+      addDay.className = "btn btn-ghost btn-sm builder-add-day";
+      addDay.type = "button";
+      addDay.dataset.addDayWeek = week.id;
+      addDay.innerHTML = '<svg class="icon"><use href="#i-plus"/></svg>Thêm ngày vào tuần';
+      days.append(addDay);
+      group.append(head, days);
+      rail.append(group);
+    });
+  }
+
+  function selectBuilderDay(number) {
+    const nav = one(`[data-builder-day="${number}"]`, templateBuilder);
+    if (nav?.dataset.dayWeek) selectedBuilderWeekId = nav.dataset.dayWeek;
+    all("[data-builder-week]", templateBuilder).forEach((group) => group.classList.toggle("active", group.dataset.builderWeek === selectedBuilderWeekId));
+    all("[data-select-week]", templateBuilder).forEach((head) => head.setAttribute("aria-expanded", String(head.dataset.selectWeek === selectedBuilderWeekId)));
+    all("[data-builder-day]", templateBuilder).forEach((button) => button.classList.toggle("active", button.dataset.builderDay === String(number)));
+    all("[data-builder-day-form]", templateBuilder).forEach((form) => form.classList.toggle("active", form.dataset.builderDayForm === String(number)));
+    syncBuilderWeekEditor();
+  }
+
+  function selectBuilderWeek(weekId) {
+    const week = builderWeeks.find((item) => item.id === weekId);
+    if (!week) return;
+    selectedBuilderWeekId = weekId;
+    renderBuilderWeekRail();
+    if (week.dayNumbers.length > 0) selectBuilderDay(week.dayNumbers[0]);
+    else {
+      all("[data-builder-day-form]", templateBuilder).forEach((form) => form.classList.remove("active"));
+      syncBuilderWeekEditor();
+    }
+    updateTemplateReadiness();
+  }
+
+  function associateBuilderLabels(form) {
+    const number = form.dataset.builderDayForm;
+    all("input,textarea,select", form).forEach((control, index) => {
+      control.id = `builder-day-${number}-control-${index + 1}`;
+      control.name = control.id;
+    });
+    all(".field", form).forEach((field, index) => {
+      const label = one("label", field);
+      const control = one("input,textarea,select", field);
+      if (!label || !control) return;
+      label.htmlFor = control.id;
+    });
+  }
+
+  function addBuilderDay(options = {}) {
+    builderDayCount += 1;
+    const number = builderDayCount;
+    const form = builderDayFormTemplate.cloneNode(true);
+    form.dataset.builderDayForm = String(number);
+    form.classList.remove("active");
+    all(".lesson-editor", form).slice(1).forEach((editor) => editor.remove());
+    all(".question-editor", form).slice(1).forEach((editor) => editor.remove());
+    all(".builder-option", form).slice(2).forEach((option) => option.remove());
+    clearClonedEditor(form);
+    one(".builder-day-title", form).value = `Ngày ${number}`;
+    one(".builder-day-title", form).setAttribute("aria-label", `Tên Ngày ${number}`);
+    one(".builder-section-head h2", form).textContent = `Đặt tên cho Ngày ${number}`;
+    one(".badge-info", form).textContent = `Ngày ${String(number).padStart(2,"0")}`;
+    one("#builder-day-forms").append(form);
+    associateBuilderLabels(form);
+
+    renumberEditors(form);
+    return form;
+  }
+
+  function addDayToWeek(weekId) {
+    const week = builderWeeks.find((item) => item.id === weekId);
+    if (!week) return;
+    addBuilderDay({ silent:true });
+    week.dayNumbers.push(builderDayCount);
+    syncBuilderDayCount();
+    selectedBuilderWeekId = weekId;
+    renderBuilderWeekRail();
+    selectBuilderDay(builderDayCount);
+    markBuilderDirty();
+    toast(`Đã thêm Ngày ${builderDayCount} vào ${week.title}`);
+  }
+
+  function addBuilderWeek() {
+    builderWeekSerial += 1;
+    const number = builderWeekSerial;
+    const id = `week-${number}`;
+    builderWeeks.push({ id, title:`Tuần ${number} · Chủ đề mới`, dayNumbers:[] });
+    selectBuilderWeek(id);
+    markBuilderDirty();
+    one("#builder-week-name").focus();
+    toast(`Đã thêm Stage Tuần ${number}`);
+  }
+
+  function populateQuestionEditor(editor, question) {
+    one(".question-prompt", editor).value = question.prompt;
+    one(".question-explanation", editor).value = question.explanation;
+    const options = one(".question-options", editor);
+    const optionTemplate = one(".builder-option", options);
+    while (all(".builder-option", options).length < question.options.length) {
+      const option = optionTemplate.cloneNode(true);
+      clearClonedEditor(option);
+      options.append(option);
+    }
+    all(".builder-option", options).forEach((option, index) => {
+      const value = question.options[index];
+      if (!value) { option.remove(); return; }
+      one(".option-copy", option).value = value.text;
+      one(".answer-key", option).checked = value.correct;
+    });
+  }
+
+  function populateBuilderDay(form, day) {
+    one(".builder-day-title", form).value = day.title;
+    one(".builder-day-description", form).value = day.objective;
+    const lesson = one(".lesson-editor", form);
+    one(".lesson-title", lesson).value = day.title;
+    one(".lesson-content", lesson).value = [
+      "## Mục tiêu", day.objective, "", "## Nội dung chính",
+      ...day.topics.map((topic) => `- ${topic}`),
+      "", "## Thực hành", day.activity, "", "## Tài nguyên",
+      ...day.resources.map((resource) => `- [${resource.label}](${resource.url})`)
+    ].join("\n");
+    const fileRow = document.createElement("div");
+    fileRow.className = "file-row";
+    const fileName = document.createElement("span");
+    fileName.textContent = day.attachment;
+    const fileState = document.createElement("span");
+    fileState.className = "badge badge-info";
+    fileState.textContent = "Tài liệu";
+    fileRow.append(fileName, fileState);
+    one(".asset-files", lesson).replaceChildren(fileRow);
+
+    const questionList = one(".question-list", form);
+    while (all(".question-editor", questionList).length < day.questions.length) {
+      const editor = one(".question-editor", questionList).cloneNode(true);
+      clearClonedEditor(editor);
+      questionList.append(editor);
+    }
+    all(".question-editor", questionList).forEach((editor, index) => populateQuestionEditor(editor, day.questions[index]));
+    renumberEditors(form);
+    associateBuilderLabels(form);
+  }
+
+  function loadBackendRoadmapDemo() {
+    const roadmap = logic.createBackendRoadmapDemo();
+    const stages = logic.createPrivosWeekStages(roadmap);
+    const days = roadmap.weeks.flatMap((week) => week.days);
+    while (builderDayCount < days.length) addBuilderDay({ silent:true });
+    one("#template-name").value = roadmap.templateName;
+    days.forEach((day, index) => populateBuilderDay(one(`[data-builder-day-form="${index + 1}"]`, templateBuilder), day));
+    builderWeeks = stages.map((stage) => ({
+      id:stage.key,
+      title:stage.name,
+      dayNumbers:stage.items.map((item) => Number(item.key.replace("day-", "")))
+    }));
+    builderWeekSerial = builderWeeks.length - 1;
+    selectedBuilderWeekId = builderWeeks[0].id;
+    renderBuilderWeekRail();
+    syncBuilderDayCount();
+    builderStatus = "ready";
+    one("#builder-status").className = "badge badge-success";
+    one("#builder-status").textContent = "Sẵn sàng";
+    const saveState = one("#builder-save-state");
+    saveState.classList.add("saved");
+    saveState.querySelector("span:last-child").textContent = "5 Stage tuần · 25 item ngày · 50 câu · Đã lưu";
+    selectBuilderDay(1);
+    updateTemplateReadiness();
+  }
+
+  one("#builder-add-week").addEventListener("click", addBuilderWeek);
+  one("#builder-delete-week").addEventListener("click", () => {
+    const week = builderWeeks.find((item) => item.id === selectedBuilderWeekId);
+    if (!week || builderWeeks.length <= 1) return;
+    pendingBuilderWeekId = week.id;
+    one("#delete-builder-week-description").textContent = `Xóa ${week.title} sẽ xóa ${week.dayNumbers.length} ngày cùng toàn bộ bài học và câu hỏi trong tuần này khỏi bản nháp.`;
+    one("#delete-builder-week-dialog").showModal();
+  });
+  one("#delete-builder-week-dialog").addEventListener("close", () => { pendingBuilderWeekId = null; });
+  one("#confirm-delete-builder-week").addEventListener("click", () => {
+    const week = builderWeeks.find((item) => item.id === pendingBuilderWeekId);
+    const removed = logic.removeTemplateWeek(builderWeeks, pendingBuilderWeekId);
+    one("#delete-builder-week-dialog").close();
+    pendingBuilderWeekId = null;
+    if (!week || !removed) return;
+    builderWeeks = removed.weeks;
+    removed.removedDayNumbers.forEach((number) => one(`[data-builder-day-form="${number}"]`, templateBuilder)?.remove());
+    syncBuilderDayCount();
+    selectBuilderWeek(removed.selectedWeekId);
+    markBuilderDirty();
+    one("#builder-week-name").focus();
+    toast(`Đã xóa ${week.title} và ${removed.removedDayNumbers.length} ngày`);
+  });
+  one("#empty-week-add-day").addEventListener("click", () => addDayToWeek(selectedBuilderWeekId));
+  one("#builder-week-name").addEventListener("input", (event) => {
+    const week = builderWeeks.find((item) => item.id === selectedBuilderWeekId);
+    if (!week) return;
+    week.title = event.target.value;
+    const title = one(`[data-builder-week="${week.id}"] .builder-week-copy strong`, templateBuilder);
+    if (title) title.textContent = week.title || "Stage chưa đặt tên";
+  });
+
+  one("#builder-days").addEventListener("click", (event) => {
+    const addDay = event.target.closest("[data-add-day-week]");
+    if (addDay) { addDayToWeek(addDay.dataset.addDayWeek); return; }
+    const button = event.target.closest("[data-builder-day]");
+    if (button) { selectBuilderDay(button.dataset.builderDay); return; }
+    const week = event.target.closest("[data-select-week]");
+    if (week) selectBuilderWeek(week.dataset.selectWeek);
+  });
+
+  templateBuilder.addEventListener("input", (event) => {
+    if (event.target.matches("input,textarea")) markBuilderDirty();
+  });
+  templateBuilder.addEventListener("change", (event) => {
+    if (event.target.matches("input,textarea")) markBuilderDirty();
+  });
+  templateBuilder.addEventListener("click", (event) => {
+    const form = event.target.closest("[data-builder-day-form]");
+    if (!form) return;
+    if (event.target.closest(".add-lesson")) {
+      const list = one(".lesson-list", form);
+      const editor = one(".lesson-editor", form).cloneNode(true);
+      clearClonedEditor(editor);
+      list.append(editor);
+      renumberEditors(form);
+      markBuilderDirty();
+    }
+    if (event.target.closest(".add-question")) {
+      const list = one(".question-list", form);
+      const editor = one(".question-editor", form).cloneNode(true);
+      all(".builder-option", editor).slice(2).forEach((option) => option.remove());
+      clearClonedEditor(editor);
+      list.append(editor);
+      renumberEditors(form);
+      markBuilderDirty();
+    }
+    const addOption = event.target.closest(".add-option");
+    if (addOption) {
+      const question = addOption.closest(".question-editor");
+      const options = all(".builder-option", question);
+      if (options.length >= 10) { toast("Mỗi câu có tối đa 10 lựa chọn"); return; }
+      const option = options[options.length - 1].cloneNode(true);
+      clearClonedEditor(option);
+      one(".question-options", question).append(option);
+      renumberEditors(form);
+      markBuilderDirty();
+    }
+    const removeOption = event.target.closest(".remove-option");
+    if (removeOption) {
+      const question = removeOption.closest(".question-editor");
+      if (all(".builder-option", question).length <= 2) { toast("Mỗi câu cần ít nhất 2 lựa chọn"); return; }
+      removeOption.closest(".builder-option").remove();
+      renumberEditors(form);
+      markBuilderDirty();
+    }
+    const removeEditor = event.target.closest(".remove-editor");
+    if (removeEditor) {
+      const editor = removeEditor.closest(".lesson-editor,.question-editor");
+      const siblings = editor.classList.contains("lesson-editor") ? all(".lesson-editor", form) : all(".question-editor", form);
+      if (siblings.length <= 1) { toast("Giữ lại ít nhất một mục để tiếp tục biên soạn"); return; }
+      editor.remove();
+      renumberEditors(form);
+      markBuilderDirty();
+    }
+    const chooseFile = event.target.closest(".choose-file");
+    if (chooseFile) chooseFile.closest(".asset-box").querySelector(".lesson-file-input").click();
+  });
+  templateBuilder.addEventListener("change", (event) => {
+    if (!event.target.matches(".lesson-file-input")) return;
+    const list = event.target.closest(".asset-box").querySelector(".asset-files");
+    list.innerHTML = "";
+    Array.from(event.target.files).forEach((file) => {
+      const row = document.createElement("div");
+      row.className = "file-row";
+      const name = document.createElement("span");
+      name.textContent = file.name;
+      const state = document.createElement("span");
+      state.className = "badge badge-info";
+      state.textContent = "Đã chọn";
+      row.append(name, state);
+      list.append(row);
+    });
+    markBuilderDirty();
+  });
+
+  one("#save-template-draft").addEventListener("click", () => {
+    updateTemplateReadiness();
+    const saveState = one("#builder-save-state");
+    saveState.classList.add("saved");
+    saveState.querySelector("span:last-child").textContent = `Đã lưu bản nháp lúc ${new Date().toLocaleTimeString("vi-VN", { hour:"2-digit", minute:"2-digit" })}`;
+    toast("Đã lưu bản nháp template");
+  });
+  one("#mark-template-ready").addEventListener("click", () => {
+    const result = updateTemplateReadiness();
+    if (!result.ready) return;
+    builderStatus = "ready";
+    one("#builder-status").className = "badge badge-success";
+    one("#builder-status").textContent = "Sẵn sàng";
+    one("#builder-save-state").classList.add("saved");
+    one("#builder-save-state span:last-child").textContent = "Đã lưu và sẵn sàng sử dụng";
+    toast("Template đã sẵn sàng để tạo lộ trình");
+  });
+  loadBackendRoadmapDemo();
+
+  all("#editor-days [data-day]").forEach((button)=>button.addEventListener("click",()=>{ all("#editor-days [data-day]").forEach((item)=>item.classList.toggle("active",item===button)); one("#editor-day-title").textContent=`Ngày ${button.dataset.day} · Nội dung onboarding`; }));
+  let dayCount=5;
+  one("#add-day").addEventListener("click",()=>{ dayCount+=1; const button=document.createElement("button"); button.className="day-button"; button.type="button"; button.innerHTML=`<span>Ngày ${dayCount}</span><small>0 · 0</small>`; one("#add-day").before(button); toast(`Đã thêm Ngày ${dayCount}`); });
+  one("#save-template").addEventListener("click",()=>{ one("#save-status").textContent="Vừa lưu"; toast("Đã lưu template"); });
+  one("#mark-ready").addEventListener("click",()=>{ one("#template-warning").scrollIntoView({behavior:"smooth",block:"center"}); toast("Còn 2 câu hỏi thiếu đáp án"); });
+  one("#missing-answer-item").addEventListener("click",()=>{ one("#question-copy").focus(); toast("Bổ sung ít nhất một đáp án đúng"); });
+  all("#admin-template-editor .answer-key").forEach((checkbox)=>checkbox.addEventListener("change",()=>{ const hasAnswer=all("#admin-template-editor .answer-key").some((item)=>item.checked); one("#question-state").className=`badge ${hasAnswer?"badge-success":"badge-warning"}`; one("#question-state").textContent=hasAnswer?"Đủ đáp án":"Chưa hoàn tất"; }));
+  one("#save-question").addEventListener("click",()=>{ if(!all("#admin-template-editor .answer-key").some((item)=>item.checked)){ toast("Chọn ít nhất một đáp án đúng"); return; } one("#missing-answer-item").classList.remove("error"); one("#missing-answer-item").querySelector("span:last-child").textContent="Đã đủ đáp án"; one("#missing-answer-item").querySelector("span:last-child").style.color="var(--green)"; toast("Đã lưu câu hỏi"); });
+
+  function dayLearningState(dayNumber) {
+    if (dayNumber <= 7) return { label:"Đã hoàn tất", short:"Xong", progress:100, className:"done" };
+    if (dayNumber === 8) return { label:"Đang học · đã đọc 1/2 bài", short:"Đang học", progress:50, className:"current" };
+    return { label:"Chưa bắt đầu", short:"Mở", progress:0, className:"" };
+  }
+
+  function renderEmployeeWeekList() {
+    const list = one("#employee-week-list");
+    list.replaceChildren();
+    let dayNumber = 0;
+    roadmapDemo.weeks.forEach((week, weekIndex) => {
+      const completed = weekIndex === 0 ? 5 : weekIndex === 1 ? 3 : 0;
+      const section = document.createElement("section");
+      section.className = `employee-week ${weekIndex === 0 ? "done" : weekIndex === 1 ? "current open" : ""}`;
+      section.dataset.employeeWeek = week.id;
+
+      const toggle = document.createElement("button");
+      toggle.className = "employee-week-toggle";
+      toggle.type = "button";
+      toggle.setAttribute("aria-expanded", String(weekIndex === 1));
+      toggle.innerHTML = '<span class="employee-week-stage"></span><span class="employee-week-copy"><strong></strong><small></small></span><span class="employee-week-chevron">›</span>';
+      one(".employee-week-stage", toggle).textContent = `S${String(weekIndex + 1).padStart(2,"0")}`;
+      one(".employee-week-copy strong", toggle).textContent = week.title;
+      one(".employee-week-copy small", toggle).textContent = `${completed}/5 ngày · ${completed === 5 ? "hoàn tất" : completed > 0 ? "đang học" : "chưa bắt đầu"}`;
+      toggle.addEventListener("click", () => {
+        const open = !section.classList.contains("open");
+        all(".employee-week").forEach((item) => { item.classList.remove("open"); one(".employee-week-toggle", item).setAttribute("aria-expanded", "false"); });
+        section.classList.toggle("open", open);
+        toggle.setAttribute("aria-expanded", String(open));
+      });
+
+      const days = document.createElement("div");
+      days.className = "employee-week-days";
+      week.days.forEach((day) => {
+        dayNumber += 1;
+        const currentDay = dayNumber;
+        const learning = dayLearningState(currentDay);
+        const button = document.createElement("button");
+        button.className = `employee-day-link${currentDay === state.selectedDay ? " active" : ""}`;
+        button.type = "button";
+        button.dataset.selectRoadmapDay = String(currentDay);
+        button.innerHTML = '<span></span><strong></strong><small></small>';
+        button.children[0].textContent = String(currentDay).padStart(2,"0");
+        button.children[1].textContent = day.title;
+        button.children[2].textContent = learning.short;
+        button.addEventListener("click", () => selectRoadmapDay(currentDay));
+        days.append(button);
+      });
+      section.append(toggle, days);
+      list.append(section);
+    });
+  }
+
+  function selectRoadmapDay(dayNumber) {
+    const entry = roadmapDays[dayNumber - 1];
+    if (!entry) return;
+    state.selectedDay = dayNumber;
+    const learning = dayLearningState(dayNumber);
+    all("[data-select-roadmap-day]").forEach((button) => button.classList.toggle("active", Number(button.dataset.selectRoadmapDay) === dayNumber));
+    one("#focus-day-number").textContent = `${entry.week.title} · Ngày ${String(dayNumber).padStart(2,"0")} / 25`;
+    one("#focus-day-title").textContent = entry.day.title;
+    one("#focus-day-objective").textContent = entry.day.objective;
+    one("#focus-day-progress").style.width = `${learning.progress}%`;
+    one("#focus-learning-state").textContent = learning.label;
+    one("#focus-quiz-state").textContent = dayNumber <= 7 ? "Quiz đã nộp" : "Quiz có thể làm ngay";
+    one("#open-focus-day").childNodes[0].textContent = `${dayNumber === 8 ? "Tiếp tục" : "Mở"} Ngày ${String(dayNumber).padStart(2,"0")}`;
+  }
+
+  function questionsForDay(entry) {
+    if (entry.dayNumber === 8) return controlStructureQuestions;
+    return entry.day.questions.map((question, index) => ({
+      id:`q${index + 1}`,
+      prompt:question.prompt,
+      explanation:question.explanation,
+      correct:question.options.map((option, optionIndex) => option.correct ? String.fromCharCode(97 + optionIndex) : null).filter(Boolean),
+      options:question.options.map((option) => option.text)
+    }));
+  }
+
+  function renderQuiz(entry) {
+    questions = questionsForDay(entry);
+    state.answers = {};
+    const form = one("#quiz-form");
+    form.replaceChildren();
+    questions.forEach((question, questionIndex) => {
+      const fieldset = document.createElement("fieldset");
+      fieldset.className = "question";
+      fieldset.dataset.question = question.id;
+      const multi = question.correct.length > 1;
+      const legend = document.createElement("legend");
+      legend.className = "sr-only";
+      legend.textContent = `Câu ${questionIndex + 1}`;
+      const number = document.createElement("div");
+      number.className = "question-number";
+      number.textContent = `Câu ${String(questionIndex + 1).padStart(2,"0")} · ${multi ? "Nhiều đáp án" : "Một đáp án"}`;
+      const heading = document.createElement("h3");
+      heading.textContent = question.prompt;
+      fieldset.append(legend, number, heading);
+      question.options.forEach((copy, optionIndex) => {
+        const value = String.fromCharCode(97 + optionIndex);
+        const option = document.createElement("label");
+        option.className = "option";
+        const input = document.createElement("input");
+        input.type = multi ? "checkbox" : "radio";
+        input.name = question.id;
+        input.value = value;
+        const letter = document.createElement("span");
+        letter.className = "option-letter";
+        letter.textContent = value.toUpperCase();
+        const text = document.createElement("span");
+        text.textContent = copy;
+        option.append(input, letter, text);
+        fieldset.append(option);
+      });
+      form.append(fieldset);
+    });
+    all("#quiz-form input").forEach((input) => input.addEventListener("change", updateQuizState));
+    updateQuizState();
+  }
+
+  function openSelectedDay() {
+    const entry = roadmapDays[state.selectedDay - 1];
+    if (!entry) return;
+    const learning = dayLearningState(entry.dayNumber);
+    one("#day-eyebrow").textContent = `${entry.week.title} · Ngày ${String(entry.dayNumber).padStart(2,"0")} / 25`;
+    one("#day-title").textContent = entry.day.title;
+    one("#day-intro").textContent = `${entry.day.objective} Bạn có thể đọc bài hoặc làm quiz ngay.`;
+    one("#compact-day-number").textContent = String(entry.dayNumber).padStart(2,"0");
+    one("#compact-day-title").textContent = entry.day.title;
+    one("#compact-day-state").textContent = learning.label;
+    one("#lesson-one-heading").textContent = entry.day.topics[0] || entry.day.title;
+    one("#lesson-one-copy").textContent = `${entry.day.objective} Nội dung chính: ${entry.day.topics.join(", ")}.`;
+    one("#lesson-two-copy").textContent = entry.day.activity;
+    one("#lesson-attachment").textContent = entry.day.attachment;
+    one("#lesson-status").className = "badge badge-muted";
+    one("#lesson-status").textContent = "Chưa đọc";
+    one("#mark-read").textContent = "Đánh dấu đã đọc";
+    one("#mark-read").disabled = false;
+    one("#day-quiz-title").textContent = `Quiz Ngày ${String(entry.dayNumber).padStart(2,"0")}`;
+    one("#day-quiz-meta").textContent = `${questionsForDay(entry).length} câu · chấm tất cả hoặc không`;
+    one("#quiz-eyebrow").textContent = `Ngày ${String(entry.dayNumber).padStart(2,"0")} · Quiz`;
+    one("#quiz-title").textContent = `Kiểm tra nhanh · ${entry.day.title}`;
+    one("#result-eyebrow").textContent = `Ngày ${String(entry.dayNumber).padStart(2,"0")} · Kết quả`;
+    contextNames["employee-day"] = `Ngày ${entry.dayNumber} · ${entry.day.title}`;
+    contextNames["employee-quiz"] = `Quiz ngày ${entry.dayNumber}`;
+    renderQuiz(entry);
+    showScreen("employee-day");
+  }
+
+  renderEmployeeWeekList();
+  selectRoadmapDay(8);
+  one("#open-focus-day").addEventListener("click", openSelectedDay);
+  all(".open-selected-quiz").forEach((button) => button.addEventListener("click", () => { renderQuiz(roadmapDays[state.selectedDay - 1]); showScreen("employee-quiz"); }));
+  one("#mark-read").addEventListener("click",()=>{ one("#lesson-status").className="badge badge-success"; one("#lesson-status").textContent="Đã đọc"; one("#mark-read").textContent="Đã đọc xong"; one("#mark-read").disabled=true; toast("Đã ghi nhận bài học hoàn tất"); });
+  one("#play-video").addEventListener("click",()=>toast("Trình phát do host PrivOS mở bằng provider embed"));
+  one("#open-file").addEventListener("click",()=>toast(`Mở ${one("#lesson-attachment").textContent} từ Files/Onboarding`));
+
+  function readAnswers() {
+    const answers={};
+    questions.forEach((question)=>{ answers[question.id]=all(`input[name="${question.id}"]:checked`).map((input)=>input.value); });
+    return answers;
+  }
+  function updateQuizState() {
+    state.answers=readAnswers(); const count=logic.answeredCount(state.answers); one("#answered-count").textContent=`${count}/${questions.length}`; one("#submit-quiz").disabled=!logic.canSubmit(questions,state.answers);
+  }
+  one("#submit-quiz").addEventListener("click",()=>{
+    const result=logic.gradeQuiz(questions,state.answers); one("#result-score").textContent=`${result.correct}/${result.total}`;
+    one("#result-details").innerHTML=result.details.map((detail,index)=>`<article class="result-detail ${detail.isCorrect?"correct":"wrong"}"><div class="question-number">Câu ${String(index+1).padStart(2,"0")}</div><h3>${detail.isCorrect?"Đúng":"Chưa đúng"}</h3><p class="muted">${questions[index].explanation}</p></article>`).join("");
+    showScreen("employee-result");
+  });
+  one("#retake-quiz").addEventListener("click",()=>{ state.attempt+=1; one("#quiz-form").reset(); state.answers={}; updateQuizState(); showScreen("employee-quiz"); toast(`Bắt đầu lần làm ${state.attempt}`); });
+
+  document.addEventListener("keydown",(event)=>{ if(event.key==="Escape" && one("#hire-drawer").classList.contains("open")) one("#close-drawer").click(); });
+})();
+</script>
+</body>
+</html>

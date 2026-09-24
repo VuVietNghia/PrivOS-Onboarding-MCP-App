@@ -15,7 +15,7 @@ function delayedApp(inner: McpApp, delayFor: (path: string) => number): McpApp {
     if (ms > 0) await new Promise<void>((resolve) => setTimeout(resolve, ms));
     return innerRest(req);
   };
-  return { rest } as unknown as McpApp;
+  return { rest, callServerTool: inner.callServerTool.bind(inner) } as unknown as McpApp;
 }
 
 function fixture() {
@@ -28,6 +28,8 @@ function fixture() {
   const items: Record<string, unknown>[] = [{ _id: 'root', name: 'Tổng quan', stageId: 'S0', parentId: null, customFields: [] }, task('a', false), task('b', false)];
   const hire: Record<string, unknown> = { _id: 'H1', stageId: 'HS1', customFields: [] };
   const routes: FakeRoute[] = [
+    { method: 'GET', path: 'items.get', reply: (req) => ok({ item: req.query?.itemId === 'H1'
+      ? hire : items.find((entry) => entry._id === req.query?.itemId) }) },
     { method: 'POST', path: 'items.update', reply: (req) => {
       if (req.body.itemId === 'H1') { hire.customFields = req.body.customFields ?? hire.customFields; if (req.body.stageId) hire.stageId = req.body.stageId; return ok({}); }
       const it = items.find((i) => i._id === req.body.itemId) as { customFields: { fieldId: string; value: unknown }[] };
@@ -115,6 +117,8 @@ describe('toggleTask', () => {
     const freshItems = [root, task('a', true), task('b', true)]; // lần đọc sau: cả hai đã xong — 2/2, mô phỏng B đã ghi xong
     const hire: Record<string, unknown> = { _id: 'H1', stageId: 'HS1', customFields: [] };
     const routes: FakeRoute[] = [
+      { method: 'GET', path: 'items.get', reply: (req) => ok({ item: req.query?.itemId === 'H1'
+        ? hire : freshItems.find((entry) => entry._id === req.query?.itemId) }) },
       { method: 'POST', path: 'items.update', reply: (req) => {
         if (req.body.itemId === 'H1') { hire.customFields = req.body.customFields ?? hire.customFields; if (req.body.stageId) hire.stageId = req.body.stageId; }
         return ok({});

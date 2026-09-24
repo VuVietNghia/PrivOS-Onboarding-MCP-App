@@ -66,14 +66,15 @@ export function safeFeatureError(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export async function restCall<T = any>(
+export async function restCall<T = unknown>(
   app: McpApp,
   method: RestRequestParams['method'],
   path: string,
-  opts?: { query?: Record<string, string | number | boolean>; body?: any; timeoutMs?: number },
+  opts?: { query?: Record<string, string | number | boolean>; body?: unknown; timeoutMs?: number },
 ): Promise<T> {
   const res = await app.rest({ method, path, query: opts?.query, body: opts?.body, timeoutMs: opts?.timeoutMs });
-  const body: any = res?.body ?? res;
+  const raw: unknown = res?.body ?? res;
+  const body = raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
   // Meteor's API.v1.failure(message) convention: the real reason travels in
   // `body.error`. Surfacing it lets callers distinguish failure modes (e.g. an
   // unprovisioned bot vs. a task already bound to a different executor)
@@ -88,5 +89,6 @@ export async function restCall<T = any>(
   if (body && body.success === false) {
     throw new PrivosRestError(detail || 'Request failed', res?.statusCode, code);
   }
+  if (!body) throw new PrivosRestError('Invalid Hub response', res?.statusCode);
   return body as T;
 }

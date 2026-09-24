@@ -50,15 +50,21 @@ function getBuiltUi(): ServeBuiltUi {
  * (HMR + breakpoints) instead of the split production bundle. See dev-server.ts.
  */
 let devPublicUrl: string | null = null;
+let devUiHtml: string | null = null;
 
 /** Enable dev mode: iframe loads UI from the Vite dev server at `publicUrl`. */
 export function setDevPublicUrl(publicUrl: string): void {
 	devPublicUrl = publicUrl.replace(/\/$/, '');
 }
 
-/** The shell HTML for the current mode — live dev server, or the built-and-cached production shell. */
+/** Serve the paired Relay P0 test bundle inline so Hub CSP cannot rewrite its script URLs. */
+export function setDevUiHtml(html: string): void {
+	devUiHtml = html;
+}
+
+/** The shell HTML for the current mode — inline P0, live Vite, or production assets. */
 function currentShellHtml(): string {
-	return devPublicUrl ? getDevUiHtml(devPublicUrl) : getBuiltUi().renderHtml();
+	return devUiHtml ?? (devPublicUrl ? getDevUiHtml(devPublicUrl) : getBuiltUi().renderHtml());
 }
 
 /**
@@ -135,15 +141,15 @@ export async function handleMcpMessage(
 
 /**
  * `resources/read` branches on the requested URI: the shell, the assets manifest, or one split
- * asset. Any other URI is refused. Dev mode short-circuits: the live Vite dev server is the only
- * source of truth there, so it echoes the dev shell for whatever URI was requested.
+ * asset. Any other URI is refused. Explicit dev mode substitutes only the shell;
+ * production assets remain readable for an older Hub installation generation.
  */
 function handleResourcesRead(uri: unknown): { contents: unknown[] } {
-	if (devPublicUrl) {
+	if ((devUiHtml || devPublicUrl) && uri === UI_RESOURCE_URI) {
 		return {
 			contents: [
 				{
-					uri: typeof uri === 'string' ? uri : UI_RESOURCE_URI,
+					uri: UI_RESOURCE_URI,
 					mimeType: 'text/html;profile=mcp-app',
 					text: currentShellHtml(),
 				},

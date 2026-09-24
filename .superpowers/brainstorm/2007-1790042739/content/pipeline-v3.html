@@ -1,0 +1,458 @@
+<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>Onboarding v2 — pipeline 3 phần (22/09)</title><style>body{margin:0;padding:28px;background:#e9ebef;font-family:Montserrat,system-ui,sans-serif}h1{font-size:1.1rem;margin:0 0 4px}.sub{color:#6C737A;font-size:.85rem;margin:0 0 20px}.lbl{font-size:.75rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#6C737A;margin:0 0 8px}.lbl b{color:#5b6ee1}.lbl span{text-transform:none;letter-spacing:0;font-weight:400;color:#9EA2A8;margin-left:8px}section{margin-bottom:32px}iframe{width:100%;max-width:1160px;border:1px solid #d5d8de;border-radius:8px;background:#fff;display:block}</style></head><body><h1>Onboarding v2 — pipeline 3 phần</h1><p class="sub">Kiến trúc → Khởi tạo lộ trình → Học và nộp quiz. Bản sửa 22/09: file đính kèm ở Files/Onboarding. Quay lại <a href="/">preview màn hình</a>.</p><section><p class="lbl"><b>Phần 1</b> · Kiến trúc: list lưu trữ và 2 vai trò <span>docs/diagrams/onboarding-v2-phan-1.html</span></p><iframe onload="this.style.height=(this.contentDocument.documentElement.scrollHeight+4)+'px'" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;vi&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;title&gt;Onboarding app v2 — Phần 1: dữ liệu và phân quyền&lt;/title&gt;
+  &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans:wght@400;500;600&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+  &lt;style&gt;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Geist', 'Noto Sans', system-ui, sans-serif; background: #f5f5f5; color: #2d3142; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #4f5d75; margin-bottom: 0.5rem; }
+    h1 { font-family: 'Instrument Serif', 'Noto Serif', serif; font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+    .n  { font-family: 'Geist', 'Noto Sans', sans-serif; font-size: 12px; font-weight: 600; fill: #2d3142; }
+    .s  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 9px; fill: #4f5d75; }
+    .f  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 9px; fill: #7a8399; }
+    .t  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 7px; letter-spacing: 0.08em; }
+    .a  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 8px; letter-spacing: 0.06em; fill: #7a8399; }
+    .lg { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 8px; letter-spacing: 0.14em; fill: #4f5d75; }
+    .c  { font-family: 'Instrument Serif', 'Noto Serif', serif; font-style: italic; font-size: 14px; fill: #4f5d75; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;frame&quot;&gt;
+    &lt;p class=&quot;eyebrow&quot;&gt;Architecture · Secure paved road · v2 · Phần 1&lt;/p&gt;
+    &lt;h1&gt;Onboarding app v2: list lưu trữ và phân quyền 2 vai trò&lt;/h1&gt;
+
+    &lt;svg viewBox=&quot;0 0 1000 700&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; role=&quot;img&quot; aria-labelledby=&quot;onboarding-v2-phan-1-title onboarding-v2-phan-1-desc&quot;&gt;
+      &lt;title id=&quot;onboarding-v2-phan-1-title&quot;&gt;Onboarding app v2: list lưu trữ và phân quyền&lt;/title&gt;
+      &lt;desc id=&quot;onboarding-v2-phan-1-desc&quot;&gt;Trong một room, Admin/Owner/HR quản lý sổ vị trí, soạn template theo vị trí và khởi tạo hồ sơ; template được copy nguyên, kể cả đáp án, thành lộ trình riêng của nhân sự; file đính kèm nằm trong thư mục Files/Onboarding của room nên lộ trình chỉ giữ tham chiếu; nhân sự đọc bài và trả lời trên lộ trình của mình, app chấm ngay trên trình duyệt và ghi điểm vào hồ sơ của chính nhân sự đó.&lt;/desc&gt;
+      &lt;defs&gt;
+        &lt;marker id=&quot;arrow&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#4f5d75&quot;/&gt;&lt;/marker&gt;
+        &lt;marker id=&quot;arrow-accent&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#eb6c36&quot;/&gt;&lt;/marker&gt;
+        &lt;marker id=&quot;arrow-link&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#2e5aa8&quot;/&gt;&lt;/marker&gt;
+      &lt;/defs&gt;
+
+      &lt;rect width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;#f5f5f5&quot;/&gt;
+
+      &lt;!-- Zone: one room, all lists isolated --&gt;
+      &lt;rect x=&quot;280&quot; y=&quot;48&quot; width=&quot;680&quot; height=&quot;584&quot; rx=&quot;8&quot; fill=&quot;rgba(45,49,66,0.02)&quot; stroke=&quot;rgba(45,49,66,0.30)&quot; stroke-width=&quot;0.8&quot; stroke-dasharray=&quot;4,4&quot;/&gt;
+      &lt;rect x=&quot;292&quot; y=&quot;42&quot; width=&quot;232&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;408&quot; y=&quot;51&quot; fill=&quot;rgba(45,49,66,0.55)&quot; font-size=&quot;7&quot; font-family=&quot;'Geist Mono', monospace&quot; text-anchor=&quot;middle&quot; letter-spacing=&quot;0.14em&quot;&gt;1 ROOM ONBOARDING · MỌI LIST ISOLATED&lt;/text&gt;
+
+      &lt;!-- Arrows (drawn before nodes) --&gt;
+      &lt;!-- Admin -&gt; Sổ vị trí --&gt;
+      &lt;path d=&quot;M200,108 H320&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- Admin -&gt; Template (over the top) --&gt;
+      &lt;path d=&quot;M160,96 V84 Q160,76 168,76 H792 Q800,76 800,84 V88&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- Admin -&gt; Hồ sơ (khởi tạo) --&gt;
+      &lt;path d=&quot;M200,148 H232 Q240,148 240,156 V492 Q240,500 248,500 H320&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- Sổ vị trí ⇢ Template (ID) --&gt;
+      &lt;path d=&quot;M560,128 H680&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;4,3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- Hồ sơ ⇢ Lộ trình (ID) --&gt;
+      &lt;path d=&quot;M560,520 H680&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;4,3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- Template -&gt; Lộ trình: COPY (focal) --&gt;
+      &lt;path d=&quot;M800,168 V480&quot; fill=&quot;none&quot; stroke=&quot;#eb6c36&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-accent)&quot;/&gt;
+      &lt;!-- Nhân sự -&gt; Lộ trình --&gt;
+      &lt;path d=&quot;M120,584 V604 Q120,612 128,612 H792 Q800,612 800,604 V560&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- Nhân sự -&gt; Hồ sơ (ghi điểm sau khi app chấm) --&gt;
+      &lt;path d=&quot;M200,544 H320&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+
+      &lt;!-- Arrow labels --&gt;
+      &lt;rect x=&quot;236&quot; y=&quot;90&quot; width=&quot;48&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;260&quot; y=&quot;99&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;VỊ TRÍ&lt;/text&gt;
+      &lt;rect x=&quot;560&quot; y=&quot;58&quot; width=&quot;80&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;600&quot; y=&quot;67&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;SOẠN TEMPLATE&lt;/text&gt;
+      &lt;rect x=&quot;256&quot; y=&quot;482&quot; width=&quot;56&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;284&quot; y=&quot;491&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;KHỞI TẠO&lt;/text&gt;
+      &lt;rect x=&quot;584&quot; y=&quot;110&quot; width=&quot;72&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;620&quot; y=&quot;119&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;ID TEMPLATE&lt;/text&gt;
+      &lt;rect x=&quot;584&quot; y=&quot;502&quot; width=&quot;72&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;620&quot; y=&quot;511&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;ID LỘ TRÌNH&lt;/text&gt;
+      &lt;rect x=&quot;810&quot; y=&quot;212&quot; width=&quot;32&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;826&quot; y=&quot;221&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot; style=&quot;fill:#eb6c36&quot;&gt;COPY&lt;/text&gt;
+      &lt;rect x=&quot;456&quot; y=&quot;594&quot; width=&quot;80&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;496&quot; y=&quot;603&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;ĐỌC · TRẢ LỜI&lt;/text&gt;
+      &lt;rect x=&quot;232&quot; y=&quot;526&quot; width=&quot;56&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;260&quot; y=&quot;535&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;GHI ĐIỂM&lt;/text&gt;
+
+      &lt;!-- Callout --&gt;
+      &lt;text x=&quot;816&quot; y=&quot;258&quot; class=&quot;c&quot;&gt;Copy đủ, kể cả&lt;/text&gt;
+      &lt;text x=&quot;816&quot; y=&quot;276&quot; class=&quot;c&quot;&gt;đáp án: app chấm&lt;/text&gt;
+      &lt;text x=&quot;816&quot; y=&quot;294&quot; class=&quot;c&quot;&gt;ngay trên trình duyệt&lt;/text&gt;
+      &lt;text x=&quot;816&quot; y=&quot;340&quot; class=&quot;c&quot;&gt;File đính kèm ở&lt;/text&gt;
+      &lt;text x=&quot;816&quot; y=&quot;358&quot; class=&quot;c&quot;&gt;Files/Onboarding,&lt;/text&gt;
+      &lt;text x=&quot;816&quot; y=&quot;376&quot; class=&quot;c&quot;&gt;lộ trình trỏ tới file&lt;/text&gt;
+
+      &lt;!-- Actor: Admin / Owner / HR --&gt;
+      &lt;rect x=&quot;40&quot; y=&quot;96&quot; width=&quot;160&quot; height=&quot;64&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;40&quot; y=&quot;96&quot; width=&quot;160&quot; height=&quot;64&quot; rx=&quot;6&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#7a8399&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;48&quot; y=&quot;102&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(122,131,153,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;62&quot; y=&quot;111&quot; class=&quot;t&quot; fill=&quot;#7a8399&quot; text-anchor=&quot;middle&quot;&gt;ROLE&lt;/text&gt;
+      &lt;text x=&quot;120&quot; y=&quot;132&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Admin / Owner / HR&lt;/text&gt;
+      &lt;text x=&quot;120&quot; y=&quot;148&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;room owner/admin&lt;/text&gt;
+
+      &lt;!-- Actor: Nhân sự --&gt;
+      &lt;rect x=&quot;40&quot; y=&quot;520&quot; width=&quot;160&quot; height=&quot;64&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;40&quot; y=&quot;520&quot; width=&quot;160&quot; height=&quot;64&quot; rx=&quot;6&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#7a8399&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;48&quot; y=&quot;526&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(122,131,153,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;62&quot; y=&quot;535&quot; class=&quot;t&quot; fill=&quot;#7a8399&quot; text-anchor=&quot;middle&quot;&gt;USER&lt;/text&gt;
+      &lt;text x=&quot;120&quot; y=&quot;556&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Nhân sự mới&lt;/text&gt;
+      &lt;text x=&quot;120&quot; y=&quot;572&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;ASSIGNEE lộ trình + hồ sơ&lt;/text&gt;
+
+      &lt;!-- Store: Sổ vị trí --&gt;
+      &lt;rect x=&quot;320&quot; y=&quot;88&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;320&quot; y=&quot;88&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;328&quot; y=&quot;94&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(79,93,117,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;342&quot; y=&quot;103&quot; class=&quot;t&quot; fill=&quot;#4f5d75&quot; text-anchor=&quot;middle&quot;&gt;REG&lt;/text&gt;
+      &lt;text x=&quot;440&quot; y=&quot;126&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Sổ vị trí&lt;/text&gt;
+      &lt;text x=&quot;440&quot; y=&quot;142&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;onb-positions · 1 item/vị trí&lt;/text&gt;
+      &lt;text x=&quot;440&quot; y=&quot;156&quot; class=&quot;f&quot; text-anchor=&quot;middle&quot;&gt;tìm · phân trang · đếm đang dùng&lt;/text&gt;
+
+      &lt;!-- Store: Template × N (stacked) --&gt;
+      &lt;rect x=&quot;688&quot; y=&quot;96&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot; stroke=&quot;rgba(79,93,117,0.35)&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;680&quot; y=&quot;88&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;680&quot; y=&quot;88&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;688&quot; y=&quot;94&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(79,93,117,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;702&quot; y=&quot;103&quot; class=&quot;t&quot; fill=&quot;#4f5d75&quot; text-anchor=&quot;middle&quot;&gt;TPL&lt;/text&gt;
+      &lt;text x=&quot;800&quot; y=&quot;120&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Template vị trí × N&lt;/text&gt;
+      &lt;text x=&quot;800&quot; y=&quot;136&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;onb-tpl-&amp;lt;id&amp;gt; · stage = Tuần N · item = Ngày&lt;/text&gt;
+      &lt;text x=&quot;800&quot; y=&quot;150&quot; class=&quot;f&quot; text-anchor=&quot;middle&quot;&gt;bài học · câu hỏi · đáp án&lt;/text&gt;
+      &lt;text x=&quot;800&quot; y=&quot;162&quot; class=&quot;f&quot; text-anchor=&quot;middle&quot;&gt;chỉ Admin/HR soạn&lt;/text&gt;
+
+      &lt;!-- Store: Hồ sơ --&gt;
+      &lt;rect x=&quot;320&quot; y=&quot;480&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;320&quot; y=&quot;480&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;328&quot; y=&quot;486&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(79,93,117,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;342&quot; y=&quot;495&quot; class=&quot;t&quot; fill=&quot;#4f5d75&quot; text-anchor=&quot;middle&quot;&gt;HIRE&lt;/text&gt;
+      &lt;text x=&quot;440&quot; y=&quot;518&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Hồ sơ nhân sự&lt;/text&gt;
+      &lt;text x=&quot;440&quot; y=&quot;534&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;onb-hires · điểm từng ngày&lt;/text&gt;
+      &lt;text x=&quot;440&quot; y=&quot;548&quot; class=&quot;f&quot; text-anchor=&quot;middle&quot;&gt;nhân sự thấy hồ sơ của mình&lt;/text&gt;
+
+      &lt;!-- Store: Lộ trình (focal) --&gt;
+      &lt;rect x=&quot;680&quot; y=&quot;480&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;680&quot; y=&quot;480&quot; width=&quot;240&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(235,108,54,0.08)&quot; stroke=&quot;#eb6c36&quot; stroke-width=&quot;1.2&quot;/&gt;
+      &lt;rect x=&quot;688&quot; y=&quot;486&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(235,108,54,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;702&quot; y=&quot;495&quot; class=&quot;t&quot; fill=&quot;#eb6c36&quot; text-anchor=&quot;middle&quot;&gt;RUN&lt;/text&gt;
+      &lt;text x=&quot;800&quot; y=&quot;518&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Lộ trình nhân sự&lt;/text&gt;
+      &lt;text x=&quot;800&quot; y=&quot;534&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;onb-run-&amp;lt;userId&amp;gt;-&amp;lt;ngày&amp;gt;&lt;/text&gt;
+      &lt;text x=&quot;800&quot; y=&quot;548&quot; class=&quot;f&quot; text-anchor=&quot;middle&quot;&gt;bài · câu hỏi · đáp án · trả lời&lt;/text&gt;
+
+      &lt;!-- Legend --&gt;
+      &lt;line x1=&quot;30&quot; y1=&quot;652&quot; x2=&quot;970&quot; y2=&quot;652&quot; stroke=&quot;rgba(45,49,66,0.10)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;40&quot; y=&quot;680&quot; class=&quot;lg&quot;&gt;LEGEND&lt;/text&gt;
+      &lt;line x1=&quot;112&quot; y1=&quot;677&quot; x2=&quot;140&quot; y2=&quot;677&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;text x=&quot;148&quot; y=&quot;680&quot; class=&quot;lg&quot;&gt;THAO TÁC NGƯỜI DÙNG&lt;/text&gt;
+      &lt;line x1=&quot;316&quot; y1=&quot;677&quot; x2=&quot;344&quot; y2=&quot;677&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;4,3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;text x=&quot;352&quot; y=&quot;680&quot; class=&quot;lg&quot;&gt;ID LƯU TRONG FIELD&lt;/text&gt;
+      &lt;line x1=&quot;512&quot; y1=&quot;677&quot; x2=&quot;540&quot; y2=&quot;677&quot; stroke=&quot;#eb6c36&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-accent)&quot;/&gt;
+      &lt;text x=&quot;548&quot; y=&quot;680&quot; class=&quot;lg&quot;&gt;COPY KHI KHỞI TẠO&lt;/text&gt;
+    &lt;/svg&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" style="height:944px"></iframe></section>
+<section><p class="lbl"><b>Phần 2</b> · Khởi tạo: copy template vị trí thành lộ trình <span>docs/diagrams/onboarding-v2-phan-2.html</span></p><iframe onload="this.style.height=(this.contentDocument.documentElement.scrollHeight+4)+'px'" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;vi&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;title&gt;Onboarding app v2 — Phần 2: khởi tạo onboarding&lt;/title&gt;
+  &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans:wght@400;500;600&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+  &lt;style&gt;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Geist', 'Noto Sans', system-ui, sans-serif; background: #f5f5f5; color: #2d3142; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #4f5d75; margin-bottom: 0.5rem; }
+    h1 { font-family: 'Instrument Serif', 'Noto Serif', serif; font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+    .n  { font-family: 'Geist', 'Noto Sans', sans-serif; font-size: 12px; font-weight: 600; fill: #2d3142; }
+    .s  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 9px; fill: #4f5d75; }
+    .t  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 7px; letter-spacing: 0.08em; }
+    .a  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 8px; letter-spacing: 0.06em; fill: #7a8399; }
+    .lg { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 8px; letter-spacing: 0.14em; fill: #4f5d75; }
+    .c  { font-family: 'Instrument Serif', 'Noto Serif', serif; font-style: italic; font-size: 14px; fill: #4f5d75; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;frame&quot;&gt;
+    &lt;p class=&quot;eyebrow&quot;&gt;Flowchart · v2 · Phần 2&lt;/p&gt;
+    &lt;h1&gt;Khởi tạo onboarding: copy template vị trí thành lộ trình&lt;/h1&gt;
+
+    &lt;svg viewBox=&quot;0 0 1000 720&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; role=&quot;img&quot; aria-labelledby=&quot;onboarding-v2-phan-2-title onboarding-v2-phan-2-desc&quot;&gt;
+      &lt;title id=&quot;onboarding-v2-phan-2-title&quot;&gt;Khởi tạo onboarding: copy template vị trí thành lộ trình&lt;/title&gt;
+      &lt;desc id=&quot;onboarding-v2-phan-2-desc&quot;&gt;Admin/HR chọn nhân sự, vị trí và ngày bắt đầu; qua preflight thì ghi hồ sơ, tạo list lộ trình, copy item từ template mà bỏ đáp án, gán nhân sự để họ thấy lộ trình, rồi đếm lại số người đang dùng vị trí; lỗi khi tạo list hoặc copy item chuyển hồ sơ sang trạng thái lỗi để tiếp tục hoặc hủy.&lt;/desc&gt;
+      &lt;defs&gt;
+        &lt;marker id=&quot;arrow&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#4f5d75&quot;/&gt;&lt;/marker&gt;
+        &lt;marker id=&quot;arrow-accent&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#eb6c36&quot;/&gt;&lt;/marker&gt;
+        &lt;marker id=&quot;arrow-link&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#2e5aa8&quot;/&gt;&lt;/marker&gt;
+      &lt;/defs&gt;
+
+      &lt;rect width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;#f5f5f5&quot;/&gt;
+
+      &lt;!-- Zone: steps that can fail mid-way (B2, B3) --&gt;
+      &lt;rect x=&quot;184&quot; y=&quot;284&quot; width=&quot;352&quot; height=&quot;176&quot; rx=&quot;8&quot; fill=&quot;rgba(45,49,66,0.02)&quot; stroke=&quot;rgba(45,49,66,0.30)&quot; stroke-width=&quot;0.8&quot; stroke-dasharray=&quot;4,4&quot;/&gt;
+      &lt;rect x=&quot;424&quot; y=&quot;278&quot; width=&quot;104&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;476&quot; y=&quot;287&quot; fill=&quot;rgba(45,49,66,0.55)&quot; font-size=&quot;7&quot; font-family=&quot;'Geist Mono', monospace&quot; text-anchor=&quot;middle&quot; letter-spacing=&quot;0.14em&quot;&gt;VÙNG CÓ THỂ LỖI&lt;/text&gt;
+
+      &lt;!-- Arrows --&gt;
+      &lt;path d=&quot;M360,80 V100&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;path d=&quot;M440,140 H560&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;path d=&quot;M360,180 V212&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;path d=&quot;M360,268 V300&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;path d=&quot;M360,356 V388&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;path d=&quot;M360,444 V476&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;path d=&quot;M360,532 V564&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- LỖI: zone edge -&gt; error --&gt;
+      &lt;path d=&quot;M536,432 H600&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; stroke-dasharray=&quot;4,3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- TIẾP TỤC: error -&gt; B2 --&gt;
+      &lt;path d=&quot;M720,388 V324 Q720,316 712,316 H520&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;!-- HỦY: error -&gt; end --&gt;
+      &lt;path d=&quot;M720,444 V476&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+
+      &lt;!-- Arrow labels --&gt;
+      &lt;rect x=&quot;464&quot; y=&quot;120&quot; width=&quot;72&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;500&quot; y=&quot;129&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;KHÔNG ĐẠT&lt;/text&gt;
+      &lt;rect x=&quot;368&quot; y=&quot;190&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;382&quot; y=&quot;199&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;ĐẠT&lt;/text&gt;
+      &lt;rect x=&quot;548&quot; y=&quot;414&quot; width=&quot;40&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;568&quot; y=&quot;423&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;LỖI&lt;/text&gt;
+      &lt;rect x=&quot;584&quot; y=&quot;298&quot; width=&quot;64&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;616&quot; y=&quot;307&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;TIẾP TỤC&lt;/text&gt;
+      &lt;rect x=&quot;728&quot; y=&quot;454&quot; width=&quot;32&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;744&quot; y=&quot;463&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;HỦY&lt;/text&gt;
+
+      &lt;!-- Preflight detail --&gt;
+      &lt;text x=&quot;268&quot; y=&quot;111&quot; class=&quot;s&quot; text-anchor=&quot;end&quot;&gt;user là owner/admin&lt;/text&gt;
+      &lt;text x=&quot;268&quot; y=&quot;125&quot; class=&quot;s&quot; text-anchor=&quot;end&quot;&gt;vị trí Sẵn sàng&lt;/text&gt;
+      &lt;text x=&quot;268&quot; y=&quot;139&quot; class=&quot;s&quot; text-anchor=&quot;end&quot;&gt;0 câu thiếu đáp án&lt;/text&gt;
+      &lt;text x=&quot;268&quot; y=&quot;153&quot; class=&quot;s&quot; text-anchor=&quot;end&quot;&gt;chưa có hồ sơ đang chạy&lt;/text&gt;
+      &lt;text x=&quot;268&quot; y=&quot;167&quot; class=&quot;s&quot; text-anchor=&quot;end&quot;&gt;file đính kèm ở Onboarding/&lt;/text&gt;
+
+      &lt;!-- Callouts --&gt;
+      &lt;text x=&quot;168&quot; y=&quot;400&quot; class=&quot;c&quot; text-anchor=&quot;end&quot;&gt;Cần spike trên Hub:&lt;/text&gt;
+      &lt;text x=&quot;168&quot; y=&quot;418&quot; class=&quot;c&quot; text-anchor=&quot;end&quot;&gt;parentId, ASSIGNEE&lt;/text&gt;
+      &lt;text x=&quot;168&quot; y=&quot;436&quot; class=&quot;c&quot; text-anchor=&quot;end&quot;&gt;trong customFields.&lt;/text&gt;
+      &lt;text x=&quot;560&quot; y=&quot;592&quot; class=&quot;c&quot;&gt;Lộ trình là bản chụp: sửa template&lt;/text&gt;
+      &lt;text x=&quot;560&quot; y=&quot;610&quot; class=&quot;c&quot;&gt;sau đó không đổi lộ trình đã tạo.&lt;/text&gt;
+
+      &lt;!-- Start --&gt;
+      &lt;rect x=&quot;240&quot; y=&quot;40&quot; width=&quot;240&quot; height=&quot;40&quot; rx=&quot;20&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;240&quot; y=&quot;40&quot; width=&quot;240&quot; height=&quot;40&quot; rx=&quot;20&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#7a8399&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;360&quot; y=&quot;58&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Admin/HR: onboarding mới&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;72&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;nhân sự · vị trí · ngày bắt đầu&lt;/text&gt;
+
+      &lt;!-- Decision --&gt;
+      &lt;polygon points=&quot;360,100 440,140 360,180 280,140&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;polygon points=&quot;360,100 440,140 360,180 280,140&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;360&quot; y=&quot;144&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Preflight đạt?&lt;/text&gt;
+
+      &lt;!-- Stop --&gt;
+      &lt;rect x=&quot;560&quot; y=&quot;120&quot; width=&quot;160&quot; height=&quot;40&quot; rx=&quot;20&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;560&quot; y=&quot;120&quot; width=&quot;160&quot; height=&quot;40&quot; rx=&quot;20&quot; fill=&quot;rgba(45,49,66,0.03)&quot; stroke=&quot;rgba(45,49,66,0.30)&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;640&quot; y=&quot;144&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Dừng, báo lý do&lt;/text&gt;
+
+      &lt;!-- B1 --&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;212&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;212&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;208&quot; y=&quot;218&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(45,49,66,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;222&quot; y=&quot;227&quot; class=&quot;t&quot; fill=&quot;#2d3142&quot; text-anchor=&quot;middle&quot;&gt;B1&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;238&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Ghi hồ sơ trước&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;254&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;onb-hires · stage Đang khởi tạo&lt;/text&gt;
+
+      &lt;!-- B2 --&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;300&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;300&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;208&quot; y=&quot;306&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(45,49,66,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;222&quot; y=&quot;315&quot; class=&quot;t&quot; fill=&quot;#2d3142&quot; text-anchor=&quot;middle&quot;&gt;B2&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;326&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Tạo list lộ trình&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;342&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;isolated · stage Tuần N · item Ngày · lưu ID vào hồ sơ&lt;/text&gt;
+
+      &lt;!-- B3 --&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;388&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;388&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;208&quot; y=&quot;394&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(45,49,66,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;222&quot; y=&quot;403&quot; class=&quot;t&quot; fill=&quot;#2d3142&quot; text-anchor=&quot;middle&quot;&gt;B3&lt;/text&gt;
+      &lt;rect x=&quot;472&quot; y=&quot;394&quot; width=&quot;40&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(45,49,66,0.30)&quot; stroke-width=&quot;0.8&quot; stroke-dasharray=&quot;3,2&quot;/&gt;
+      &lt;text x=&quot;492&quot; y=&quot;403&quot; class=&quot;t&quot; fill=&quot;#7a8399&quot; text-anchor=&quot;middle&quot;&gt;SPIKE&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;414&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Copy item từ template&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;430&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;copy đủ, kể cả Đáp án · song song 4&lt;/text&gt;
+
+      &lt;!-- B4 (focal) --&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;476&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;476&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;rgba(235,108,54,0.08)&quot; stroke=&quot;#eb6c36&quot; stroke-width=&quot;1.2&quot;/&gt;
+      &lt;rect x=&quot;208&quot; y=&quot;482&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(235,108,54,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;222&quot; y=&quot;491&quot; class=&quot;t&quot; fill=&quot;#eb6c36&quot; text-anchor=&quot;middle&quot;&gt;B4&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;502&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Gán nhân sự: thấy lộ trình&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;518&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;ASSIGNEE item gốc · stage Đang học&lt;/text&gt;
+
+      &lt;!-- B5 --&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;564&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;200&quot; y=&quot;564&quot; width=&quot;320&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;rect x=&quot;208&quot; y=&quot;570&quot; width=&quot;28&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;transparent&quot; stroke=&quot;rgba(45,49,66,0.40)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;222&quot; y=&quot;579&quot; class=&quot;t&quot; fill=&quot;#2d3142&quot; text-anchor=&quot;middle&quot;&gt;B5&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;590&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Đếm lại &quot;Đang dùng&quot;&lt;/text&gt;
+      &lt;text x=&quot;360&quot; y=&quot;606&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;items.query · ghi số tuyệt đối vào sổ vị trí&lt;/text&gt;
+
+      &lt;!-- Error state --&gt;
+      &lt;rect x=&quot;600&quot; y=&quot;388&quot; width=&quot;240&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;600&quot; y=&quot;388&quot; width=&quot;240&quot; height=&quot;56&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;720&quot; y=&quot;414&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Khởi tạo lỗi&lt;/text&gt;
+      &lt;text x=&quot;720&quot; y=&quot;430&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;hồ sơ đổi stage · lưu mã lỗi&lt;/text&gt;
+
+      &lt;!-- Cancel --&gt;
+      &lt;rect x=&quot;600&quot; y=&quot;476&quot; width=&quot;240&quot; height=&quot;40&quot; rx=&quot;20&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;600&quot; y=&quot;476&quot; width=&quot;240&quot; height=&quot;40&quot; rx=&quot;20&quot; fill=&quot;rgba(45,49,66,0.03)&quot; stroke=&quot;rgba(45,49,66,0.30)&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;720&quot; y=&quot;500&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Xóa lộ trình + hồ sơ&lt;/text&gt;
+
+      &lt;!-- Legend --&gt;
+      &lt;line x1=&quot;30&quot; y1=&quot;660&quot; x2=&quot;970&quot; y2=&quot;660&quot; stroke=&quot;rgba(45,49,66,0.10)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;40&quot; y=&quot;690&quot; class=&quot;lg&quot;&gt;LEGEND&lt;/text&gt;
+      &lt;rect x=&quot;120&quot; y=&quot;681&quot; width=&quot;24&quot; height=&quot;12&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.03)&quot; stroke=&quot;rgba(45,49,66,0.30)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;152&quot; y=&quot;690&quot; class=&quot;lg&quot;&gt;BẮT ĐẦU / KẾT THÚC&lt;/text&gt;
+      &lt;rect x=&quot;320&quot; y=&quot;681&quot; width=&quot;24&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;352&quot; y=&quot;690&quot; class=&quot;lg&quot;&gt;BƯỚC&lt;/text&gt;
+      &lt;polygon points=&quot;424,681 436,687 424,693 412,687&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;444&quot; y=&quot;690&quot; class=&quot;lg&quot;&gt;KIỂM TRA&lt;/text&gt;
+      &lt;rect x=&quot;540&quot; y=&quot;681&quot; width=&quot;24&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;rgba(45,49,66,0.02)&quot; stroke=&quot;rgba(45,49,66,0.30)&quot; stroke-width=&quot;0.8&quot; stroke-dasharray=&quot;3,2&quot;/&gt;
+      &lt;text x=&quot;572&quot; y=&quot;690&quot; class=&quot;lg&quot;&gt;VÙNG CÓ THỂ LỖI&lt;/text&gt;
+      &lt;rect x=&quot;740&quot; y=&quot;681&quot; width=&quot;24&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;rgba(235,108,54,0.08)&quot; stroke=&quot;#eb6c36&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;772&quot; y=&quot;690&quot; class=&quot;lg&quot;&gt;NHÂN SỰ THẤY LỘ TRÌNH&lt;/text&gt;
+    &lt;/svg&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" style="height:966px"></iframe></section>
+<section><p class="lbl"><b>Phần 3</b> · Nộp quiz: chấm bằng logic thuần trên trình duyệt <span>docs/diagrams/onboarding-v2-phan-3.html</span></p><iframe onload="this.style.height=(this.contentDocument.documentElement.scrollHeight+4)+'px'" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;vi&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;title&gt;Onboarding app v2 — Phần 3: nộp và chấm quiz&lt;/title&gt;
+  &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans:wght@400;500;600&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+  &lt;style&gt;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Geist', 'Noto Sans', system-ui, sans-serif; background: #f5f5f5; color: #2d3142; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .eyebrow { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #4f5d75; margin-bottom: 0.5rem; }
+    h1 { font-family: 'Instrument Serif', 'Noto Serif', serif; font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 900px; display: block; }
+    .n  { font-family: 'Geist', 'Noto Sans', sans-serif; font-size: 12px; font-weight: 600; fill: #2d3142; }
+    .s  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 9px; fill: #4f5d75; }
+    .a  { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 8px; letter-spacing: 0.06em; fill: #7a8399; }
+    .lg { font-family: 'Geist Mono', 'Noto Sans Mono', monospace; font-size: 8px; letter-spacing: 0.14em; fill: #4f5d75; }
+    .c  { font-family: 'Instrument Serif', 'Noto Serif', serif; font-style: italic; font-size: 14px; fill: #4f5d75; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;frame&quot;&gt;
+    &lt;p class=&quot;eyebrow&quot;&gt;Sequence · v2 · Phần 3&lt;/p&gt;
+    &lt;h1&gt;Nộp quiz: app chấm bằng logic thuần, ngay trên trình duyệt&lt;/h1&gt;
+
+    &lt;svg viewBox=&quot;0 0 1000 660&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; role=&quot;img&quot; aria-labelledby=&quot;onboarding-v2-phan-3-title onboarding-v2-phan-3-desc&quot;&gt;
+      &lt;title id=&quot;onboarding-v2-phan-3-title&quot;&gt;Nộp và chấm quiz ngay trong app&lt;/title&gt;
+      &lt;desc id=&quot;onboarding-v2-phan-3-desc&quot;&gt;Khi nhân sự mở một ngày, app đọc câu hỏi kèm đáp án từ lộ trình; nhân sự nộp bài, app chấm bằng hàm thuần gradeDay trên trình duyệt, ghi câu trả lời và kết quả vào lộ trình, đọc hồ sơ rồi ghi điểm lần làm này, và hiện điểm cùng đáp án cho nhân sự; không có bot hay server chấm điểm.&lt;/desc&gt;
+      &lt;defs&gt;
+        &lt;marker id=&quot;arrow&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#4f5d75&quot;/&gt;&lt;/marker&gt;
+        &lt;marker id=&quot;arrow-accent&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#eb6c36&quot;/&gt;&lt;/marker&gt;
+        &lt;marker id=&quot;arrow-link&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;&lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#2e5aa8&quot;/&gt;&lt;/marker&gt;
+      &lt;/defs&gt;
+
+      &lt;rect width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;#f5f5f5&quot;/&gt;
+
+      &lt;!-- Lifelines --&gt;
+      &lt;line x1=&quot;130&quot; y1=&quot;88&quot; x2=&quot;130&quot; y2=&quot;548&quot; stroke=&quot;rgba(45,49,66,0.20)&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,3&quot;/&gt;
+      &lt;line x1=&quot;380&quot; y1=&quot;88&quot; x2=&quot;380&quot; y2=&quot;548&quot; stroke=&quot;rgba(45,49,66,0.20)&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,3&quot;/&gt;
+      &lt;line x1=&quot;630&quot; y1=&quot;88&quot; x2=&quot;630&quot; y2=&quot;548&quot; stroke=&quot;rgba(45,49,66,0.20)&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,3&quot;/&gt;
+      &lt;line x1=&quot;860&quot; y1=&quot;88&quot; x2=&quot;860&quot; y2=&quot;548&quot; stroke=&quot;rgba(45,49,66,0.20)&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;3,3&quot;/&gt;
+
+      &lt;!-- Activation bars --&gt;
+      &lt;rect x=&quot;376&quot; y=&quot;124&quot; width=&quot;8&quot; height=&quot;28&quot; fill=&quot;rgba(45,49,66,0.06)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;rect x=&quot;376&quot; y=&quot;192&quot; width=&quot;8&quot; height=&quot;332&quot; fill=&quot;rgba(45,49,66,0.06)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;0.8&quot;/&gt;
+
+      &lt;!-- 1. Mở ngày: đọc câu hỏi kèm đáp án --&gt;
+      &lt;path d=&quot;M384,124 H622&quot; fill=&quot;none&quot; stroke=&quot;#2e5aa8&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-link)&quot;/&gt;
+      &lt;rect x=&quot;436&quot; y=&quot;106&quot; width=&quot;136&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;504&quot; y=&quot;115&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot; style=&quot;fill:#2e5aa8&quot;&gt;ĐỌC CÂU HỎI + ĐÁP ÁN&lt;/text&gt;
+      &lt;path d=&quot;M626,152 H388&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;4,3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;rect x=&quot;456&quot; y=&quot;134&quot; width=&quot;96&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;504&quot; y=&quot;143&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;CÂU HỎI CỦA NGÀY&lt;/text&gt;
+
+      &lt;!-- 2. Nhân sự nộp bài --&gt;
+      &lt;path d=&quot;M130,192 H372&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;rect x=&quot;192&quot; y=&quot;174&quot; width=&quot;120&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;252&quot; y=&quot;183&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;CHỌN ĐÁP ÁN · NỘP BÀI&lt;/text&gt;
+
+      &lt;!-- 3. Self: chấm bằng hàm thuần --&gt;
+      &lt;path d=&quot;M384,224 H424 V244 H388&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;text x=&quot;432&quot; y=&quot;238&quot; class=&quot;a&quot;&gt;gradeDay() · HÀM THUẦN&lt;/text&gt;
+
+      &lt;!-- 4. Ghi Trả lời + Kết quả vào lộ trình --&gt;
+      &lt;path d=&quot;M384,288 H626&quot; fill=&quot;none&quot; stroke=&quot;#2e5aa8&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-link)&quot;/&gt;
+      &lt;rect x=&quot;436&quot; y=&quot;270&quot; width=&quot;136&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;504&quot; y=&quot;279&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot; style=&quot;fill:#2e5aa8&quot;&gt;GHI TRẢ LỜI + KẾT QUẢ&lt;/text&gt;
+
+      &lt;!-- 5. Đọc hồ sơ --&gt;
+      &lt;path d=&quot;M384,332 H852&quot; fill=&quot;none&quot; stroke=&quot;#2e5aa8&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-link)&quot;/&gt;
+      &lt;rect x=&quot;690&quot; y=&quot;314&quot; width=&quot;112&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;746&quot; y=&quot;323&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot; style=&quot;fill:#2e5aa8&quot;&gt;ĐỌC HỒ SƠ CỦA MÌNH&lt;/text&gt;
+      &lt;path d=&quot;M856,360 H388&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;4,3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;rect x=&quot;690&quot; y=&quot;342&quot; width=&quot;112&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;746&quot; y=&quot;351&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot;&gt;ĐIỂM CÁC LẦN TRƯỚC&lt;/text&gt;
+
+      &lt;!-- 6. Self: thêm lần làm, đếm lại --&gt;
+      &lt;path d=&quot;M384,392 H424 V412 H388&quot; fill=&quot;none&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;text x=&quot;432&quot; y=&quot;406&quot; class=&quot;a&quot;&gt;THÊM LẦN LÀM · ĐẾM LẠI NGÀY XONG&lt;/text&gt;
+
+      &lt;!-- 7. Ghi Điểm vào hồ sơ --&gt;
+      &lt;path d=&quot;M384,456 H856&quot; fill=&quot;none&quot; stroke=&quot;#2e5aa8&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-link)&quot;/&gt;
+      &lt;rect x=&quot;680&quot; y=&quot;438&quot; width=&quot;132&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;746&quot; y=&quot;447&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot; style=&quot;fill:#2e5aa8&quot;&gt;GHI ĐIỂM · FIRST, ATTEMPTS&lt;/text&gt;
+
+      &lt;!-- 8. Headline: hiện kết quả --&gt;
+      &lt;path d=&quot;M376,500 H134&quot; fill=&quot;none&quot; stroke=&quot;#eb6c36&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-accent)&quot;/&gt;
+      &lt;rect x=&quot;180&quot; y=&quot;482&quot; width=&quot;144&quot; height=&quot;12&quot; rx=&quot;2&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;text x=&quot;252&quot; y=&quot;491&quot; class=&quot;a&quot; text-anchor=&quot;middle&quot; style=&quot;fill:#eb6c36&quot;&gt;ĐIỂM + ĐÚNG/SAI + ĐÁP ÁN&lt;/text&gt;
+
+      &lt;!-- Callout --&gt;
+      &lt;text x=&quot;500&quot; y=&quot;584&quot; class=&quot;c&quot; text-anchor=&quot;middle&quot;&gt;Không bot, không server chấm điểm: mọi bước chạy bằng phiên đăng nhập của chính nhân sự.&lt;/text&gt;
+
+      &lt;!-- Actors --&gt;
+      &lt;rect x=&quot;55&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;55&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#7a8399&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;130&quot; y=&quot;62&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Nhân sự&lt;/text&gt;
+      &lt;text x=&quot;130&quot; y=&quot;77&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;người học&lt;/text&gt;
+
+      &lt;rect x=&quot;305&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;305&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;380&quot; y=&quot;62&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;App (trình duyệt)&lt;/text&gt;
+      &lt;text x=&quot;380&quot; y=&quot;77&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;app.rest · domain/quiz.ts&lt;/text&gt;
+
+      &lt;rect x=&quot;555&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;555&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;630&quot; y=&quot;62&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Lộ trình&lt;/text&gt;
+      &lt;text x=&quot;630&quot; y=&quot;77&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;onb-run-…&lt;/text&gt;
+
+      &lt;rect x=&quot;785&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;#f5f5f5&quot;/&gt;
+      &lt;rect x=&quot;785&quot; y=&quot;40&quot; width=&quot;150&quot; height=&quot;48&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+      &lt;text x=&quot;860&quot; y=&quot;62&quot; class=&quot;n&quot; text-anchor=&quot;middle&quot;&gt;Hồ sơ&lt;/text&gt;
+      &lt;text x=&quot;860&quot; y=&quot;77&quot; class=&quot;s&quot; text-anchor=&quot;middle&quot;&gt;onb-hires · của mình&lt;/text&gt;
+
+      &lt;!-- Legend --&gt;
+      &lt;line x1=&quot;30&quot; y1=&quot;612&quot; x2=&quot;970&quot; y2=&quot;612&quot; stroke=&quot;rgba(45,49,66,0.10)&quot; stroke-width=&quot;0.8&quot;/&gt;
+      &lt;text x=&quot;40&quot; y=&quot;642&quot; class=&quot;lg&quot;&gt;LEGEND&lt;/text&gt;
+      &lt;line x1=&quot;112&quot; y1=&quot;639&quot; x2=&quot;140&quot; y2=&quot;639&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;text x=&quot;148&quot; y=&quot;642&quot; class=&quot;lg&quot;&gt;THAO TÁC / LOGIC TRONG APP&lt;/text&gt;
+      &lt;line x1=&quot;352&quot; y1=&quot;639&quot; x2=&quot;380&quot; y2=&quot;639&quot; stroke=&quot;#2e5aa8&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-link)&quot;/&gt;
+      &lt;text x=&quot;388&quot; y=&quot;642&quot; class=&quot;lg&quot;&gt;HUB REST (QUYỀN NHÂN SỰ)&lt;/text&gt;
+      &lt;line x1=&quot;588&quot; y1=&quot;639&quot; x2=&quot;616&quot; y2=&quot;639&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; stroke-dasharray=&quot;4,3&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+      &lt;text x=&quot;624&quot; y=&quot;642&quot; class=&quot;lg&quot;&gt;TRẢ VỀ&lt;/text&gt;
+      &lt;line x1=&quot;712&quot; y1=&quot;639&quot; x2=&quot;740&quot; y2=&quot;639&quot; stroke=&quot;#eb6c36&quot; stroke-width=&quot;1.2&quot; marker-end=&quot;url(#arrow-accent)&quot;/&gt;
+      &lt;text x=&quot;748&quot; y=&quot;642&quot; class=&quot;lg&quot;&gt;KẾT QUẢ&lt;/text&gt;
+    &lt;/svg&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+" style="height:899px"></iframe></section></body></html>

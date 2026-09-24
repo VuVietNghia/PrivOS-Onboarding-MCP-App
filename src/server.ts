@@ -10,7 +10,9 @@
  * The ONE piece that stays app-local (by design) is the interactive
  * `development` Relay loop: `PRIVOS_TRANSPORT=relay` (`npm run dev`) steps
  * `serveApp` aside from the Direct HTTP MCP router and runs the terminal
- * pairing prompt + optional Vite dev-UI here. `PRIVOS_TRANSPORT` is a
+ * pairing prompt here. An explicit local `PRIVOS_DEV_UI=1` serves the P0
+ * test UI inline in a paired standalone session when NODE_ENV is not production.
+ * `PRIVOS_TRANSPORT` is a
  * development affordance only — `serveApp` rejects `transportOverride` under any
  * production mode as a boot error.
  *
@@ -25,6 +27,7 @@ import { serveApp, RuntimeModeError } from '@privos_ai/app-server';
 
 import { createManifest, buildRelayAppDescriptor } from './manifest';
 import { relayMcpHandler } from './relay-transport';
+import { shouldStartDevUi } from './dev-ui-mode';
 
 /**
  * Manifest-only degraded surface for `PRODUCTION_WITHOUT_IDENTITY`.
@@ -67,15 +70,25 @@ async function start(): Promise<void> {
 		},
 	});
 
-	// development + PRIVOS_TRANSPORT=relay: run the app-local pairing loop (and
-	// optional live Vite dev UI) alongside serveApp's HTTP support surface.
-	if (handle.mode === 'development' && transportOverride === 'relay') {
-		if (process.env.PRIVOS_DEV_UI === '1') {
+	// The paired standalone session keeps its identity and Relay. Hub srcdoc
+	// rewrites external scripts to a blocked standalone-relay: scheme, so its
+	// explicit P0 test UI is delivered as one inline HTML resource.
+	if (shouldStartDevUi(handle.mode, transportOverride, process.env)) {
+		if (handle.mode === 'standalone-production') {
+			const { buildP0InlineHtml } = await import('./p0-inline-ui');
+			const { setDevUiHtml } = await import('./mcp-message-handlers');
+			setDevUiHtml(await buildP0InlineHtml());
+			console.log('[Dev] Onboarding v4 inline UI ready for paired Relay');
+		} else {
 			const { startDevUiServer } = await import('./dev-server');
 			const { setDevPublicUrl } = await import('./mcp-message-handlers');
 			const dev = await startDevUiServer();
 			setDevPublicUrl(dev.publicUrl);
 		}
+	}
+
+	// The interactive pairing loop belongs only to the development Relay mode.
+	if (handle.mode === 'development' && transportOverride === 'relay') {
 		const { startDevelopmentRelay } = await import('./relay-transport');
 		await startDevelopmentRelay();
 	}

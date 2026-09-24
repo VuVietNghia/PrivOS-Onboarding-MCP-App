@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Onboarding v2 — preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Token lấy nguyên từ src/ui/contact-form-styles.css (light), màu chính theo Hub */
+:root{
+  --radius-base:6px;
+  --bg:#F7F8FA; --bg-card:#FFFFFF; --bg-hover:#F2F3F5; --bg-input:#FFFFFF; --bg-table-head:#F7F8FA;
+  --text:#1F2329; --text-secondary:#2F343D; --text-muted:#6C737A; --text-faint:#9EA2A8;
+  --border:#E4E7EA; --border-light:#EBECEF;
+  --accent:#5b6ee1; --accent-hover:#4a5bc9;
+  --success-bg:#C1EBDD; --success-text:#148660; --error-bg:#FFE9EC; --error-text:#EC0D2A;
+  --warn-bg:#FFF3D6; --warn-text:#9A6400;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#e9ebef;font-family:Montserrat,system-ui,sans-serif;color:var(--text);padding:28px}
+.page-title{font-size:1.1rem;font-weight:700;margin:0 0 4px}
+.page-sub{color:var(--text-muted);font-size:.85rem;margin:0 0 24px}
+.shot{margin:0 0 36px}
+.shot-label{font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin:0 0 8px}
+.shot-label b{color:var(--accent)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+/* khung app trong room PrivOS */
+.frame{background:var(--bg);border:1px solid #d5d8de;border-radius:8px;overflow:hidden;width:100%}
+.container{padding:20px 24px}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--bg-card)}
+.app-title{font-weight:700;font-size:.95rem}
+.app-tabs{display:flex;gap:6px}
+.tab-btn{padding:6px 14px;background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:var(--radius-base);font:inherit;font-size:.85rem}
+.tab-btn.tab-active{background:var(--accent);border-color:var(--accent);color:#fff}
+.toggle{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius-base);overflow:hidden}
+.toggle span{padding:4px 10px;font-size:.72rem;color:var(--text-muted);background:var(--bg-card);border-right:1px solid var(--border)}
+.toggle span:last-child{border-right:none}
+.toggle span.active{background:var(--accent);color:#fff}
+h1{font-size:1.1rem;margin:0 0 4px}
+h2{font-size:.95rem;margin:18px 0 8px}
+.muted{color:var(--text-muted);font-size:.82rem}
+.faint{color:var(--text-faint);font-size:.8rem}
+.list-select-row{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+input,select,textarea{padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius-base);font:inherit;font-size:.85rem;background:var(--bg-input);color:var(--text)}
+textarea{width:100%;resize:none}
+label{display:block;font-size:.8rem;color:var(--text-secondary);margin:0 0 4px;font-weight:500}
+.form-group{margin-bottom:14px}
+.form-group input,.form-group select{width:100%}
+.btn-submit{padding:9px 16px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-base);font:inherit;font-size:.85rem;font-weight:600}
+.btn-submit[disabled]{opacity:.45}
+.btn-new-list{padding:8px 14px;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:var(--radius-base);font:inherit;font-size:.85rem;white-space:nowrap}
+.btn-plain{padding:6px 12px;background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);border-radius:var(--radius-base);font:inherit;font-size:.8rem}
+.btn-danger{padding:6px 12px;background:var(--bg-card);border:1px solid var(--error-text);color:var(--error-text);border-radius:var(--radius-base);font:inherit;font-size:.8rem}
+.items-table{width:100%;border-collapse:collapse;font-size:.8rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-base);overflow:hidden}
+.items-table th{background:var(--bg-table-head);font-weight:600;text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.items-table td{padding:7px 10px;border-bottom:1px solid var(--border-light);color:var(--text-secondary);white-space:nowrap}
+.items-table tr.sel td{background:#eef0fc}
+.items-count{color:var(--text-faint);font-size:.78rem;margin:6px 0 0;display:flex;justify-content:space-between}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600}
+.p-learn{background:#e5e8fb;color:var(--accent)}
+.p-done{background:var(--success-bg);color:var(--success-text)}
+.p-err{background:var(--error-bg);color:var(--error-text)}
+.p-off{background:var(--bg-hover);color:var(--text-muted)}
+.p-draft{background:var(--warn-bg);color:var(--warn-text)}
+.sc{display:inline-block;min-width:30px;text-align:center;font-size:.72rem;padding:1px 4px;border-radius:4px;background:var(--bg-hover);margin-right:2px}
+.sc sup{color:var(--text-faint);font-size:.6rem}
+.sc.none{color:var(--text-faint)}
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card-title{font-weight:600;font-size:.88rem}
+.progress{height:6px;background:var(--bg-hover);border-radius:3px;overflow:hidden;margin:6px 0}
+.progress i{display:block;height:100%;background:var(--accent)}
+.error-message{background:var(--error-bg);color:var(--error-text);padding:10px 12px;border-radius:var(--radius-base);font-size:.82rem;margin-bottom:12px}
+.q{padding:10px 0;border-top:1px solid var(--border-light);font-size:.84rem}
+.q:first-of-type{border-top:none}
+.opt{display:flex;gap:8px;align-items:center;padding:4px 0;color:var(--text-secondary)}
+.opt .box{width:14px;height:14px;border:1.5px solid var(--text-faint);flex-shrink:0;background:#fff}
+.opt .r{border-radius:50%}
+.opt .c{border-radius:3px}
+.opt.on .box{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 2px #fff}
+.opt.right{color:var(--success-text);font-weight:600}
+.opt.wrong{color:var(--error-text);text-decoration:line-through}
+.hint{font-size:.75rem;color:var(--text-muted);font-style:italic;margin:2px 0 4px}
+.explain{background:var(--bg-hover);border-radius:var(--radius-base);padding:8px 10px;font-size:.78rem;color:var(--text-secondary);margin-top:6px}
+.sticky{position:relative;display:flex;justify-content:space-between;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-base);padding:8px 12px;margin-bottom:10px;font-size:.82rem}
+.sticky::after{content:"dính ở đầu khi cuộn";position:absolute;right:-4px;top:-18px;font-size:.62rem;color:var(--text-faint)}
+.day{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;font-size:.85rem}
+.day .n{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;background:var(--bg-hover);color:var(--text-muted);flex-shrink:0}
+.day.done .n{background:var(--success-bg);color:var(--success-text)}
+.day.doing .n{background:#e5e8fb;color:var(--accent)}
+.day .t{flex:1}
+.day .meta{color:var(--text-faint);font-size:.75rem}
+.video{height:120px;border-radius:var(--radius-base);background:#1f2329;color:#c9ccd1;display:flex;align-items:center;justify-content:center;font-size:.75rem;margin:8px 0}
+.file{display:flex;justify-content:space-between;padding:6px 10px;border:1px solid var(--border-light);border-radius:var(--radius-base);font-size:.78rem;margin-top:6px}
+.md{font-size:.84rem;line-height:1.55;color:var(--text-secondary)}
+.md h3{font-size:.92rem;margin:0 0 6px;color:var(--text)}
+.split{display:grid;grid-template-columns:200px 1fr;gap:14px}
+.daynav div{padding:7px 10px;border-radius:var(--radius-base);font-size:.82rem;color:var(--text-secondary);margin-bottom:2px;display:flex;justify-content:space-between}
+.daynav div.active{background:#e5e8fb;color:var(--accent);font-weight:600}
+.item-row{display:flex;gap:8px;align-items:center;padding:8px 10px;border:1px solid var(--border-light);border-radius:var(--radius-base);background:var(--bg-card);margin-bottom:6px;font-size:.8rem}
+.item-row .drag{color:var(--text-faint)}
+.item-row.miss{border-color:var(--error-text);background:#fff7f8}
+.tag{font-size:.66rem;font-weight:600;padding:1px 6px;border-radius:4px;background:var(--bg-hover);color:var(--text-muted)}
+.edit-opt{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+.edit-opt input[type=text]{flex:1}
+.chk{width:14px;height:14px;border:1.5px solid var(--text-faint);border-radius:3px}
+.chk.on{background:var(--success-text);border-color:var(--success-text)}
+.note{font-size:.72rem;color:var(--text-muted);margin-top:6px}
+.modal-back{background:rgba(0,0,0,.35);padding:30px}
+.modal{background:var(--bg-card);border-radius:8px;padding:18px 20px;max-width:440px;margin:0 auto}
+.radio-line{display:flex;gap:8px;align-items:center;font-size:.84rem;margin:6px 0}
+</style>
+</head>
+<body>
+
+<p class="page-title">Onboarding v2 — preview giao diện</p>
+<p class="page-sub">Bám spec v2 §6–§7 và class/màu có sẵn trong <code>contact-form-styles.css</code> (header + tab, bảng <code>items-table</code>, nút <code>btn-submit</code>/<code>btn-new-list</code>, nút đổi dạng <code>theme-toggle</code>). Admin/Owner/HR: 3 tab. Nhân sự: 1 màn.</p>
+
+<!-- ============ ADMIN 1 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>A1</b> · Admin/HR · Tab Nhân sự</p>
+  <div class="frame">
+    <div class="app-header">
+      <div class="app-tabs"><button class="tab-btn tab-active">Nhân sự</button><button class="tab-btn">Onboarding nhân sự mới</button><button class="tab-btn">Template</button></div>
+      <div class="toggle"><span class="active">VI</span><span>EN</span></div>
+    </div>
+    <div class="container">
+      <div class="list-select-row">
+        <input placeholder="Tìm theo tên nhân sự" style="flex:1">
+        <select><option>Mọi trạng thái</option></select>
+        <input placeholder="Vị trí (gõ để tìm)" style="width:200px">
+        <button class="btn-new-list">+ Onboarding nhân sự mới</button>
+      </div>
+      <table class="items-table">
+        <tr><th>Nhân sự</th><th>Vị trí</th><th>Bắt đầu</th><th>Đã xong</th><th>Điểm lần đầu theo ngày</th><th>Trạng thái</th></tr>
+        <tr class="sel"><td>Trần Minh Anh</td><td>Kế toán tổng hợp</td><td>15/09/2026</td><td>3/5</td><td><span class="sc">4/5</span><span class="sc">5/5<sup>×2</sup></span><span class="sc">3/6</span><span class="sc none">—</span><span class="sc none">—</span></td><td><span class="pill p-learn">Đang học</span></td></tr>
+        <tr><td>Lê Quốc Bảo</td><td>Nhân viên kho</td><td>08/09/2026</td><td>3/3</td><td><span class="sc">5/5</span><span class="sc">—</span><span class="sc">6/8<sup>×3</sup></span></td><td><span class="pill p-done">Hoàn tất</span></td></tr>
+        <tr><td>Phạm Thu Hà</td><td>Chăm sóc khách hàng</td><td>22/09/2026</td><td>0/4</td><td><span class="sc none">—</span><span class="sc none">—</span><span class="sc none">—</span><span class="sc none">—</span></td><td><span class="pill p-err">Khởi tạo lỗi</span></td></tr>
+        <tr><td>Nguyễn Hoàng Long</td><td>Lập trình viên backend</td><td>01/09/2026</td><td>7/10</td><td><span class="sc">4/5</span><span class="sc">5/5</span><span class="sc">4/4</span><span class="sc">9/12</span><span class="sc">5/5</span><span class="sc">3/5<sup>×2</sup></span><span class="sc">6/6</span> <span class="faint">+3</span></td><td><span class="pill p-learn">Đang học</span></td></tr>
+        <tr><td>Đỗ Khánh Vy</td><td>Kế toán tổng hợp</td><td>25/08/2026</td><td>2/5</td><td><span class="sc">5/5</span><span class="sc">4/5</span><span class="sc none">—</span><span class="sc none">—</span><span class="sc none">—</span></td><td><span class="pill p-off">Đã huỷ</span></td></tr>
+      </table>
+      <div class="items-count"><span>Bấm một dòng để xem chi tiết · <sup>×2</sup> = số lần làm</span><span>1–50 / 312 · ‹ Trước · Sau ›</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN 2 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>A2</b> · Admin/HR · Chi tiết một nhân sự (mở từ dòng trong A1)</p>
+  <div class="frame">
+    <div class="app-header">
+      <div class="app-tabs"><button class="tab-btn tab-active">Nhân sự</button><button class="tab-btn">Onboarding nhân sự mới</button><button class="tab-btn">Template</button></div>
+      <div class="toggle"><span class="active">VI</span><span>EN</span></div>
+    </div>
+    <div class="container">
+      <p class="faint" style="margin:0 0 8px">‹ Danh sách nhân sự</p>
+      <div class="card-head" style="margin-bottom:14px">
+        <div><h1>Trần Minh Anh</h1><div class="muted">Kế toán tổng hợp · Bắt đầu 15/09/2026 · Đã xong 3/5 ngày · <span class="pill p-learn">Đang học</span></div></div>
+        <button class="btn-danger">Huỷ onboarding</button>
+      </div>
+      <div class="row2">
+        <div>
+          <div class="card"><div class="card-head"><span class="card-title">Ngày 1 — Giới thiệu công ty</span><span class="muted">Bài đã đọc 3/3 · Lần đầu <b>4/5</b></span></div></div>
+          <div class="card">
+            <div class="card-head"><span class="card-title">Ngày 2 — Quy trình chứng từ</span><span class="muted">Bài đã đọc 2/4 · Lần đầu <b>5/5</b></span></div>
+            <div class="faint" style="margin-top:4px">2 lần làm: 5/5, 5/5</div>
+          </div>
+          <div class="card" style="border-color:var(--accent)">
+            <div class="card-head"><span class="card-title">Ngày 3 — Phần mềm kế toán</span><span class="muted">Bài đã đọc 1/3 · Lần đầu <b>3/6</b></span></div>
+            <div class="faint" style="margin-top:4px">1 lần làm · đang xem ▸</div>
+          </div>
+          <div class="card"><div class="card-head"><span class="card-title">Ngày 4 — Báo cáo thuế</span><span class="muted">Chưa làm</span></div></div>
+          <div class="card"><div class="card-head"><span class="card-title">Ngày 5 — Kiểm tra cuối kỳ</span><span class="muted">Chưa làm</span></div></div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="margin-bottom:6px">Ngày 3 · Quiz · lần 1 · 3/6</div>
+          <div class="q"><b>1.</b> Phân hệ nào dùng để hạch toán hoá đơn đầu vào?<div class="opt right">✓ Chọn: b) Mua hàng</div></div>
+          <div class="q"><b>2.</b> Những thao tác nào cần duyệt trước khi ghi sổ? <span class="tag">nhiều đáp án</span><div class="opt wrong">✗ Chọn: a, c</div><div class="faint">Đáp án đúng: a, c, d</div></div>
+          <div class="q"><b>3.</b> Kỳ khoá sổ mặc định là?<div class="opt right">✓ Chọn: a) Cuối tháng</div></div>
+          <div class="faint" style="padding-top:6px">… 3 câu nữa</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN 3 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>A3</b> · Admin/HR · Tab Onboarding nhân sự mới</p>
+  <div class="row2">
+    <div class="frame">
+      <div class="app-header">
+        <div class="app-tabs"><button class="tab-btn">Nhân sự</button><button class="tab-btn tab-active">Onboarding nhân sự mới</button><button class="tab-btn">Template</button></div>
+        <div class="toggle"><span class="active">VI</span><span>EN</span></div>
+      </div>
+      <div class="container">
+        <div class="form-group"><label>Nhân sự</label><select><option>Phạm Thu Hà</option></select></div>
+        <div class="form-group"><label>Vị trí</label><input value="chăm só"><div class="card" style="padding:4px 0;margin-top:4px">
+          <div style="padding:6px 12px;font-size:.84rem;background:#eef0fc">Chăm sóc khách hàng</div>
+          <div style="padding:6px 12px;font-size:.84rem">Chăm sóc khách hàng doanh nghiệp</div>
+          <div style="padding:4px 12px" class="faint">Chỉ hiện vị trí Sẵn sàng · 20 kết quả mỗi lần</div></div></div>
+        <div class="form-group"><label>Ngày bắt đầu</label><input value="22/09/2026"></div>
+        <div class="card" style="background:var(--bg-hover);border:none"><span class="muted">Lộ trình sẽ có <b>4 ngày · 11 bài học · 26 câu hỏi</b></span></div>
+        <button class="btn-submit" style="width:100%">Tạo lộ trình</button>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="app-header">
+        <div class="app-tabs"><button class="tab-btn">Nhân sự</button><button class="tab-btn tab-active">Onboarding nhân sự mới</button><button class="tab-btn">Template</button></div>
+        <div class="toggle"><span class="active">VI</span><span>EN</span></div>
+      </div>
+      <div class="container">
+        <p class="muted" style="margin:0 0 4px">Đang tạo lộ trình cho Phạm Thu Hà</p>
+        <div class="progress"><i style="width:62%"></i></div>
+        <p class="faint" style="margin:0 0 18px">Đã copy 23/37 mục</p>
+        <div class="error-message">Tạo lộ trình bị gián đoạn ở mục 24/37 (mất kết nối). Hồ sơ đang ở trạng thái Khởi tạo lỗi.</div>
+        <div style="display:flex;gap:8px"><button class="btn-submit">Tiếp tục</button><button class="btn-danger">Hủy</button></div>
+        <p class="note">Tiếp tục: chỉ tạo phần còn thiếu. Hủy: xoá lộ trình và hồ sơ lỗi.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN 4 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>A4</b> · Admin/HR · Tab Template — danh sách vị trí</p>
+  <div class="frame">
+    <div class="app-header">
+      <div class="app-tabs"><button class="tab-btn">Nhân sự</button><button class="tab-btn">Onboarding nhân sự mới</button><button class="tab-btn tab-active">Template</button></div>
+      <div class="toggle"><span class="active">VI</span><span>EN</span></div>
+    </div>
+    <div class="container">
+      <div class="list-select-row">
+        <input placeholder="Tìm vị trí" style="flex:1"><select><option>Mọi trạng thái</option></select>
+        <button class="btn-new-list">+ Vị trí mới</button>
+      </div>
+      <table class="items-table">
+        <tr><th>Vị trí</th><th>Số ngày</th><th>Bài học</th><th>Câu hỏi</th><th>Thiếu đáp án</th><th>Đang dùng</th><th>Trạng thái</th><th></th></tr>
+        <tr><td>Kế toán tổng hợp</td><td>5</td><td>14</td><td>31</td><td>0</td><td>12</td><td><span class="pill p-done">Sẵn sàng</span></td><td><button class="btn-plain">Mở</button></td></tr>
+        <tr><td>Chăm sóc khách hàng</td><td>4</td><td>11</td><td>26</td><td>0</td><td>8</td><td><span class="pill p-done">Sẵn sàng</span></td><td><button class="btn-plain">Mở</button></td></tr>
+        <tr><td>Lập trình viên backend</td><td>10</td><td>32</td><td>74</td><td style="color:var(--error-text);font-weight:600">2</td><td>5</td><td><span class="pill p-draft">Đang soạn</span></td><td><button class="btn-plain">Mở</button></td></tr>
+        <tr><td>Nhân viên kho</td><td>3</td><td>7</td><td>15</td><td>0</td><td>0</td><td><span class="pill p-off">Ngừng dùng</span></td><td><button class="btn-plain">Mở</button></td></tr>
+      </table>
+      <div class="items-count"><span>Thiếu đáp án &gt; 0 thì chưa khởi tạo được</span><span>1–50 / 1 284 · ‹ Trước · Sau ›</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN 5 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>A5</b> · Admin/HR · + Vị trí mới</p>
+  <div class="frame modal-back">
+    <div class="modal">
+      <h1 style="margin-bottom:12px">Vị trí mới</h1>
+      <div class="form-group"><label>Tên vị trí</label><input value="Kế toán thuế"></div>
+      <label>Nội dung ban đầu</label>
+      <div class="radio-line"><span class="box" style="width:14px;height:14px;border:1.5px solid var(--text-faint);border-radius:50%"></span>Bắt đầu trống</div>
+      <div class="radio-line"><span style="width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:inset 0 0 0 3px #fff;border:1.5px solid var(--accent)"></span>Copy từ vị trí có sẵn</div>
+      <div style="padding-left:22px">
+        <input value="Kế toán tổng hợp" style="width:100%;margin-bottom:8px">
+        <div class="opt on"><span class="box c"></span>Ngày 1 — Giới thiệu công ty</div>
+        <div class="opt on"><span class="box c"></span>Ngày 2 — Quy trình chứng từ</div>
+        <div class="opt"><span class="box c"></span>Ngày 3 — Phần mềm kế toán</div>
+        <div class="opt"><span class="box c"></span>Ngày 4 — Báo cáo thuế</div>
+        <div class="opt"><span class="box c"></span>Ngày 5 — Kiểm tra cuối kỳ</div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn-plain">Thôi</button><button class="btn-submit">Tạo vị trí</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ADMIN 6 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>A6</b> · Admin/HR · Sửa template một vị trí</p>
+  <div class="frame">
+    <div class="app-header">
+      <div class="app-tabs"><button class="tab-btn">Nhân sự</button><button class="tab-btn">Onboarding nhân sự mới</button><button class="tab-btn tab-active">Template</button></div>
+      <div class="toggle"><span class="active">VI</span><span>EN</span></div>
+    </div>
+    <div class="container">
+      <p class="faint" style="margin:0 0 8px">‹ Danh sách vị trí</p>
+      <div class="card-head" style="margin-bottom:14px">
+        <div><h1>Lập trình viên backend</h1><div class="muted">10 ngày · 32 bài · 74 câu · <span style="color:var(--error-text)">2 câu thiếu đáp án</span> · <span class="pill p-draft">Đang soạn</span></div></div>
+        <div style="display:flex;gap:8px"><button class="btn-plain">Ngừng dùng</button><button class="btn-submit">Đánh dấu Sẵn sàng</button></div>
+      </div>
+      <div class="split">
+        <div class="daynav">
+          <div>Ngày 1 <span class="faint">3 · 5</span></div>
+          <div>Ngày 2 <span class="faint">4 · 6</span></div>
+          <div class="active">Ngày 3 <span>3 · 8</span></div>
+          <div>Ngày 4 <span class="faint">2 · 12</span></div>
+          <div style="color:var(--text-faint)">… Ngày 5–10</div>
+          <div style="color:var(--accent)">+ Thêm ngày</div>
+        </div>
+        <div>
+          <div class="row2" style="gap:14px">
+            <div>
+              <div class="muted" style="margin-bottom:6px;font-weight:600">Ngày 3 — Kiến trúc dịch vụ</div>
+              <div class="item-row"><span class="drag">⋮⋮</span><span class="tag">Bài</span>Tổng quan các service</div>
+              <div class="item-row"><span class="drag">⋮⋮</span><span class="tag">Bài</span>Quy ước API nội bộ</div>
+              <div class="item-row"><span class="drag">⋮⋮</span><span class="tag">Bài</span>Chạy môi trường local</div>
+              <div class="item-row"><span class="drag">⋮⋮</span><span class="tag">Câu</span>Service nào giữ phiên đăng nhập?</div>
+              <div class="item-row miss"><span class="drag">⋮⋮</span><span class="tag">Câu</span>Những header bắt buộc… <span style="color:var(--error-text);font-size:.7rem;margin-left:auto">Thiếu đáp án</span></div>
+              <div class="faint">… 6 câu nữa</div>
+              <div style="display:flex;gap:6px;margin-top:8px"><button class="btn-plain">+ Bài học</button><button class="btn-plain">+ Câu hỏi</button></div>
+            </div>
+            <div class="card" style="margin:0">
+              <div class="card-title" style="margin-bottom:8px">Câu hỏi</div>
+              <div class="form-group"><textarea rows="2">Những header nào bắt buộc khi gọi API nội bộ?</textarea></div>
+              <label>Lựa chọn (2–10) · tick ô đáp án đúng, tick được nhiều</label>
+              <div class="edit-opt"><span class="drag faint">⋮⋮</span><span class="faint">a</span><input type="text" value="X-Request-Id"><span class="chk"></span></div>
+              <div class="edit-opt"><span class="drag faint">⋮⋮</span><span class="faint">b</span><input type="text" value="Authorization"><span class="chk"></span></div>
+              <div class="edit-opt"><span class="drag faint">⋮⋮</span><span class="faint">c</span><input type="text" value="Content-Type"><span class="chk"></span></div>
+              <div class="edit-opt"><span class="drag faint">⋮⋮</span><span class="faint">d</span><input type="text" value="X-Debug"><span class="chk"></span></div>
+              <div class="faint" style="color:var(--accent);margin-bottom:8px">+ Thêm lựa chọn</div>
+              <div class="form-group"><label>Giải thích (không bắt buộc)</label><textarea rows="2"></textarea></div>
+              <div style="display:flex;justify-content:space-between;align-items:center"><span class="btn-danger" style="border:none;padding:0">Xoá câu</span><button class="btn-submit">Lưu</button></div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:14px">
+            <div class="card-title" style="margin-bottom:8px">Bài học (khi chọn một bài)</div>
+            <div class="row2" style="gap:12px">
+              <div><label>Tên bài</label><input value="Chạy môi trường local" style="width:100%;margin-bottom:8px"><label>Nội dung Markdown</label><textarea rows="4">## Cài đặt&#10;1. Clone repo…&#10;2. Chạy `npm install`</textarea></div>
+              <div><label>Xem trước</label><div class="md" style="border:1px solid var(--border-light);border-radius:6px;padding:8px;height:106px"><h3>Cài đặt</h3>1. Clone repo…<br>2. Chạy <code>npm install</code></div></div>
+            </div>
+            <label style="margin-top:10px">Đính kèm (ảnh, PDF, video)</label>
+            <div class="file"><span>so-do-local.png</span><span class="faint">240 KB · xoá</span></div>
+            <div class="file"><span>huong-dan.pdf</span><span class="faint">1,2 MB · xoá</span></div>
+            <label style="margin-top:10px">Link video (mỗi dòng một link)</label>
+            <textarea rows="2">https://youtu.be/abc123&#10;https://example.com/clip.mp4</textarea>
+            <div class="note" style="color:var(--warn-text)">Dòng 2 không nhúng được (chỉ YouTube, Vimeo, Google Drive) — sẽ hiện thành link thường.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HIRE 1 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>N1</b> · Nhân sự · Lộ trình của tôi</p>
+  <div class="row2">
+    <div class="frame">
+      <div class="app-header"><span class="app-title">Lộ trình của tôi</span><div class="toggle"><span class="active">VI</span><span>EN</span></div></div>
+      <div class="container">
+        <h1>Kế toán tổng hợp</h1>
+        <div class="muted">Bắt đầu 15/09/2026 · Đã xong 3/5 ngày · Điểm trung bình 80%</div>
+        <div class="progress" style="margin:10px 0 16px"><i style="width:60%"></i></div>
+        <div class="day done"><span class="n">1</span><span class="t">Giới thiệu công ty<div class="meta">3 bài · Quiz 4/5</div></span><span class="pill p-done">Đã xong</span></div>
+        <div class="day done"><span class="n">2</span><span class="t">Quy trình chứng từ<div class="meta">4 bài · Quiz 5/5</div></span><span class="pill p-done">Đã xong</span></div>
+        <div class="day done"><span class="n">3</span><span class="t">Phần mềm kế toán<div class="meta">3 bài · Quiz 3/6</div></span><span class="pill p-done">Đã xong</span></div>
+        <div class="day doing"><span class="n">4</span><span class="t">Báo cáo thuế<div class="meta">Đã đọc 1/2 bài · Quiz 8 câu</div></span><span class="pill p-learn">Đang học</span></div>
+        <div class="day"><span class="n">5</span><span class="t">Kiểm tra cuối kỳ<div class="meta">2 bài · Quiz 10 câu</div></span><span class="pill p-off">Chưa bắt đầu</span></div>
+        <p class="faint" style="margin-top:8px">Mọi ngày đều mở, học theo thứ tự tuỳ ý.</p>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="app-header"><span class="app-title">Lộ trình của tôi</span><div class="toggle"><span class="active">VI</span><span>EN</span></div></div>
+      <div class="container"><p class="empty-text" style="color:var(--text-faint);text-align:center;padding:60px 0;font-size:.9rem">Bạn chưa được giao lộ trình onboarding.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HIRE 2 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>N2</b> · Nhân sự · Mở một ngày: bài học rồi quiz trên cùng một trang cuộn</p>
+  <div class="row2">
+    <div class="frame">
+      <div class="app-header"><span class="app-title">‹ Ngày 4 — Báo cáo thuế</span><div class="toggle"><span class="active">VI</span><span>EN</span></div></div>
+      <div class="container">
+        <div class="card">
+          <div class="card-head" style="margin-bottom:6px"><span class="card-title">Bài 1 · Tờ khai GTGT</span><span class="pill p-done">Đã đọc</span></div>
+          <div class="md">Tờ khai thuế GTGT nộp theo tháng hoặc quý tuỳ doanh thu năm trước…</div>
+        </div>
+        <div class="card">
+          <div class="card-head" style="margin-bottom:6px"><span class="card-title">Bài 2 · Quyết toán TNCN</span></div>
+          <div class="md">Cuối năm, kế toán tổng hợp thu nhập của từng nhân viên và đối chiếu số đã khấu trừ…</div>
+          <div class="video">▶ Trình phát YouTube (youtube-nocookie)</div>
+          <div class="file"><span>mau-quyet-toan.pdf</span><span style="color:var(--accent)">Mở</span></div>
+          <div style="text-align:right;margin-top:10px"><button class="btn-submit">Đã đọc xong</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame">
+      <div class="app-header"><span class="app-title">‹ Ngày 4 — Quiz</span><div class="toggle"><span class="active">VI</span><span>EN</span></div></div>
+      <div class="container">
+        <div class="sticky"><span>Đã trả lời <b>2/8</b></span><button class="btn-submit" disabled>Nộp bài</button></div>
+        <div class="card">
+          <div class="q"><b>1.</b> Doanh nghiệp doanh thu dưới 50 tỷ khai GTGT theo kỳ nào?
+            <div class="opt"><span class="box r"></span>a) Tháng</div>
+            <div class="opt on"><span class="box r"></span>b) Quý</div>
+            <div class="opt"><span class="box r"></span>c) Năm</div>
+          </div>
+          <div class="q"><b>2.</b> Hồ sơ quyết toán TNCN gồm những gì?
+            <div class="hint">Chọn tất cả đáp án đúng</div>
+            <div class="opt on"><span class="box c"></span>a) Tờ khai 05/QTT-TNCN</div>
+            <div class="opt"><span class="box c"></span>b) Hợp đồng lao động</div>
+            <div class="opt on"><span class="box c"></span>c) Bảng kê 05-1/BK-QTT</div>
+            <div class="opt"><span class="box c"></span>d) Sổ quỹ tiền mặt</div>
+          </div>
+          <div class="q"><b>3.</b> Hạn nộp tờ khai quý là ngày cuối cùng của…
+            <div class="opt"><span class="box r"></span>a) Tháng đầu quý sau</div>
+            <div class="opt"><span class="box r"></span>b) Tháng cuối quý</div>
+          </div>
+          <div class="faint" style="padding-top:6px">… 5 câu nữa · nút Nộp bài bật khi trả lời đủ 8/8</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ HIRE 3 ============ -->
+<div class="shot">
+  <p class="shot-label"><b>N3</b> · Nhân sự · Sau khi nộp (chấm ngay trong app)</p>
+  <div class="frame" style="max-width:calc(50% - 12px)">
+    <div class="app-header"><span class="app-title">‹ Ngày 4 — Kết quả</span><div class="toggle"><span class="active">VI</span><span>EN</span></div></div>
+    <div class="container">
+      <div class="card-head card" style="background:#eef0fc;border-color:#d4d9f6">
+        <div><div class="card-title">6/8 câu đúng</div><div class="faint">Lần 1 · điểm chính thức</div></div>
+        <button class="btn-new-list">Làm lại</button>
+      </div>
+      <div class="card">
+        <div class="q"><b>1.</b> Doanh nghiệp doanh thu dưới 50 tỷ khai GTGT theo kỳ nào? <span class="pill p-done">Đúng</span>
+          <div class="opt right">b) Quý</div>
+        </div>
+        <div class="q"><b>2.</b> Hồ sơ quyết toán TNCN gồm những gì? <span class="pill p-err">Sai</span>
+          <div class="opt right">a) Tờ khai 05/QTT-TNCN</div>
+          <div class="opt">b) Hợp đồng lao động</div>
+          <div class="opt right">c) Bảng kê 05-1/BK-QTT</div>
+          <div class="opt right" style="font-weight:600">d) Sổ quỹ tiền mặt <span class="faint">(bạn bỏ sót)</span></div>
+          <div class="explain">Đáp án đúng: a, c, d. Sổ quỹ dùng để đối chiếu khoản chi lương bằng tiền mặt.</div>
+        </div>
+        <div class="faint" style="padding-top:6px">… 6 câu nữa</div>
+      </div>
+      <p class="note">Làm lại không đổi điểm chính thức; mọi lần làm đều được lưu và Admin/HR xem được.</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,41 +1,64 @@
 # PrivOS Onboarding MCP App
 
-Onboarding for new hires on PrivOS. HR keeps one roadmap **template per position**; onboarding a hire
-copies that template into a **roadmap list of their own**, with deadlines counted in working days
-(Monday–Friday) from the start date. The hire ticks their own tasks; HR follows progress and the
-record moves to "Hoàn tất" by itself when every task is done.
+The v4 app uses PrivOS Lists for positions, hire records, templates, progress and scores, and PrivOS
+Files for shared learning materials. HR builds a template per position; each onboarding run gets its
+own isolated List. Learning days can be opened in any order, and the first quiz score is official.
+
+Current Hub evidence (2026-09-24): the two room registries were created and read back through
+`mcpapp.lists.*`. A Ready template containing one week, one day and one lesson saved successfully;
+after reload, Open displayed the complete tree. One provision case also passed: the current admin
+account was onboarded from Ready template `Kiểm thử Cha P8 2026-09-24` for 2026-09-29; People showed
+Learning 0/1 day and its drawer showed the correct position, date and status. A/B/C access, file
+open/download, quiz, cancellation, importer and full P8 manual acceptance remain unrun. A full
+template copy saved as a new Ready position (1/1/1); disabling that copy removed it from the
+new-onboarding position picker.
+See the [v4 design](../docs/superpowers/specs/2026-09-23-onboarding-app-v4-design.md),
+[implementation plan](../docs/superpowers/plans/2026-09-23-onboarding-v4-index.md) and
+[acceptance record](../docs/superpowers/specs/2026-09-23-onboarding-v4-acceptance.md).
 
 ## What it stores
 
-Everything lives in PrivOS Lists in the room, all created with `isolatedList: true`:
+The app creates isolated Lists in the current room through the signed-in user's Hub session:
 
 | List | Key | One per |
 |---|---|---|
-| Position template | `onb-tpl-<slug>` | position |
-| Hire records | `onb-hires` | room |
-| Roadmap | `onb-run-<userId>-<yyyymmdd>` (a `-2`, `-3`… suffix is added if that key already exists) | hire |
+| Position registry | `onb-positions` (requested key) | room |
+| Hire registry | `onb-hires` (requested key) | room |
+| Position template | `onb-tpl-<positionItemId>` (requested key) | position |
+| Roadmap run | `onb-run-<userId>-<yyyymmdd>` (requested key) | onboarding run |
 
-Provisioning has no transaction, so it is resumable: the hire record is written first, each roadmap
-task stores the template task it came from, and "Tiếp tục" creates only what is missing.
+Hub may rewrite a requested List key, so the app discovers Lists by room and verified name/ID rather
+than treating the key as authoritative. A template or run List has one physical Stage, `Nội dung`.
+All content items are physically flat: `Cha:TEXT` stores the parent item ID and `Thứ tự:NUMBER`
+stores display order. The app reconstructs `Tuần → Ngày → Bài học/Câu hỏi` for templates and
+`Tổng quan → Tuần → Ngày → Bài học/Câu hỏi` for runs. Hub `createItem` was observed ignoring native
+`parentId`; do not use native `parentId` filters to load this tree. A missing, invalid or cyclic
+`Cha` is a data error. Each run item a hire needs must be assigned directly with `ASSIGNEE`, since
+the logical tree does not create Hub ACL inheritance.
+
+Shared files belong under the room's `Onboarding/<positionItemId>/` folder. Lesson items store a
+full file object in `FILE_MULTIPLE` plus a `[fileId:...]` description marker. Opening or downloading
+uses fresh file metadata; a temporary signed URL is not stored in Lists.
 
 ## Who sees what
 
-- **Room owner / admin / moderator** — the Admin/HR screen: position templates, the hire table, the
-  provisioning form (pick the hire from the room member list), and any hire's roadmap.
-- **Everyone else** (a room member by default) — "Lộ trình của tôi": their own roadmap, with checkboxes
-  only on the tasks assigned to them.
+- **Room owner/admin** — Admin/HR screens for positions, templates, hires and provisioning.
+- **Assigned hire** — "Lộ trình của tôi" for the hire's own run once item grants and discovery are
+  verified on Hub.
 
-That checkbox restriction is enforced in the app UI (`canToggle`). Real write enforcement on isolated
-list items is the Hub's, through the `ASSIGNEE` field, and has not been verified on a live Hub yet.
+Real access enforcement belongs to Hub isolated List ACL, with
+`Isolated_Item_Write_ACL_Enforce` enabled by a workspace administrator. The current A/B/C read and
+write matrix has not been verified on Hub; UI role checks alone are not acceptance evidence.
 
 ## Code layout
 
-`src/ui/onboarding/` — `domain/` pure functions with unit tests, `data/` typed REST calls through
-`src/ui/privos-rest.ts` (always as the logged-in user, never an internal route), `flows/` multi-call
-orchestration tested against a fake `app.rest`, `views/` React. The server (`src/*.ts`) only serves
-the UI and the single `onboarding_dashboard` tool; it holds no onboarding logic.
+`src/ui/onboarding/` has `domain/` models and validation, `data/` Hub adapters, `flows/`
+multi-call operations and `views/` React screens. Lists/Items use mediated `mcpapp.*` tools through
+the Hub bridge; Files use the documented tool, REST and upload channels. The server (`src/*.ts`)
+serves the UI and MCP entrypoint; it holds no onboarding data store.
 
-Design: `docs/superpowers/specs/2026-09-21-onboarding-app-design.md` in the parent workspace.
+The v1/v2 plans remain in the parent workspace as historical records. Follow the v4 design and
+acceptance links above for current behavior and test status.
 
 ## Runtime trust model
 
@@ -88,6 +111,37 @@ verified backend actor, credentials cached to disk — is only ever reachable wh
 
 The Vite UI defaults to `http://localhost:5179`. `DEV_TUNNEL=cloudflared` is optional when the
 browser displaying Hub is on another machine.
+
+### V4 review in a Hub test room
+
+With the paired Relay configured, start the interactive UI from WSL in this app directory:
+
+```bash
+NODE_ENV=development PRIVOS_DEV_UI=1 npm start
+```
+
+Open the app inside the test room as owner/admin. On a room without onboarding registries, first
+open creates `Onboarding positions` and `Onboarding hires`; reload should reuse their IDs. In
+Templates, create a position with one week, one day and one lesson, choose `Sẵn sàng`, reload and
+use Open to inspect the tree. This exact Ready save/reload/Open path has been observed on Hub. The
+List stores flat items; inspect `Cha:TEXT` and `Thứ tự` on each item if comparing native Lists with
+the v4 UI. The single observed provision case used the current admin account and the Ready template
+`Kiểm thử Cha P8 2026-09-24`, with start date 2026-09-29; People showed Learning 0/1 day, and the
+drawer showed the correct position, date and status. Account B/C, Files, other provision cases,
+quiz and cancellation require their separate acceptance cases in the linked record.
+
+For local verification from this app directory:
+
+```bash
+npm run typecheck:strict-unused
+npx vitest run --exclude tests/packaging.spec.ts
+npm run build
+```
+
+Local verification on 2026-09-24: strict-unused PASS; 68 files/430 tests PASS with
+`--exclude tests/packaging.spec.ts`; `npm run build` PASS; manifest lint valid; the production
+bundle contains no P0, role-switch or `demoPositions` labels. These results are separate from Hub
+manual acceptance; P8 manual acceptance remains unrun.
 
 ## Managed direct runtime
 

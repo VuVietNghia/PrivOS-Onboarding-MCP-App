@@ -75,6 +75,7 @@ export function resolveFieldIds(defs: FieldDef[], specs: FieldSpec[]): { ok: tru
 export interface HubItem {
   _id: string;
   name?: string;
+  description?: string;
   stageId?: string;
   parentId?: string | null;
   customFields?: { fieldId: string; value: unknown }[];

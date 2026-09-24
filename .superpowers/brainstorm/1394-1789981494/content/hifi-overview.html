@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Onboarding — Tổng quan (hi-fi)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1f2029; --surface:#272833; --surface-2:#2e303c; --line:#363947; --line-soft:#2f3140;
+    --text:#e6e8ef; --text-2:#a9afbd; --text-3:#7c8395;
+    --primary:#5b6ee1; --primary-soft:rgba(91,110,225,.16); --primary-line:rgba(91,110,225,.45);
+    --ok:#2DE0A5; --ok-soft:rgba(45,224,165,.13);
+    --warn:#FFD031; --warn-soft:rgba(255,208,49,.13);
+    --err:#ef4444; --err-soft:rgba(239,68,68,.14);
+    --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font:13px/1.5 Montserrat,-apple-system,"Segoe UI",sans-serif;background:#0b0c10;color:var(--text);padding:24px}
+  .hint{max-width:1440px;margin:0 auto 14px;color:#9aa1b2;font-size:13px}
+  .hint b{color:#e6e8ef}
+  .app{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:232px 1fr;min-height:860px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
+
+  /* Sidebar */
+  .side{background:#1a1b23;border-right:1px solid var(--line-soft);padding:18px 12px;display:flex;flex-direction:column;gap:4px}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px}
+  .brand .logo{width:30px;height:30px;border-radius:var(--r-md);background:linear-gradient(135deg,#5b6ee1,#7f61fe);display:grid;place-items:center;font-weight:700;color:#fff}
+  .brand b{font-size:14px}.brand small{display:block;color:var(--text-3);font-size:11px}
+  .nav{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r-md);color:var(--text-2);font-weight:500}
+  .nav svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+  .nav.on{background:var(--primary-soft);color:#c9d0ff}
+  .nav .cnt{margin-left:auto;font-size:11px;color:var(--text-3)}
+  .nav .cnt.red{color:#fff;background:var(--err);padding:0 6px;border-radius:99px;font-weight:600}
+  .side .sep{height:1px;background:var(--line-soft);margin:12px 6px}
+  .side .foot{margin-top:auto;padding:10px;border-radius:var(--r-md);background:var(--surface);color:var(--text-3);font-size:11px}
+  .side .foot b{color:var(--text-2);display:block;font-size:12px}
+
+  /* Main */
+  .main{padding:22px 28px 32px;overflow:hidden}
+  .top{display:flex;align-items:flex-end;gap:16px;margin-bottom:20px}
+  .top h1{font-size:20px;font-weight:600}
+  .top p{color:var(--text-3);font-size:12px;margin-top:2px}
+  .sp{flex:1}
+  .btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:var(--r-md);font-weight:600;font-size:13px;border:1px solid transparent;white-space:nowrap}
+  .btn-p{background:var(--primary);color:#fff}
+  .btn-s{background:var(--surface);border-color:var(--line);color:var(--text)}
+  .btn-sm{height:28px;padding:0 10px;font-size:12px}
+  .btn-ghost{color:#aab6ff;padding:0 6px;height:auto}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .kpi{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg);padding:14px 16px}
+  .kpi .lbl{color:var(--text-2);font-size:12px;display:flex;align-items:center;gap:6px}
+  .kpi .dot{width:8px;height:8px;border-radius:50%}
+  .kpi .val{font-size:26px;font-weight:600;margin:4px 0 2px;letter-spacing:-.01em}
+  .kpi .sub{font-size:11px;color:var(--text-3)}
+  .kpi .sub .up{color:var(--ok)} .kpi .sub .dn{color:var(--err)}
+
+  .cols{display:grid;grid-template-columns:1.55fr 1fr;gap:16px}
+  .panel{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--r-lg)}
+  .ph{display:flex;align-items:center;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line-soft)}
+  .ph h3{font-size:13px;font-weight:600}
+  .ph .n{font-size:11px;color:var(--text-3);background:var(--surface-2);padding:1px 7px;border-radius:99px}
+
+  .row{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line-soft)}
+  .row:last-child{border-bottom:0}
+  .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;color:#fff}
+  .who b{font-weight:600;display:block}
+  .who small{color:var(--text-3);font-size:11px}
+  .ico{width:28px;height:28px;border-radius:var(--r-md);display:grid;place-items:center;flex:none}
+  .ico svg{width:15px;height:15px;fill:none;stroke-width:2}
+  .ico.err{background:var(--err-soft)} .ico.err svg{stroke:var(--err)}
+  .ico.warn{background:var(--warn-soft)} .ico.warn svg{stroke:var(--warn)}
+  .ico.info{background:var(--primary-soft)} .ico.info svg{stroke:#9fb0ff}
+  .lz{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:var(--r-sm);font-size:11px;font-weight:600;white-space:nowrap}
+  .lz-err{background:var(--err-soft);color:#ff8b8b}
+  .lz-warn{background:var(--warn-soft);color:#ffdd6b}
+  .lz-ok{background:var(--ok-soft);color:#6ff0c4}
+  .lz-info{background:var(--primary-soft);color:#b3bfff}
+  .lz-mute{background:var(--surface-2);color:var(--text-2)}
+  .meta{color:var(--text-3);font-size:11px}
+
+  .bar{height:6px;border-radius:99px;background:#3a3d4c;position:relative;overflow:visible}
+  .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:var(--primary)}
+  .bar .plan{position:absolute;top:-3px;width:2px;height:12px;background:#e6e8ef;border-radius:1px}
+  .prog{width:160px}
+  .prog .t{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-bottom:4px}
+  .prog .t b{color:var(--text);font-weight:600}
+
+  .days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:14px 16px}
+  .day{border:1px solid var(--line-soft);border-radius:var(--r-md);padding:8px;min-height:92px;background:var(--surface-2)}
+  .day.today{border-color:var(--primary-line);background:rgba(91,110,225,.07)}
+  .day .d{font-size:11px;color:var(--text-3);display:flex;justify-content:space-between}
+  .day .d b{color:var(--text);font-size:15px;font-weight:600}
+  .chip{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;background:var(--surface);border-radius:var(--r-sm);padding:4px 6px}
+  .chip .av{width:18px;height:18px;font-size:9px}
+
+  .legend{display:flex;gap:14px;font-size:11px;color:var(--text-3);padding:0 16px 12px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:10px;height:6px;border-radius:99px;background:var(--primary)}
+  .legend em{display:inline-block;width:2px;height:10px;background:#e6e8ef}
+</style>
+</head>
+<body>
+<p class="hint"><b>Màn 1 · Tổng quan</b>. Chế độ tối, dùng đúng font (Montserrat), màu chính (#5b6ee1) và bo góc của PrivOS Hub. Dữ liệu minh hoạ.</p>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand"><div class="logo">O</div><div><b>Onboarding</b><small>Room · Nhân sự 2026</small></div></div>
+    <div class="nav on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Tổng quan</div>
+    <div class="nav"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-7 7-7s7 3 7 7"/><path d="M17 11a3 3 0 1 0 0-6M22 21c0-3-2-5.5-5-6"/></svg>Nhân sự<span class="cnt">14</span></div>
+    <div class="nav"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Tiến độ<span class="cnt red">5</span></div>
+    <div class="nav"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Template<span class="cnt">6</span></div>
+    <div class="sep"></div>
+    <div class="btn btn-p" style="justify-content:center">+ Khởi tạo onboarding</div>
+    <div class="foot"><b>Dữ liệu lưu trong PrivOS Lists</b>Cập nhật 2 phút trước · <span style="color:#aab6ff">Tải lại</span></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="top">
+      <div><h1>Tổng quan</h1><p>Thứ Hai, 21/09/2026 · tuần 39</p></div>
+      <span class="sp"></span>
+      <span class="btn btn-s">Quản lý template</span>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--primary)"></span>Đang onboarding</div><div class="val">9</div><div class="sub">6 người đã qua tuần đầu</div></div>
+      <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--err)"></span>Có việc quá hạn</div><div class="val" style="color:#ff8b8b">3</div><div class="sub">7 việc quá hạn · 4 của HR</div></div>
+      <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--warn)"></span>Bắt đầu trong 7 ngày</div><div class="val">2</div><div class="sub">Gần nhất: thứ Tư 23/09</div></div>
+      <div class="kpi"><div class="lbl"><span class="dot" style="background:var(--ok)"></span>Đã hoàn tất</div><div class="val">4</div><div class="sub">Tổng số hồ sơ đã xong</div></div>
+    </div>
+
+    <div class="cols">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <!-- Cần xử lý ngay -->
+        <section class="panel">
+          <div class="ph"><h3>Cần xử lý ngay</h3><span class="n">5</span><span class="sp"></span><span class="btn-ghost btn">Xem tất cả việc quá hạn →</span></div>
+          <div class="row">
+            <div class="ico err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></svg></div>
+            <div style="flex:1"><b>Khởi tạo lỗi · Phạm Dũng</b><div class="meta">Sales Executive · dừng ở task 7/12 · lỗi mạng khi tạo task</div></div>
+            <span class="btn btn-s btn-sm">Hủy</span><span class="btn btn-p btn-sm">Tiếp tục khởi tạo</span>
+          </div>
+          <div class="row">
+            <div class="ico warn"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+            <div style="flex:1"><b>Kẹt ở "Đang khởi tạo" · Võ Hà</b><div class="meta">Designer · 0/9 task. Có thể tab đã bị đóng giữa chừng.</div></div>
+            <span class="btn btn-s btn-sm">Tiếp tục khởi tạo</span>
+          </div>
+          <div class="row">
+            <div class="ico err"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg></div>
+            <div style="flex:1"><b>Cấp laptop và tài khoản VPN</b><div class="meta">Việc của HR · cho <b style="color:var(--text-2)">Nguyễn An</b> · hạn thứ Sáu 18/09</div></div>
+            <span class="lz lz-err">Trễ 1 ngày</span><span class="btn btn-s btn-sm">Đánh dấu xong</span>
+          </div>
+          <div class="row">
+            <div class="ico err"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11"/></svg></div>
+            <div style="flex:1"><b>Ký hợp đồng bảo mật (NDA)</b><div class="meta">Việc của HR · cho <b style="color:var(--text-2)">Trần Bình</b> · hạn thứ Năm 17/09</div></div>
+            <span class="lz lz-err">Trễ 2 ngày</span><span class="btn btn-s btn-sm">Đánh dấu xong</span>
+          </div>
+        </section>
+
+        <!-- Chậm tiến độ -->
+        <section class="panel">
+          <div class="ph"><h3>Chậm tiến độ</h3><span class="n">3</span><span class="meta" style="margin-left:6px">thực tế thấp hơn kế hoạch theo hạn</span><span class="sp"></span><span class="btn-ghost btn">Mở màn Tiến độ →</span></div>
+          <div class="row">
+            <div class="av" style="background:#7f61fe">NA</div>
+            <div class="who" style="width:210px"><b>Nguyễn An</b><small>Kỹ sư Backend · ngày thứ 6/20</small></div>
+            <div class="prog"><div class="t"><span>Thực tế <b>30%</b></span><span>KH 55%</span></div><div class="bar"><i style="width:30%"></i><span class="plan" style="left:55%"></span></div></div>
+            <span class="sp"></span><span class="lz lz-err">3 quá hạn</span><span class="lz lz-mute">HR còn 4 · NS còn 10</span>
+          </div>
+          <div class="row">
+            <div class="av" style="background:#32AAF0">TB</div>
+            <div class="who" style="width:210px"><b>Trần Bình</b><small>QA Engineer · ngày thứ 9/15</small></div>
+            <div class="prog"><div class="t"><span>Thực tế <b>48%</b></span><span>KH 62%</span></div><div class="bar"><i style="width:48%"></i><span class="plan" style="left:62%"></span></div></div>
+            <span class="sp"></span><span class="lz lz-err">2 quá hạn</span><span class="lz lz-mute">HR còn 1 · NS còn 6</span>
+          </div>
+          <div class="row">
+            <div class="av" style="background:#D7801D">LM</div>
+            <div class="who" style="width:210px"><b>Lê Minh</b><small>Kế toán · ngày thứ 3/10</small></div>
+            <div class="prog"><div class="t"><span>Thực tế <b>10%</b></span><span>KH 20%</span></div><div class="bar"><i style="width:10%"></i><span class="plan" style="left:20%"></span></div></div>
+            <span class="sp"></span><span class="lz lz-warn">Sắp đến hạn 2</span><span class="lz lz-mute">HR còn 0 · NS còn 9</span>
+          </div>
+          <div class="legend"><span><i></i>Đã xong</span><span><em></em>Lẽ ra phải đạt hôm nay (theo hạn các task)</span></div>
+        </section>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <!-- Sắp bắt đầu -->
+        <section class="panel">
+          <div class="ph"><h3>Sắp bắt đầu</h3><span class="n">2</span></div>
+          <div class="row">
+            <div class="av" style="background:#1DD787;color:#0b0c10">HT</div>
+            <div class="who" style="flex:1"><b>Hoàng Thu</b><small>Kỹ sư Frontend</small></div>
+            <div style="text-align:right"><b>Thứ Tư 23/09</b><div class="meta">còn 2 ngày làm việc</div></div>
+          </div>
+          <div class="row">
+            <div class="av" style="background:#F0328C">ĐK</div>
+            <div class="who" style="flex:1"><b>Đỗ Khang</b><small>Product Manager</small></div>
+            <div style="text-align:right"><b>Thứ Hai 28/09</b><div class="meta">còn 5 ngày làm việc</div></div>
+          </div>
+        </section>
+
+        <!-- Tuần này -->
+        <section class="panel">
+          <div class="ph"><h3>Hạn trong tuần này</h3><span class="n">11</span><span class="sp"></span><span class="meta">21 – 25/09</span></div>
+          <div class="days">
+            <div class="day today"><div class="d">T2 <b>21</b></div><div class="chip"><span class="av" style="background:#7f61fe">NA</span>3 việc</div><div class="chip"><span class="av" style="background:#32AAF0">TB</span>1 việc</div></div>
+            <div class="day"><div class="d">T3 <b>22</b></div><div class="chip"><span class="av" style="background:#D7801D">LM</span>2 việc</div></div>
+            <div class="day"><div class="d">T4 <b>23</b></div><div class="chip"><span class="av" style="background:#1DD787;color:#0b0c10">HT</span>Ngày đầu</div><div class="chip"><span class="av" style="background:#7f61fe">NA</span>1 việc</div></div>
+            <div class="day"><div class="d">T5 <b>24</b></div><div class="chip"><span class="av" style="background:#32AAF0">TB</span>2 việc</div></div>
+            <div class="day"><div class="d">T6 <b>25</b></div><div class="chip"><span class="av" style="background:#7f61fe">NA</span>2 việc</div></div>
+          </div>
+        </section>
+
+        <!-- Hoàn tất gần đây -->
+        <section class="panel">
+          <div class="ph"><h3>Hoàn tất</h3></div>
+          <div class="row"><div class="av" style="background:#5b6ee1">LC</div><div class="who" style="flex:1"><b>Lê Chi</b><small>Designer · 16/16 việc</small></div><span class="lz lz-ok">Hoàn tất</span></div>
+          <div class="row"><div class="av" style="background:#686f7a">PQ</div><div class="who" style="flex:1"><b>Phan Quân</b><small>Kỹ sư Backend · 21/21 việc</small></div><span class="lz lz-ok">Hoàn tất</span></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

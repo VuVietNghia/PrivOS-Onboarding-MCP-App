@@ -1,0 +1,102 @@
+<style>
+  .m{font:13px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1F2329;background:#F7F8FA;border:1px solid #E4E7EA;border-radius:8px;overflow:hidden}
+  .m *{box-sizing:border-box}
+  .top{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-bottom:1px solid #E4E7EA}
+  .top b{font-size:14px}
+  .tabs{display:flex;gap:2px;margin-left:12px}
+  .tab{padding:5px 10px;border-radius:6px;color:#6C737A}
+  .tab.on{background:#EEF4FF;color:#156FF5;font-weight:600}
+  .sp{flex:1}
+  .btn{padding:6px 11px;border-radius:6px;background:#156FF5;color:#fff;font-weight:600;font-size:12px}
+  .btn.g{background:#fff;color:#1F2329;border:1px solid #E4E7EA}
+  .pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600}
+  .p-run{background:#EEF4FF;color:#156FF5}.p-ok{background:#E3F6EE;color:#148660}.p-late{background:#FFE9EC;color:#D40C26}.p-warn{background:#FFF4DE;color:#B26A00}
+  .bar{height:6px;background:#EBECEF;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:#156FF5}
+  .av{width:26px;height:26px;border-radius:50%;background:#DCE6F9;color:#156FF5;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex:none}
+  .card{background:#fff;border:1px solid #E4E7EA;border-radius:8px}
+  .muted{color:#6C737A;font-size:12px}
+  .row{display:flex;align-items:center;gap:10px}
+  .task{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #F0F1F3}
+  .cb{width:14px;height:14px;border:1.5px solid #9EA2A8;border-radius:3px;flex:none}.cb.on{background:#156FF5;border-color:#156FF5}
+</style>
+
+<h2>Màn Admin/HR: chọn bố cục</h2>
+<p class="subtitle">Cả 3 dùng chung dữ liệu hiện có (hồ sơ, tiến độ, trạng thái, lộ trình). Khác nhau ở cách HR duyệt và mở một hồ sơ. Click để chọn.</p>
+
+<div class="options">
+
+<div class="option" data-choice="a" onclick="toggleSelect(this)">
+<div class="letter">A</div>
+<div class="content">
+<h3>Master–detail: danh sách trái, lộ trình phải</h3>
+<p>Click một người là lộ trình mở ngay bên phải, không cuộn trang. Hợp khi HR theo dõi từng người.</p>
+<div class="m" style="margin-top:8px">
+  <div class="top"><b>Onboarding</b><div class="tabs"><span class="tab on">Nhân sự mới</span><span class="tab">Template</span></div><span class="sp"></span><span class="btn">+ Thêm nhân sự</span></div>
+  <div style="display:flex;min-height:260px">
+    <div style="width:38%;border-right:1px solid #E4E7EA;background:#fff">
+      <div style="padding:8px 12px;border-bottom:1px solid #E4E7EA"><span class="muted">Tìm kiếm…</span> <span style="float:right" class="muted">Tất cả ▾</span></div>
+      <div style="padding:10px 12px;background:#EEF4FF;border-left:3px solid #156FF5"><div class="row"><span class="av">NA</span><div style="flex:1"><b>Nguyễn An</b><div class="muted">Backend · 22/09</div></div><span class="pill p-late">2 quá hạn</span></div><div class="bar" style="margin-top:6px"><i style="width:40%"></i></div></div>
+      <div style="padding:10px 12px;border-bottom:1px solid #F0F1F3"><div class="row"><span class="av">TB</span><div style="flex:1"><b>Trần Bình</b><div class="muted">QA · 15/09</div></div><span class="pill p-run">Đang chạy</span></div><div class="bar" style="margin-top:6px"><i style="width:75%"></i></div></div>
+      <div style="padding:10px 12px"><div class="row"><span class="av">LC</span><div style="flex:1"><b>Lê Chi</b><div class="muted">Design · 01/09</div></div><span class="pill p-ok">Hoàn tất</span></div></div>
+    </div>
+    <div style="flex:1;padding:14px">
+      <div class="row"><span class="av" style="width:34px;height:34px">NA</span><div style="flex:1"><b style="font-size:15px">Nguyễn An</b><div class="muted">Kỹ sư Backend · bắt đầu 22/09</div></div><span class="btn g">Tính lại</span><span class="btn g">Hủy</span></div>
+      <div class="row" style="margin:12px 0 4px"><span class="muted">4/10 việc · 40%</span><span class="sp"></span><span class="muted">Hạn gần nhất 24/09</span></div>
+      <div class="bar"><i style="width:40%"></i></div>
+      <div style="margin-top:12px;font-weight:600;font-size:12px;color:#6C737A">TUẦN ĐẦU</div>
+      <div class="task"><span class="cb on"></span><s class="muted">Cấp laptop, tài khoản</s></div>
+      <div class="task"><span class="cb"></span>Đọc tài liệu kiến trúc<span class="sp"></span><span class="pill p-late">Quá hạn</span></div>
+      <div class="task"><span class="cb"></span>Pair với mentor<span class="sp"></span><span class="pill p-warn">Còn 2 ngày</span></div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="option" data-choice="b" onclick="toggleSelect(this)">
+<div class="letter">B</div>
+<div class="content">
+<h3>Dashboard: thẻ số liệu + bảng + ngăn trượt</h3>
+<p>Nhìn tổng quan trước (đang chạy, quá hạn, sắp bắt đầu), bảng đầy đủ bên dưới. Click một hàng thì lộ trình trượt ra từ cạnh phải.</p>
+<div class="m" style="margin-top:8px;position:relative">
+  <div class="top"><b>Onboarding</b><div class="tabs"><span class="tab on">Tổng quan</span><span class="tab">Template</span></div><span class="sp"></span><span class="btn">+ Thêm nhân sự</span></div>
+  <div style="padding:12px">
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <div class="card" style="padding:10px"><div class="muted">Đang onboarding</div><b style="font-size:20px">6</b></div>
+      <div class="card" style="padding:10px"><div class="muted">Có việc quá hạn</div><b style="font-size:20px;color:#D40C26">2</b></div>
+      <div class="card" style="padding:10px"><div class="muted">Bắt đầu tuần này</div><b style="font-size:20px">1</b></div>
+      <div class="card" style="padding:10px"><div class="muted">Hoàn tất tháng này</div><b style="font-size:20px;color:#148660">3</b></div>
+    </div>
+    <div class="card" style="margin-top:10px">
+      <div class="row" style="padding:8px 12px;border-bottom:1px solid #E4E7EA;font-size:11px;color:#6C737A;font-weight:600"><span style="width:34%">NHÂN SỰ</span><span style="width:18%">BẮT ĐẦU</span><span style="width:28%">TIẾN ĐỘ</span><span>TRẠNG THÁI</span></div>
+      <div class="row" style="padding:9px 12px;border-bottom:1px solid #F0F1F3"><span style="width:34%" class="row"><span class="av">NA</span><span><b>Nguyễn An</b><div class="muted">Backend</div></span></span><span style="width:18%">22/09</span><span style="width:28%"><div class="bar" style="width:80%"><i style="width:40%"></i></div></span><span class="pill p-late">2 quá hạn</span></div>
+      <div class="row" style="padding:9px 12px"><span style="width:34%" class="row"><span class="av">TB</span><span><b>Trần Bình</b><div class="muted">QA</div></span></span><span style="width:18%">15/09</span><span style="width:28%"><div class="bar" style="width:80%"><i style="width:75%"></i></div></span><span class="pill p-run">Đang chạy</span></div>
+    </div>
+  </div>
+  <div style="position:absolute;top:42px;right:0;bottom:0;width:44%;background:#fff;border-left:1px solid #E4E7EA;box-shadow:-8px 0 24px rgba(0,0,0,.08);padding:12px">
+    <div class="row"><b>Nguyễn An</b><span class="sp"></span><span class="muted">✕</span></div>
+    <div class="bar" style="margin:10px 0"><i style="width:40%"></i></div>
+    <div class="task"><span class="cb on"></span><s class="muted">Cấp laptop</s></div>
+    <div class="task"><span class="cb"></span>Đọc tài liệu<span class="sp"></span><span class="pill p-late">Quá hạn</span></div>
+  </div>
+</div>
+</div>
+</div>
+
+<div class="option" data-choice="c" onclick="toggleSelect(this)">
+<div class="letter">C</div>
+<div class="content">
+<h3>Kanban theo trạng thái</h3>
+<p>Mỗi cột là một trạng thái hồ sơ (Đang khởi tạo, Đang onboarding, Hoàn tất, Lỗi). Trực quan nhưng chỉ đọc, vì trạng thái đổi tự động theo tiến độ chứ không kéo thả được.</p>
+<div class="m" style="margin-top:8px">
+  <div class="top"><b>Onboarding</b><div class="tabs"><span class="tab on">Bảng</span><span class="tab">Template</span></div><span class="sp"></span><span class="btn">+ Thêm nhân sự</span></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px">
+    <div><div class="muted" style="font-weight:600;margin-bottom:6px">ĐANG KHỞI TẠO · 1</div><div class="card" style="padding:10px"><div class="row"><span class="av">PD</span><b>Phạm Dũng</b></div><div class="muted" style="margin-top:4px">Sales · 29/09</div></div></div>
+    <div><div class="muted" style="font-weight:600;margin-bottom:6px">ĐANG ONBOARDING · 2</div><div class="card" style="padding:10px;margin-bottom:8px"><div class="row"><span class="av">NA</span><b>Nguyễn An</b><span class="sp"></span><span class="pill p-late">2</span></div><div class="bar" style="margin-top:8px"><i style="width:40%"></i></div></div><div class="card" style="padding:10px"><div class="row"><span class="av">TB</span><b>Trần Bình</b></div><div class="bar" style="margin-top:8px"><i style="width:75%"></i></div></div></div>
+    <div><div class="muted" style="font-weight:600;margin-bottom:6px">HOÀN TẤT · 1</div><div class="card" style="padding:10px;opacity:.75"><div class="row"><span class="av">LC</span><b>Lê Chi</b></div><div class="muted" style="margin-top:4px">Design · 100%</div></div></div>
+  </div>
+</div>
+</div>
+</div>
+
+</div>
