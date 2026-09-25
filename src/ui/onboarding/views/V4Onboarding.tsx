@@ -111,7 +111,10 @@ function UnconfiguredScreen({ screen, message, locale }: { screen: OnboardingScr
 
 export function V4Onboarding({ admin }: { admin: boolean }) {
   const app = usePrivosApp();
-  const { roomId, userId, userRoles, theme: hostTheme } = usePrivosContext();
+  const context = usePrivosContext();
+  const { roomId, userId, userRoles, theme: hostTheme } = context;
+  // The SDK omits this runtime field from its published TypeScript interface.
+  const roomType: unknown = (context as typeof context & { roomType?: unknown }).roomType;
   const role = admin ? 'admin' : 'employee';
   const [screen, setScreen] = useState<OnboardingScreen>(admin ? 'hires' : 'roadmap');
   const [templateEditor, setTemplateEditor] = useState<{ key: string; positionId?: string; tree: TemplateTree; name: string; status: 'draft' | 'ready' | 'disabled' } | null>(null);
@@ -208,7 +211,7 @@ export function V4Onboarding({ admin }: { admin: boolean }) {
   return <OnboardingShell role={role} roomId={roomId} screen={screen} onNavigate={(next) => { setScreen(next); setTemplateEditor(null); setCopySource(null); setImportOpen(false); }} locale={locale} onLocaleChange={changeLocale} theme={theme} onThemeChange={changeTheme}>
     {admin && catalogs && screen === 'hires' && <HiresScreen key={`${identityKey}:${catalogRevision}`} catalogs={catalogs} identityKey={identityKey} locale={locale} onCreate={() => setScreen('provision')} onOpen={setSelectedHireId} />}
     {admin && catalogs && binding && selectedHireId && <HrV4Drawer app={app} binding={binding} catalogs={catalogs} actorRoles={userRoles ?? []} hireId={selectedHireId} onClose={() => setSelectedHireId(null)} onChanged={() => setCatalogRevision((value) => value + 1)} />}
-    {admin && catalogs && binding && screen === 'provision' && <ProvisionV4Form app={app} binding={binding} catalogs={catalogs} actorRoles={userRoles ?? []} onDone={() => { setCatalogRevision((value) => value + 1); setScreen('hires'); }} />}
+    {admin && catalogs && binding && screen === 'provision' && <ProvisionV4Form app={app} roomType={roomType} binding={binding} catalogs={catalogs} actorRoles={userRoles ?? []} onDone={() => { setCatalogRevision((value) => value + 1); setScreen('hires'); }} />}
     {admin && screen === 'templates' && templateEditor && <><button type="button" className="v4-secondary-button v4-builder-back" onClick={() => { setTemplateEditor(null); setCatalogRevision((value) => value + 1); }}>Quay lại danh sách</button><TemplateBuilder key={templateEditor.key} mode="live" initial={templateEditor.tree} initialName={templateEditor.name} initialStatus={templateEditor.status} onSave={saveTemplate} positionId={templateEditor.positionId} filesGateway={filesGateway ?? undefined} /></>}
     {admin && screen === 'templates' && templateLoading && <p role="status">Đang tải template</p>}
     {admin && screen === 'templates' && templateError && <p role="alert">{templateError}</p>}

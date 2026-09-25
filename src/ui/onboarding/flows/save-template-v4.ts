@@ -13,6 +13,7 @@ import { unwrapToolResult } from '../data/tool-result';
 const CONTENT_STAGE = 'Nội dung';
 const DRAFT_STAGE = 'Đang soạn';
 const READY_STAGE = 'Sẵn sàng';
+const DISABLED_STAGE = 'Ngừng dùng';
 
 function fieldValue(item: { customFields?: { fieldId: string; value: unknown }[] }, fieldId: string): unknown {
   return item.customFields?.find((field) => field.fieldId === fieldId)?.value;
@@ -42,6 +43,40 @@ function registryFields(ids: Record<string, string>, listId: string, tree: Templ
 }
 
 function isDraftId(id: string): boolean { return id.startsWith('draft:'); }
+
+function attachmentIds(value: unknown): string[] | null {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value)) return null;
+  const ids: string[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) return null;
+    const raw: Record<string, unknown> = entry;
+    const id = raw._id ?? raw.id;
+    if (typeof id !== 'string' || !id) return null;
+    ids.push(id);
+  }
+  return ids;
+}
+
+function scalarFieldsPersisted(
+  item: { customFields?: { fieldId: string; value: unknown }[] },
+  encoded: readonly { fieldId: string; value: unknown }[],
+  ids: Record<string, string>,
+): boolean {
+  const emptyTextIds = new Set([ids[V2.content], ids[V2.options], ids[V2.answers], ids[V2.explanation], ids[V2.videos]]);
+  return encoded.every(({ fieldId, value }) => {
+    if (fieldId === ids[V2.kind]) return true;
+    const actual = fieldValue(item, fieldId);
+    if (fieldId === ids[V2.attachments]) {
+      const expectedIds = attachmentIds(value);
+      const actualIds = attachmentIds(actual);
+      return expectedIds !== null && actualIds !== null && JSON.stringify(actualIds) === JSON.stringify(expectedIds);
+    }
+    if ((actual === undefined || actual === null) &&
+      ((value === '' && emptyTextIds.has(fieldId)) || (value === false && fieldId === ids[V2.multiple]))) return true;
+    return JSON.stringify(actual) === JSON.stringify(value);
+  });
+}
 
 function descriptionFor(node: Week | ContentItem, previous?: string): string | undefined {
   if (!('kind' in node) || node.kind !== 'lesson') return previous;
@@ -81,7 +116,7 @@ async function writeTree(app: McpApp, listId: string, roomId: string, draft: Tem
       await updateItem(app, { itemId: previous._id, name: node.name, ...(description !== undefined ? { description } : {}), customFields: encoded });
       const verified = await readItem(app, listId, previous._id);
       if (verified.name !== node.name || verified.stageId !== stageId || fieldValue(verified, fields[V2.parent]) !== (parentId ?? '') ||
-        (description !== undefined && verified.description !== description)) throw new OnboardingError('SCHEMA_DRIFT');
+        (description !== undefined && verified.description !== description) || !scalarFieldsPersisted(verified, encoded, fields)) throw new OnboardingError('SCHEMA_DRIFT');
       mapped.set(node.id, previous._id);
       retained.add(previous._id);
       return;
@@ -97,7 +132,7 @@ async function writeTree(app: McpApp, listId: string, roomId: string, draft: Tem
       created = matches[0];
     }
     if (created.stageId !== stageId || created.name !== node.name || fieldValue(created, fields[V2.parent]) !== (parentId ?? '') ||
-      (description !== undefined && created.description !== description)) throw new OnboardingError('SCHEMA_DRIFT');
+      (description !== undefined && created.description !== description) || !scalarFieldsPersisted(created, encoded, fields)) throw new OnboardingError('SCHEMA_DRIFT');
     mapped.set(node.id, created._id);
     retained.add(created._id);
   };
@@ -151,12 +186,13 @@ export async function saveTemplateV4(app: McpApp, binding: RoomBinding, input: S
   const positionIds = resolveV2FieldIds(positionInfo.fieldDefinitions, V2_POSITION_FIELDS);
   const draftStage = positionInfo.stages.find((stage) => stage.name === DRAFT_STAGE)?._id;
   const readyStage = positionInfo.stages.find((stage) => stage.name === READY_STAGE)?._id;
-  if (!draftStage || !readyStage) throw new OnboardingError('SCHEMA_DRIFT');
+  const disabledStage = positionInfo.stages.find((stage) => stage.name === DISABLED_STAGE)?._id;
+  if (!draftStage || !readyStage || !disabledStage) throw new OnboardingError('SCHEMA_DRIFT');
   let positionId = input.positionId;
   let listId: string;
   if (positionId) {
     const position = await readItem(app, binding.positionsListId, positionId);
-    if (position.stageId !== draftStage && position.stageId !== readyStage) throw new OnboardingError('SCHEMA_DRIFT');
+    if (position.stageId !== draftStage && position.stageId !== readyStage && position.stageId !== disabledStage) throw new OnboardingError('SCHEMA_DRIFT');
     const linked = fieldValue(position, positionIds[V2.template]);
     if (typeof linked !== 'string' || !linked) throw new OnboardingError('SCHEMA_DRIFT');
     listId = linked;
@@ -184,18 +220,19 @@ export async function saveTemplateV4(app: McpApp, binding: RoomBinding, input: S
   }
   const readback = await writeTree(app, listId, binding.roomId, input.tree);
   if (input.status === 'ready' && validateReady(readback, name).length) throw new OnboardingError('TEMPLATE_INVALID');
+  const expectedRegistryFields = registryFields(positionIds, listId, readback, input.importSource);
   if (!positionId) {
     const created = await createItem(app, { listId: binding.positionsListId, name, stageId: draftStage,
-      customFields: [...registryFields(positionIds, listId, readback, input.importSource), { fieldId: positionIds[V2.inUse], value: 0 }] });
+      customFields: [...expectedRegistryFields, { fieldId: positionIds[V2.inUse], value: 0 }] });
     positionId = created._id;
   } else {
-    await updateItem(app, { itemId: positionId, name, customFields: registryFields(positionIds, listId, readback, input.importSource) });
+    await updateItem(app, { itemId: positionId, name, customFields: expectedRegistryFields });
   }
   if (input.status === 'ready') {
     unwrapToolResult(await app.callServerTool({ name: 'mcpapp.lists.moveItemToStage', arguments: { itemId: positionId, stageId: readyStage } }));
   }
   const verified = await readItem(app, binding.positionsListId, positionId);
   if (verified.name !== name || verified.stageId !== (input.status === 'ready' ? readyStage : draftStage) ||
-    fieldValue(verified, positionIds[V2.template]) !== listId) throw new OnboardingError('SCHEMA_DRIFT');
+    !expectedRegistryFields.every(({ fieldId, value }) => fieldValue(verified, fieldId) === value)) throw new OnboardingError('SCHEMA_DRIFT');
   return positionId;
 }

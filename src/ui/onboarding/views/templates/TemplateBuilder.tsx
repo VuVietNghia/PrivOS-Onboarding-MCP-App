@@ -4,6 +4,7 @@ import type { TemplateTree } from '../../domain/models';
 import type { ContentItem, Day, Lesson, Question } from '../../domain/models';
 import type { FileMetadata, FilesGateway } from '../../data/files';
 import { validateReady, type ReadinessIssue } from '../../domain/template-readiness';
+import { describeError } from '../../domain/errors';
 import { WeekRail } from './WeekRail';
 import { DayEditor } from './DayEditor';
 
@@ -144,7 +145,7 @@ export function TemplateBuilder(props: TemplateBuilderProps) {
     const savedRevision = editRevision.current;
     setSaveState('saving'); setSaveError('');
     try { await props.onSave(tree, name.trim(), status); setSaveState(editRevision.current === savedRevision ? 'saved' : 'dirty'); }
-    catch (error: unknown) { setSaveError(error instanceof Error ? error.message : 'Không lưu được template'); setSaveState('error'); }
+    catch (error: unknown) { setSaveError(describeError(error).message); setSaveState('error'); }
     finally { saving.current = false; }
   };
 

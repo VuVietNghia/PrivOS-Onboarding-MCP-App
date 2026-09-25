@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
+import { OnboardingError } from '../../src/ui/onboarding/domain/errors';
 import { TemplateBuilder } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
 
 afterEach(cleanup);
@@ -24,6 +25,16 @@ describe('template builder', () => {
     await user.type(screen.getByRole('textbox', { name: 'Tên vị trí' }), 'B');
     await act(async () => { finish?.(); await pending; });
     expect(screen.getByRole('status').textContent).toContain('Chưa lưu');
+  });
+
+  it('hiện lỗi lưu template dễ hiểu thay vì lộ mã nội bộ', async () => {
+    const user = userEvent.setup();
+    render(<TemplateBuilder initial={{ weeks: [{ id: 'w1', name: 'Tuần 1', order: 0 }], items: [] }}
+      initialName="Engineer" initialStatus="disabled" positionId="p1"
+      onSave={async () => { throw new OnboardingError('SCHEMA_DRIFT'); }} />);
+    await user.click(screen.getByRole('button', { name: 'Lưu nháp' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Cấu trúc list bị sửa ngoài app');
+    expect(screen.getByRole('alert').textContent).not.toContain('SCHEMA_DRIFT');
   });
 
   it('moves focus to the field selected from the readiness checklist', async () => {

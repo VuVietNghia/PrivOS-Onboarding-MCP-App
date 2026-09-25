@@ -72,7 +72,15 @@ export async function restCall<T = unknown>(
   path: string,
   opts?: { query?: Record<string, string | number | boolean>; body?: unknown; timeoutMs?: number },
 ): Promise<T> {
-  const res = await app.rest({ method, path, query: opts?.query, body: opts?.body, timeoutMs: opts?.timeoutMs });
+  let res: Awaited<ReturnType<McpApp['rest']>>;
+  try {
+    res = await app.rest({ method, path, query: opts?.query, body: opts?.body, timeoutMs: opts?.timeoutMs });
+  } catch (error) {
+    // The host bridge rejects some 403 responses as a plain Error before app.rest() returns a statusCode.
+    const deniedRoute = `App is not permitted to call ${method} /${path.replace(/^\/+/, '')}`;
+    if (error instanceof Error && error.message.includes(deniedRoute)) throw new OptionalFeatureUnavailableError();
+    throw error;
+  }
   const raw: unknown = res?.body ?? res;
   const body = raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? raw as Record<string, unknown> : null;
   // Meteor's API.v1.failure(message) convention: the real reason travels in

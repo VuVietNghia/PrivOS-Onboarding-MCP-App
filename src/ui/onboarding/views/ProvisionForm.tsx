@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { listTemplateLists } from '../data/find-lists';
 import type { HubList } from '../data/onboarding-lists';
 import { lookupUser } from '../data/room-members';
+import { localTodayIso } from '../domain/local-date';
 import { pickEmployee, type RoomMember } from '../domain/pick-employee';
 import { isWorkingDay } from '../domain/working-days';
 import { provisionRoadmap, type ProvisionProgress } from '../flows/provision-roadmap';
@@ -33,7 +34,7 @@ export function ProvisionForm({ roomId, members, onDone }: ProvisionFormProps) {
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const [typedUser, setTypedUser] = useState('');
   const [templateListId, setTemplateListId] = useState('');
-  const [startDate, setStartDate] = useState('');
+  const [startDate, setStartDate] = useState(localTodayIso);
   const [progress, setProgress] = useState<ProvisionProgress | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [error, setError] = useState<unknown | null>(null);

@@ -12,8 +12,8 @@ logged-in user through `app.callServerTool`, `app.uploadFile` or documented `app
 | `lists:write` | Required | Room; user | Creates Lists and Items and updates Item fields through `mcpapp.lists.*` (`src/ui/onboarding/data/onboarding-lists.ts`, `isolated-lists.ts`). | Installation is cancelled if rejected. |
 | `files:read` | Required | Room; user | Reads linked file metadata through `mcpapp.files.get` in `src/ui/onboarding/dev/P02ContractProbe.tsx`; P3 viewer is pending. | Installation is cancelled if rejected. |
 | `files:write` | Required | Room; user | Uploads test documents through `app.uploadFile` and creates room folders through `mcpapp.folders.*` in the P0 probe; P3 editor is pending. | Installation is cancelled if rejected. |
-| `rooms:read` | Optional | Room; user | Lists the current room's members so HR picks the hire from a dropdown (`listRoomMembers` in `src/ui/onboarding/data/room-members.ts`, `GET rooms.membersOrderedByRole`), and shows names instead of user ids in the hire table. Not yet confirmed against the live Portal permission catalog. | HR types the hire's username (or user id) instead; the hire table shows user ids. |
-| `users:read` | Optional | Room; user | Resolves a typed username to its user id when the member list is unavailable (`lookupUser` in `src/ui/onboarding/data/room-members.ts`, `GET users.info`). | HR must type the hire's user id. |
+| `rooms:read` | Optional | Room; user | Lists only current-room members: `GET channels.members` for room type `c`, `GET groups.members` for `p`. The Hub installation must actually grant this scope; the manifest request is insufficient. Verify the private-group route against the live bridge allowlist. | HR types the hire's username or user ID. |
+| `users:read` | Optional | Room; user | Resolves a typed username or user id when the member list is unavailable (`lookupUser` in `src/ui/onboarding/data/room-members.ts`, `GET users.list` and `GET users.info`). | HR must type the hire's user id. |
 
 ## What enforces access
 
