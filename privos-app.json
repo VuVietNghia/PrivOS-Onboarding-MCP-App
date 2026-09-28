@@ -1,9 +1,9 @@
 {
   "schemaVersion": 3,
   "kind": "mcp-app",
-  "name": "ai.privos.onboarding-mcp-app",
+  "name": "ai.privos.onboarding-mcp-app-demo",
   "version": "3.0.0",
-  "title": "PrivOS Onboarding MCP App",
+  "title": "Onboarding App",
   "description": "Onboarding for new hires on PrivOS: one roadmap template per position, one roadmap list per hire copied from the template, working-day deadlines, and progress tracking. All data lives in isolated PrivOS Lists.",
   "icon": "/public/icon.svg",
   "author": {
@@ -104,7 +104,7 @@
         }
       },
       "ui": {
-        "resourceUri": "ui://ai.privos.onboarding-mcp-app/form.html"
+        "resourceUri": "ui://ai.privos.onboarding-mcp-app-demo/form.html"
       }
     }
   ],

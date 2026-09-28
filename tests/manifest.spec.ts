@@ -5,13 +5,17 @@ import { createManifest, MARKETPLACE_MANIFEST_FIELDS } from '../src/manifest';
 import { lintManifest } from '@privos_ai/app-server/manifest-tools';
 
 describe('manifest', () => {
+  it('keeps the standalone readiness manifest identical to the pairing manifest', () => {
+    const runtimeManifest = createManifest();
+    expect(runtimeManifest).toEqual(publisherManifest);
+    expect(lintManifest(runtimeManifest).canonicalManifestHash)
+      .toBe(lintManifest(publisherManifest).canonicalManifestHash);
+  });
+
   it('serves the canonical Marketplace manifest', () => {
     const manifest = createManifest();
     expect(Object.keys(manifest)).toEqual(MARKETPLACE_MANIFEST_FIELDS);
-    // `ui` (`distDir`) is publisher-side build metadata, not a Marketplace manifest field, so the
-    // served manifest is the publisher manifest minus exactly that key.
-    const { ui: _publisherOnlyUi, ...marketplaceManifest } = publisherManifest;
-    expect(manifest).toEqual(marketplaceManifest);
+    expect(manifest).toEqual(publisherManifest);
     expect(manifest.name).toBe(pkg.name);
     expect(manifest.version).toBe(pkg.version);
     expect(manifest.title).toBe(pkg.title);
