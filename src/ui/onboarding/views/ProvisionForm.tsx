@@ -1,14 +1,12 @@
 // src/ui/onboarding/views/ProvisionForm.tsx
 import { useEffect, useState, type FormEvent } from 'react';
-import { usePrivosApp, usePrivosContext } from '@privos_ai/app-react';
+import { useOnboardingServices, useOnboardingSession } from '../../composition/PrivosOnboardingRoot';
 import { z } from 'zod';
-import { listTemplateLists } from '../data/find-lists';
-import type { HubList } from '../data/onboarding-lists';
-import { lookupUser } from '../data/room-members';
+import type { HubList } from '../ports/lists';
 import { localTodayIso } from '../domain/local-date';
 import { pickEmployee, type RoomMember } from '../domain/pick-employee';
 import { isWorkingDay } from '../domain/working-days';
-import { provisionRoadmap, type ProvisionProgress } from '../flows/provision-roadmap';
+import type { ProvisionProgress } from '../flows/provision-roadmap';
 import { ErrorBanner } from './ErrorBanner';
 
 const formSchema = z.object({
@@ -28,18 +26,20 @@ export interface ProvisionFormProps {
 }
 
 export function ProvisionForm({ roomId, members, onDone }: ProvisionFormProps) {
-  const app = usePrivosApp();
-  const { userRoles } = usePrivosContext();
+  const services = useOnboardingServices();
+  const session = useOnboardingSession();
+  if (!session) throw new Error('ONBOARDING_SESSION_UNAVAILABLE');
+  const userRoles = session.actor.roles;
   const [templates, setTemplates] = useState<HubList[]>([]);
   const [selectedMemberId, setSelectedMemberId] = useState('');
   const [typedUser, setTypedUser] = useState('');
   const [templateListId, setTemplateListId] = useState('');
-  const [startDate, setStartDate] = useState(localTodayIso);
+  const [startDate, setStartDate] = useState(() => localTodayIso(services.clock.now()));
   const [progress, setProgress] = useState<ProvisionProgress | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [error, setError] = useState<unknown | null>(null);
 
-  useEffect(() => { listTemplateLists(app, roomId).then(setTemplates).catch((err: unknown) => setError(err)); }, [app, roomId]);
+  useEffect(() => { services.legacyData.discovery.listTemplateLists(roomId).then(setTemplates).catch((err: unknown) => setError(err)); }, [services, roomId]);
 
   const useDropdown = Array.isArray(members);
 
@@ -48,7 +48,7 @@ export function ProvisionForm({ roomId, members, onDone }: ProvisionFormProps) {
       if (!selectedMemberId) { setFormError('Chọn nhân sự.'); return null; }
       return selectedMemberId;
     }
-    const lookup = typedUser.trim() ? await lookupUser(app, typedUser) : ({ kind: 'unavailable' } as const);
+    const lookup = typedUser.trim() ? await services.members.lookup(typedUser) : ({ kind: 'unavailable' } as const);
     const picked = pickEmployee(typedUser, lookup);
     if (!picked.ok) { setFormError(picked.message); return null; }
     return picked.employeeId;
@@ -62,7 +62,7 @@ export function ProvisionForm({ roomId, members, onDone }: ProvisionFormProps) {
     try {
       const employeeId = await resolveEmployeeId();
       if (!employeeId) return;
-      await provisionRoadmap(app, { roomId, employeeId, ...parsed.data, userRoles: userRoles ?? [] }, setProgress);
+      await services.legacy.provisionRoadmap({ roomId, employeeId, ...parsed.data, userRoles }, setProgress);
       setSelectedMemberId(''); setTypedUser(''); setStartDate(''); onDone();
     } catch (err) { setError(err); onDone(); }
     finally { setProgress(null); }

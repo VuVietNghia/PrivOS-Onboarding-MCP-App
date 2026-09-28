@@ -1,19 +1,13 @@
-import type { McpApp } from '@privos_ai/app-react';
-import { patchFields, queryItems, readAllItems, readItem, readListInfo } from '../data/v2-lists';
-import { unwrapToolResult } from '../data/tool-result';
 import type { HubItem } from '../domain/fields';
-import type { ContentItem, Day, Hire, Lesson, Question, Roadmap, RoomBinding, Week } from '../domain/models';
-import { gradeDay, type Answers, type GradeResult } from '../domain/quiz';
+import type { ContentItem, Day, Hire, Lesson, Question, Roadmap, Week } from '../domain/models';
+import { gradeDay } from '../domain/quiz';
 import { appendScore, completeLessonDay, countCompletedDays } from '../domain/scores';
 import { parseHireItem, parseTemplateItems } from '../domain/v2-schemas';
 import { resolveSelectLabels, resolveV2FieldIds, V2, V2_HIRE_FIELDS, V2_ROADMAP_FIELDS } from '../domain/v2-fields';
+import type { LearningDeps, LearningService, LoadedLearning, SubmitQuizInput, SubmitQuizResult, SubmissionJournal } from '../ports/learning';
 
-interface Loaded { hire: Hire; roadmap: Roadmap }
-export interface SubmitQuizInput { userId: string; hireId: string; dayId: string; operationId: string; answers: Answers }
-export interface SubmitQuizResult { hire: Hire; grade: GradeResult; attempt: number }
-interface SubmissionJournal { version: 1; operationId: string; dayId: string; previousScores: string; answers: Record<string, string[]> }
+export type { SubmitQuizInput, SubmitQuizResult } from '../ports/learning';
 
-const activeHires = new Set<string>();
 const MAX_SERIALIZED_BYTES = 16_000;
 
 function field(row: HubItem, fieldId: string): unknown {
@@ -46,8 +40,9 @@ function sameJournal(actual: SubmissionJournal | null, expected: SubmissionJourn
     actual.previousScores === expected.previousScores && JSON.stringify(actual.answers) === JSON.stringify(expected.answers);
 }
 
-async function hireContext(app: McpApp, binding: RoomBinding) {
-  const info = await readListInfo(app, binding.hiresListId);
+async function hireContext(deps: LearningDeps) {
+  const { binding } = deps;
+  const info = await deps.read.readListInfo(binding.hiresListId);
   if (info.list.roomId !== binding.roomId) throw new Error('ROOM_MISMATCH');
   return { info, ids: resolveV2FieldIds(info.list.fieldDefinitions, V2_HIRE_FIELDS) };
 }
@@ -57,9 +52,9 @@ function hireStatus(stages: { _id: string; name: string }[], stageId: string): '
   if (stage === 'Hoàn tất') return 'done';
   throw new Error('HIRE_NOT_ACTIVE');
 }
-async function ownHire(app: McpApp, binding: RoomBinding, userId: string, hireId: string) {
-  const { info, ids } = await hireContext(app, binding);
-  const row = await readItem(app, binding.hiresListId, hireId);
+async function ownHire(deps: LearningDeps, userId: string, hireId: string) {
+  const { info, ids } = await hireContext(deps);
+  const row = await deps.read.readItem(deps.binding.hiresListId, hireId);
   if (!row.stageId) throw new Error('SCHEMA_DRIFT');
   const hire = parseHireItem(row, ids, hireStatus(info.stages, row.stageId));
   if (hire.employeeId !== userId || !hire.roadmapListId) throw new Error('HIRE_NOT_OWNED');
@@ -67,12 +62,12 @@ async function ownHire(app: McpApp, binding: RoomBinding, userId: string, hireId
   return { hire, row, ids, info };
 }
 
-async function loadRun(app: McpApp, binding: RoomBinding, runId: string): Promise<Roadmap> {
-  const info = await readListInfo(app, runId);
-  if (info.list.roomId !== binding.roomId || info.stages.length !== 1 || info.stages[0].name !== 'Nội dung') throw new Error('RUN_INVALID');
+async function loadRun(deps: LearningDeps, runId: string): Promise<Roadmap> {
+  const info = await deps.read.readListInfo(runId);
+  if (info.list.roomId !== deps.binding.roomId || info.stages.length !== 1 || info.stages[0].name !== 'Nội dung') throw new Error('RUN_INVALID');
   const ids = resolveV2FieldIds(info.list.fieldDefinitions, V2_ROADMAP_FIELDS);
   const labels = resolveSelectLabels(info.list.fieldDefinitions);
-  const rows = await readAllItems(app, runId);
+  const rows = await deps.read.readAllItems(runId);
   const logicalParent = (row: HubItem): string => {
     const value = field(row, ids[V2.parent]);
     if (typeof value !== 'string') throw new Error('RUN_INVALID');
@@ -122,9 +117,10 @@ async function loadRun(app: McpApp, binding: RoomBinding, runId: string): Promis
   return { overviewId: overview._id, templateListId: text(field(overview, ids[V2.template])), tree: { weeks, items } };
 }
 
-export async function loadMyRoadmap(app: McpApp, binding: RoomBinding, userId: string): Promise<Loaded | null> {
+async function loadMyRoadmapWithPorts(deps: LearningDeps, userId: string): Promise<LoadedLearning | null> {
   if (!userId) throw new Error('HIRE_NOT_OWNED');
-  const { info, ids } = await hireContext(app, binding);
+  const { binding } = deps;
+  const { info, ids } = await hireContext(deps);
   const candidates: Hire[] = [];
   for (const status of ['learning', 'done'] as const) {
     const stageName = status === 'learning' ? 'Đang học' : 'Hoàn tất';
@@ -132,7 +128,7 @@ export async function loadMyRoadmap(app: McpApp, binding: RoomBinding, userId: s
     if (!stage) throw new Error('SCHEMA_DRIFT');
     let cursor: string | undefined;
     do {
-      const page = await queryItems(app, binding.hiresListId, { stageId: stage._id, archived: false,
+      const page = await deps.read.queryItems(binding.hiresListId, { stageId: stage._id, archived: false,
         customFields: [{ fieldId: ids[V2.employee], op: 'is', value: userId }] }, 100, cursor);
       for (const row of page.items) {
         const hire = parseHireItem(row, ids, status);
@@ -145,13 +141,7 @@ export async function loadMyRoadmap(app: McpApp, binding: RoomBinding, userId: s
   const hire = candidates.sort((a, b) => b.startDate.localeCompare(a.startDate) || b.id.localeCompare(a.id))[0];
   if (!hire) return null;
   if (!hire.roadmapListId) throw new Error('RUN_INVALID');
-  return { hire, roadmap: await loadRun(app, binding, hire.roadmapListId) };
-}
-
-async function withHireLock<T>(hireId: string, operation: () => Promise<T>): Promise<T> {
-  if (activeHires.has(hireId)) throw new Error('WRITE_CONFLICT');
-  activeHires.add(hireId);
-  try { return await operation(); } finally { activeHires.delete(hireId); }
+  return { hire, roadmap: await loadRun(deps, hire.roadmapListId) };
 }
 function dayChildren(roadmap: Roadmap, dayId: string) {
   const day = roadmap.tree.items.find((item): item is Day => item.kind === 'day' && item.id === dayId);
@@ -164,51 +154,53 @@ function completedDays(roadmap: Roadmap, scores: Hire['scores']): number {
   const days = roadmap.tree.items.filter((item): item is Day => item.kind === 'day');
   return countCompletedDays(scores, days.map((day) => day.order));
 }
-async function finishHireIfDone(app: McpApp, hireId: string, hire: Hire, stages: { _id: string; name: string }[]): Promise<void> {
+async function finishHireIfDone(deps: LearningDeps, hireId: string, hire: Hire, stages: { _id: string; name: string }[]): Promise<void> {
   if (hire.doneDays < hire.totalDays || hire.status === 'done') return;
   const done = stages.find((stage) => stage.name === 'Hoàn tất');
   if (!done) throw new Error('SCHEMA_DRIFT');
-  unwrapToolResult(await app.callServerTool({ name: 'mcpapp.lists.moveItemToStage', arguments: { itemId: hireId, stageId: done._id } }));
+  await deps.write.moveItemToStage(hireId, done._id);
 }
 
-export async function markLessonRead(app: McpApp, binding: RoomBinding, userId: string, hireId: string, lessonId: string): Promise<Loaded> {
-  return withHireLock(hireId, async () => {
-    const context = await ownHire(app, binding, userId, hireId);
+async function markLessonReadWithPorts(deps: LearningDeps, userId: string, hireId: string, lessonId: string): Promise<LoadedLearning> {
+  const { binding } = deps;
+  return deps.lock.run(hireId, async () => {
+    const context = await ownHire(deps, userId, hireId);
     if (journal(field(context.row, context.ids[V2.pendingSubmission]))) throw new Error('WRITE_CONFLICT');
     const runId = context.hire.roadmapListId!;
-    const roadmap = await loadRun(app, binding, runId);
+    const roadmap = await loadRun(deps, runId);
     const lesson = roadmap.tree.items.find((item): item is Lesson => item.kind === 'lesson' && item.id === lessonId);
     if (!lesson) throw new Error('LESSON_NOT_FOUND');
-    const runInfo = await readListInfo(app, runId);
+    const runInfo = await deps.read.readListInfo(runId);
     const runIds = resolveV2FieldIds(runInfo.list.fieldDefinitions, V2_ROADMAP_FIELDS);
-    if (!lesson.read) await patchFields(app, runId, lessonId, { [runIds[V2.read]]: true });
-    const updatedRoadmap = await loadRun(app, binding, runId);
+    if (!lesson.read) await deps.write.patchFields(runId, lessonId, { [runIds[V2.read]]: true });
+    const updatedRoadmap = await loadRun(deps, runId);
     const { day, children } = dayChildren(updatedRoadmap, lesson.parentId ?? '');
     const onlyLessons = children.every((item) => item.kind === 'lesson');
     const allRead = children.every((item) => item.kind === 'lesson' && item.read);
     if (onlyLessons && allRead) {
-      const latest = await ownHire(app, binding, userId, hireId);
+      const latest = await ownHire(deps, userId, hireId);
       if (journal(field(latest.row, latest.ids[V2.pendingSubmission]))) throw new Error('WRITE_CONFLICT');
       if (!latest.hire.scores[String(day.order)]) {
         const scores = completeLessonDay(latest.hire.scores, day.order);
-        await patchFields(app, binding.hiresListId, hireId, { [latest.ids[V2.scores]]: serialized(scores),
+        await deps.write.patchFields(binding.hiresListId, hireId, { [latest.ids[V2.scores]]: serialized(scores),
           [latest.ids[V2.doneDays]]: completedDays(updatedRoadmap, scores) });
-        const saved = await ownHire(app, binding, userId, hireId);
+        const saved = await ownHire(deps, userId, hireId);
         if (serialized(saved.hire.scores) !== serialized(scores)) throw new Error('WRITE_CONFLICT');
       }
     }
-    const current = await ownHire(app, binding, userId, hireId);
-    await finishHireIfDone(app, hireId, current.hire, current.info.stages);
-    return { hire: (await ownHire(app, binding, userId, hireId)).hire, roadmap: updatedRoadmap };
+    const current = await ownHire(deps, userId, hireId);
+    await finishHireIfDone(deps, hireId, current.hire, current.info.stages);
+    return { hire: (await ownHire(deps, userId, hireId)).hire, roadmap: updatedRoadmap };
   });
 }
 
-export async function submitQuiz(app: McpApp, binding: RoomBinding, input: SubmitQuizInput): Promise<SubmitQuizResult> {
-  return withHireLock(input.hireId, async () => {
+async function submitQuizWithPorts(deps: LearningDeps, input: SubmitQuizInput): Promise<SubmitQuizResult> {
+  const { binding } = deps;
+  return deps.lock.run(input.hireId, async () => {
     if (!/^[A-Za-z0-9_-]{8,64}$/.test(input.operationId)) throw new Error('QUIZ_INVALID');
-    const context = await ownHire(app, binding, input.userId, input.hireId);
+    const context = await ownHire(deps, input.userId, input.hireId);
     const runId = context.hire.roadmapListId!;
-    const roadmap = await loadRun(app, binding, runId);
+    const roadmap = await loadRun(deps, runId);
     const { day, children } = dayChildren(roadmap, input.dayId);
     const questions = children.filter((item): item is Question => item.kind === 'question');
     const grade = gradeDay(questions, input.answers);
@@ -222,8 +214,8 @@ export async function submitQuiz(app: McpApp, binding: RoomBinding, input: Submi
             const supplied = [...(input.answers[question.id] ?? [])].sort();
             return JSON.stringify(saved) !== JSON.stringify(supplied);
           })) throw new Error('WRITE_CONFLICT');
-      await finishHireIfDone(app, input.hireId, context.hire, context.info.stages);
-      const hire = (await ownHire(app, binding, input.userId, input.hireId)).hire;
+      await finishHireIfDone(deps, input.hireId, context.hire, context.info.stages);
+      const hire = (await ownHire(deps, input.userId, input.hireId)).hire;
       return { hire, grade, attempt: hire.scores[String(day.order)]?.attempts?.length ?? 1 };
     }
     if (existingJournal && (existingJournal.operationId !== input.operationId || existingJournal.dayId !== day.id ||
@@ -236,38 +228,46 @@ export async function submitQuiz(app: McpApp, binding: RoomBinding, input: Submi
       previousScores, answers: Object.fromEntries(Object.entries(input.answers).map(([id, labels]) => [id, [...labels]])) };
     serialized(nextJournal);
     if (!existingJournal) {
-      await patchFields(app, binding.hiresListId, input.hireId, { [context.ids[V2.pendingSubmission]]: serialized(nextJournal) });
+      await deps.write.patchFields(binding.hiresListId, input.hireId, { [context.ids[V2.pendingSubmission]]: serialized(nextJournal) });
     }
-    const runInfo = await readListInfo(app, runId);
+    const runInfo = await deps.read.readListInfo(runId);
     const runIds = resolveV2FieldIds(runInfo.list.fieldDefinitions, V2_ROADMAP_FIELDS);
     const resultOptions = runInfo.list.fieldDefinitions.find((definition) => definition._id === runIds[V2.result])?.options ?? [];
-    const reserved = await ownHire(app, binding, input.userId, input.hireId);
+    const reserved = await ownHire(deps, input.userId, input.hireId);
     if (!sameJournal(journal(field(reserved.row, reserved.ids[V2.pendingSubmission])), nextJournal) ||
       serialized(reserved.hire.scores) !== previousScores ||
       field(reserved.row, reserved.ids[V2.lastSubmission]) !== lastOperation) throw new Error('WRITE_CONFLICT');
     for (const result of grade.results) {
       const option = resultOptions.find((entry) => entry.value === (result.correct ? 'Đúng' : 'Sai'))?._id;
       if (!option) throw new Error('SCHEMA_DRIFT');
-      await patchFields(app, runId, result.itemId, { [runIds[V2.selected]]: [...input.answers[result.itemId]].sort().join(','),
+      await deps.write.patchFields(runId, result.itemId, { [runIds[V2.selected]]: [...input.answers[result.itemId]].sort().join(','),
         [runIds[V2.result]]: option });
     }
-    const beforeFinal = await ownHire(app, binding, input.userId, input.hireId);
+    const beforeFinal = await ownHire(deps, input.userId, input.hireId);
     if (!sameJournal(journal(field(beforeFinal.row, beforeFinal.ids[V2.pendingSubmission])), nextJournal) ||
       serialized(beforeFinal.hire.scores) !== previousScores ||
       field(beforeFinal.row, beforeFinal.ids[V2.lastSubmission]) !== lastOperation) throw new Error('WRITE_CONFLICT');
     const scores = appendScore(beforeFinal.hire.scores, day.order, score);
     const doneDays = completedDays(roadmap, scores);
-    await patchFields(app, binding.hiresListId, input.hireId, {
+    await deps.write.patchFields(binding.hiresListId, input.hireId, {
       [context.ids[V2.scores]]: serialized(scores), [context.ids[V2.doneDays]]: doneDays,
       [context.ids[V2.lastSubmission]]: input.operationId, [context.ids[V2.pendingSubmission]]: '',
     });
-    const saved = await ownHire(app, binding, input.userId, input.hireId);
+    const saved = await ownHire(deps, input.userId, input.hireId);
     const savedAttempts = saved.hire.scores[String(day.order)]?.attempts ?? [];
     if (field(saved.row, saved.ids[V2.lastSubmission]) !== input.operationId ||
       field(saved.row, saved.ids[V2.pendingSubmission]) !== '' || saved.hire.doneDays !== doneDays ||
       serialized(saved.hire.scores) !== projectedScores || savedAttempts[savedAttempts.length - 1] !== score) throw new Error('WRITE_CONFLICT');
-    await finishHireIfDone(app, input.hireId, saved.hire, saved.info.stages);
-    const hire = (await ownHire(app, binding, input.userId, input.hireId)).hire;
+    await finishHireIfDone(deps, input.hireId, saved.hire, saved.info.stages);
+    const hire = (await ownHire(deps, input.userId, input.hireId)).hire;
     return { hire, grade, attempt: hire.scores[String(day.order)]?.attempts?.length ?? 1 };
   });
+}
+
+export function createLearningService(deps: LearningDeps): LearningService {
+  return {
+    load: () => loadMyRoadmapWithPorts(deps, deps.actor.userId),
+    markRead: (hireId, lessonId) => markLessonReadWithPorts(deps, deps.actor.userId, hireId, lessonId),
+    submit: (input) => submitQuizWithPorts(deps, { ...input, userId: deps.actor.userId }),
+  };
 }

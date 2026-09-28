@@ -1,7 +1,5 @@
 // src/ui/onboarding/flows/provision-roadmap.ts
-import type { McpApp } from '@privos_ai/app-react';
-import { createItem, createList, deleteItem, deleteList, listAllItems, listRoomLists, renameList, updateItem } from '../data/onboarding-lists';
-import { ensureHiresList, listTemplateLists, loadListWithFields } from '../data/find-lists';
+import type { LegacyDeps, LegacyProvisionInput as ProvisionInput, LegacyProvisionProgress as ProvisionProgress, LegacyProvisionResult as ProvisionResult } from '../ports/legacy';
 import { mapWithConcurrency } from '../domain/concurrency';
 import { describeError, OnboardingError } from '../domain/errors';
 import { F, HIRES_FIELDS, HIRE_STAGES, ROOT_ITEM_NAME, RUN_FIELDS, TEMPLATE_FIELDS, type FieldIds } from '../domain/fields';
@@ -11,9 +9,7 @@ import { buildRoadmapPlan, mapStagesByOrder, type PlannedTask, type RoadmapPlan,
 import { parseHire, parseRoadmapTask, parseTemplateTask, type Hire } from '../domain/schemas';
 import { isWorkingDay } from '../domain/working-days';
 
-export interface ProvisionInput { roomId: string; employeeId: string; templateListId: string; startDate: string; userRoles: readonly string[] }
-export interface ProvisionProgress { step: 'preflight' | 'hire' | 'plan' | 'list' | 'items' | 'finish'; done: number; total: number }
-export interface ProvisionResult { hireItemId: string; roadmapListId: string; taskCount: number }
+export type { LegacyProvisionInput as ProvisionInput, LegacyProvisionProgress as ProvisionProgress, LegacyProvisionResult as ProvisionResult } from '../ports/legacy';
 type Report = (p: ProvisionProgress) => void;
 
 const PARALLEL = 4;
@@ -24,19 +20,19 @@ function stageId(stages: StageRef[], name: string): string {
   return found._id;
 }
 
-async function loadTemplate(app: McpApp, templateListId: string) {
-  const tpl = await loadListWithFields(app, templateListId, TEMPLATE_FIELDS);
-  const { items } = await listAllItems(app, templateListId);
+async function loadTemplate(deps: LegacyDeps, templateListId: string) {
+  const tpl = await deps.discovery.loadListWithFields(templateListId, TEMPLATE_FIELDS);
+  const { items } = await deps.read.listAllItems(templateListId);
   const tasks = items.map((i) => parseTemplateTask(i, tpl.ids));
   const bad = tasks.filter((t) => !t.ok);
   if (bad.length) throw new OnboardingError('TEMPLATE_INVALID', `${bad.length} task lỗi`);
   return { ...tpl, tasks: tasks.flatMap((t) => (t.ok ? [t.value] : [])) };
 }
 
-async function loadHires(app: McpApp, roomId: string) {
-  const hiresList = await ensureHiresList(app, roomId);
-  const loaded = await loadListWithFields(app, hiresList._id, HIRES_FIELDS);
-  const { items, capped } = await listAllItems(app, hiresList._id);
+async function loadHires(deps: LegacyDeps, roomId: string) {
+  const hiresList = await deps.discovery.ensureHiresList(roomId);
+  const loaded = await deps.discovery.loadListWithFields(hiresList._id, HIRES_FIELDS);
+  const { items, capped } = await deps.read.listAllItems(hiresList._id);
   return { ...loaded, hires: items.map((i) => parseHire(i, loaded.ids)), capped };
 }
 
@@ -48,8 +44,8 @@ async function loadHires(app: McpApp, roomId: string) {
  * Chỉ dùng lúc tạo — resumeProvision tìm list qua `hire.roadmapListId` chứ
  * không qua key — nên đổi key ở đây an toàn.
  */
-async function uniqueRunKey(app: McpApp, roomId: string, wanted: string): Promise<string> {
-  const existingKeys = new Set((await listRoomLists(app, roomId)).map((l) => l.key).filter((k): k is string => Boolean(k)));
+async function uniqueRunKey(deps: LegacyDeps, roomId: string, wanted: string): Promise<string> {
+  const existingKeys = new Set((await deps.read.listRoomLists(roomId)).map((l) => l.key).filter((k): k is string => Boolean(k)));
   if (!existingKeys.has(wanted)) return wanted;
   let n = 2;
   while (existingKeys.has(`${wanted}-${n}`)) n += 1;
@@ -68,10 +64,10 @@ function taskFields(ids: FieldIds, t: PlannedTask): { fieldId: string; value: un
 }
 
 async function createMissingTasks(
-  app: McpApp, roadmapListId: string, runIds: FieldIds, runStages: StageRef[], plan: RoadmapPlan,
+  deps: LegacyDeps, roadmapListId: string, runIds: FieldIds, runStages: StageRef[], plan: RoadmapPlan,
   employeeId: string, startDate: string, report: Report | undefined,
 ): Promise<{ rootId: string; taskCount: number }> {
-  const { items } = await listAllItems(app, roadmapListId);
+  const { items } = await deps.read.listAllItems(roadmapListId);
   const existing = items.map((i) => parseRoadmapTask(i, runIds)).flatMap((r) => (r.ok ? [r.value] : []));
   const stageByOrder = mapStagesByOrder(plan.stages, runStages);
   // Mỗi list lộ trình chỉ có đúng 1 item gốc theo thiết kế, nên `parentId ===
@@ -80,7 +76,7 @@ async function createMissingTasks(
   // thêm item gốc thứ hai.
   let root = existing.find((t) => t.parentId === null);
   if (!root) {
-    const created = await createItem(app, {
+    const created = await deps.write.createItem({
       listId: roadmapListId, name: ROOT_ITEM_NAME, stageId: stageByOrder.get(0) ?? runStages[0]._id,
       // Item gốc kế thừa toàn bộ field bắt buộc của roadmapTaskSchema (qua
       // templateTaskSchema): Hạn (ngày thứ N) và Người thực hiện là required,
@@ -104,17 +100,17 @@ async function createMissingTasks(
   let done = plan.tasks.length - missing.length;
   report?.({ step: 'items', done, total: plan.tasks.length });
   await mapWithConcurrency(missing, PARALLEL, async (t) => {
-    await createItem(app, { listId: roadmapListId, name: t.name, stageId: stageByOrder.get(t.stageOrder)!, parentId: rootId, customFields: taskFields(runIds, t) });
+    await deps.write.createItem({ listId: roadmapListId, name: t.name, stageId: stageByOrder.get(t.stageOrder)!, parentId: rootId, customFields: taskFields(runIds, t) });
     done += 1;
     report?.({ step: 'items', done, total: plan.tasks.length });
   });
   return { rootId, taskCount: plan.tasks.length };
 }
 
-async function markFailed(app: McpApp, hireItemId: string, hireIds: FieldIds, hireStages: StageRef[], err: unknown): Promise<never> {
+async function markFailed(deps: LegacyDeps, hireItemId: string, hireIds: FieldIds, hireStages: StageRef[], err: unknown): Promise<never> {
   const { code } = describeError(err);
   try {
-    await updateItem(app, { itemId: hireItemId, stageId: stageId(hireStages, HIRE_STAGES.failed), customFields: [{ fieldId: hireIds[F.errorCode], value: code }] });
+    await deps.write.updateItem({ itemId: hireItemId, stageId: stageId(hireStages, HIRE_STAGES.failed), customFields: [{ fieldId: hireIds[F.errorCode], value: code }] });
   } catch {
     // Ghi trạng thái lỗi thất bại (Hub sập đúng lúc) — vẫn phải báo lỗi gốc
     // thay vì để exception của updateItem che mất mã lỗi thật sự.
@@ -122,8 +118,8 @@ async function markFailed(app: McpApp, hireItemId: string, hireIds: FieldIds, hi
   throw new OnboardingError('PROVISION_FAILED', code);
 }
 
-async function finish(app: McpApp, hireItemId: string, hireIds: FieldIds, hireStages: StageRef[], employeeId: string, taskCount: number): Promise<void> {
-  await updateItem(app, {
+async function finish(deps: LegacyDeps, hireItemId: string, hireIds: FieldIds, hireStages: StageRef[], employeeId: string, taskCount: number): Promise<void> {
+  await deps.write.updateItem({
     itemId: hireItemId, stageId: stageId(hireStages, HIRE_STAGES.active),
     customFields: [
       { fieldId: hireIds[F.assignee], value: [employeeId] },
@@ -134,12 +130,12 @@ async function finish(app: McpApp, hireItemId: string, hireIds: FieldIds, hireSt
   });
 }
 
-export async function provisionRoadmap(app: McpApp, input: ProvisionInput, onProgress?: Report): Promise<ProvisionResult> {
+export async function provisionRoadmap(deps: LegacyDeps, input: ProvisionInput, onProgress?: Report): Promise<ProvisionResult> {
   onProgress?.({ step: 'preflight', done: 0, total: 1 });
   if (!isRoomAdmin(input.userRoles)) throw new OnboardingError('NOT_ADMIN');
   if (!isWorkingDay(input.startDate)) throw new OnboardingError('START_NOT_WORKING_DAY');
-  const template = await loadTemplate(app, input.templateListId);
-  const hires = await loadHires(app, input.roomId);
+  const template = await loadTemplate(deps, input.templateListId);
+  const hires = await loadHires(deps, input.roomId);
   // List `onb-hires` chỉ tăng, không bao giờ xóa hồ sơ đã Hoàn tất. Khi vượt
   // 500 item và thiếu scope `lists:query`, listAllItems dùng đường dự phòng
   // bị cắt còn 500 item — preflight chống trùng phía dưới sẽ không thấy được
@@ -154,7 +150,7 @@ export async function provisionRoadmap(app: McpApp, input: ProvisionInput, onPro
   if (running) throw new OnboardingError('HIRE_EXISTS');
 
   onProgress?.({ step: 'hire', done: 0, total: 1 });
-  const hireItem = await createItem(app, {
+  const hireItem = await deps.write.createItem({
     listId: hires.list._id, name: input.employeeId, stageId: stageId(hires.stages, HIRE_STAGES.provisioning),
     customFields: [
       { fieldId: hires.ids[F.position], value: template.list.name },
@@ -173,61 +169,61 @@ export async function provisionRoadmap(app: McpApp, input: ProvisionInput, onPro
 
     onProgress?.({ step: 'list', done: 0, total: 1 });
     const runKeyWanted = runKey(input.employeeId, input.startDate);
-    const runList = await createList(app, {
+    const runList = await deps.lifecycle.createList({
       roomId: input.roomId, name: `Lộ trình · ${input.employeeId} · ${template.list.name}`,
-      key: await uniqueRunKey(app, input.roomId, runKeyWanted), isolated: true, fields: RUN_FIELDS, stages: plan.stages,
+      key: await uniqueRunKey(deps, input.roomId, runKeyWanted), isolated: true, fields: RUN_FIELDS, stages: plan.stages,
     });
-    await updateItem(app, { itemId: hireItem._id, customFields: [{ fieldId: hires.ids[F.roadmapListId], value: runList._id }] });
-    const run = await loadListWithFields(app, runList._id, RUN_FIELDS);
+    await deps.write.updateItem({ itemId: hireItem._id, customFields: [{ fieldId: hires.ids[F.roadmapListId], value: runList._id }] });
+    const run = await deps.discovery.loadListWithFields(runList._id, RUN_FIELDS);
 
-    const { taskCount } = await createMissingTasks(app, runList._id, run.ids, run.stages, plan, input.employeeId, input.startDate, onProgress);
+    const { taskCount } = await createMissingTasks(deps, runList._id, run.ids, run.stages, plan, input.employeeId, input.startDate, onProgress);
 
     onProgress?.({ step: 'finish', done: 0, total: 1 });
-    await finish(app, hireItem._id, hires.ids, hires.stages, input.employeeId, taskCount);
+    await finish(deps, hireItem._id, hires.ids, hires.stages, input.employeeId, taskCount);
     return { hireItemId: hireItem._id, roadmapListId: runList._id, taskCount };
   } catch (err) {
-    return markFailed(app, hireItem._id, hires.ids, hires.stages, err);
+    return markFailed(deps, hireItem._id, hires.ids, hires.stages, err);
   }
 }
 
-async function findHire(app: McpApp, roomId: string, hireItemId: string) {
-  const hires = await loadHires(app, roomId);
+async function findHire(deps: LegacyDeps, roomId: string, hireItemId: string) {
+  const hires = await loadHires(deps, roomId);
   const found = hires.hires.find((h) => h.ok && h.value.id === hireItemId);
   if (!found || !found.ok) throw new OnboardingError('SCHEMA_DRIFT', 'hire not found');
   return { ...hires, hire: found.value as Hire };
 }
 
-export async function resumeProvision(app: McpApp, input: { roomId: string; hireItemId: string; userRoles: readonly string[] }, onProgress?: Report): Promise<ProvisionResult> {
+export async function resumeProvision(deps: LegacyDeps, input: { roomId: string; hireItemId: string; userRoles: readonly string[] }, onProgress?: Report): Promise<ProvisionResult> {
   if (!isRoomAdmin(input.userRoles)) throw new OnboardingError('NOT_ADMIN');
-  const hires = await findHire(app, input.roomId, input.hireItemId);
+  const hires = await findHire(deps, input.roomId, input.hireItemId);
   const hire = hires.hire;
   if (!hire.roadmapListId) throw new OnboardingError('PROVISION_FAILED', 'no roadmap list; cancel and retry');
   try {
-    const run = await loadListWithFields(app, hire.roadmapListId, RUN_FIELDS);
+    const run = await deps.discovery.loadListWithFields(hire.roadmapListId, RUN_FIELDS);
     // Template gốc: tìm lại theo tên vị trí đã lưu trên hồ sơ.
-    const tplList = (await listTemplateLists(app, input.roomId)).find((l) => l.name === hire.position);
+    const tplList = (await deps.discovery.listTemplateLists(input.roomId)).find((l) => l.name === hire.position);
     if (!tplList) throw new OnboardingError('TEMPLATE_INVALID', 'template list not found');
-    const template = await loadTemplate(app, tplList._id);
+    const template = await loadTemplate(deps, tplList._id);
     // ASSIGNEE chỉ được gán ở bước cuối, nên khi resume lấy user id từ tên item hồ sơ.
     const employeeId = hire.employeeIds[0] ?? hire.name;
     const plan = buildRoadmapPlan({ templateStages: template.stages, templateTasks: template.tasks, startDate: hire.startDate, employeeId });
     if (plan.tasks.length === 0) throw new OnboardingError('TEMPLATE_INVALID', 'template chưa có task nào');
-    const { taskCount } = await createMissingTasks(app, hire.roadmapListId, run.ids, run.stages, plan, employeeId, hire.startDate, onProgress);
+    const { taskCount } = await createMissingTasks(deps, hire.roadmapListId, run.ids, run.stages, plan, employeeId, hire.startDate, onProgress);
     onProgress?.({ step: 'finish', done: 0, total: 1 });
-    await finish(app, hire.id, hires.ids, hires.stages, employeeId, taskCount);
+    await finish(deps, hire.id, hires.ids, hires.stages, employeeId, taskCount);
     return { hireItemId: hire.id, roadmapListId: hire.roadmapListId, taskCount };
   } catch (err) {
-    return markFailed(app, hire.id, hires.ids, hires.stages, err);
+    return markFailed(deps, hire.id, hires.ids, hires.stages, err);
   }
 }
 
-export async function cancelProvision(app: McpApp, input: { roomId: string; hireItemId: string; userRoles: readonly string[] }): Promise<void> {
+export async function cancelProvision(deps: LegacyDeps, input: { roomId: string; hireItemId: string; userRoles: readonly string[] }): Promise<void> {
   if (!isRoomAdmin(input.userRoles)) throw new OnboardingError('NOT_ADMIN');
-  const hires = await findHire(app, input.roomId, input.hireItemId);
+  const hires = await findHire(deps, input.roomId, input.hireItemId);
   const listId = hires.hire.roadmapListId;
   if (listId) {
-    const deleted = await deleteList(app, listId);
-    if (!deleted) await renameList(app, listId, `(Đã hủy) ${listId}`);
+    const deleted = await deps.lifecycle.deleteList(listId);
+    if (!deleted) await deps.lifecycle.renameList(listId, `(Đã hủy) ${listId}`);
   }
-  await deleteItem(app, hires.hire.id);
+  await deps.write.deleteItem(hires.hire.id);
 }

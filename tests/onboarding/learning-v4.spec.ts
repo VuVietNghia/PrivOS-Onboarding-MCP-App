@@ -1,7 +1,23 @@
 import { describe, expect, it } from 'vitest';
 import type { McpApp } from '@privos_ai/app-react';
 import { V2, V2_HIRE_FIELDS, V2_ROADMAP_FIELDS } from '../../src/ui/onboarding/domain/v2-fields';
-import { loadMyRoadmap, markLessonRead, submitQuiz } from '../../src/ui/onboarding/flows/learning-v4';
+import { createMcpLearningCompat } from '../../src/ui/onboarding/data/privos/compat-flows';
+import type { RoomBinding } from '../../src/ui/onboarding/domain/models';
+import type { SubmitQuizInput } from '../../src/ui/onboarding/ports/learning';
+
+const learningScopes = new WeakMap<McpApp, ReturnType<typeof createMcpLearningCompat>>();
+function scope(app: McpApp, binding: RoomBinding, userId: string) {
+  const existing = learningScopes.get(app);
+  if (existing) return existing;
+  const service = createMcpLearningCompat(app, binding, userId);
+  learningScopes.set(app, service);
+  return service;
+}
+const loadMyRoadmap = (app: McpApp, binding: RoomBinding, userId: string) => scope(app, binding, userId).load();
+const markLessonRead = (app: McpApp, binding: RoomBinding, userId: string, hireId: string, lessonId: string) =>
+  scope(app, binding, userId).markRead(hireId, lessonId);
+const submitQuiz = (app: McpApp, binding: RoomBinding, input: SubmitQuizInput) =>
+  scope(app, binding, input.userId).submit(input);
 
 type Field = { fieldId: string; value: unknown };
 type Row = { _id: string; listId: string; name: string; stageId: string; parentId: string | null; customFields: Field[] };

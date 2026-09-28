@@ -2,17 +2,10 @@ import type { McpApp } from '@privos_ai/app-react';
 import { OnboardingError } from '../domain/errors';
 import { PrivosRestError, restCall } from '../../privos-rest';
 import type { CreateListInput } from './onboarding-lists';
+import type { IsolatedListInfo } from '../ports/lists';
+export type { IsolatedListInfo } from '../ports/lists';
 import { registryListInput } from '../domain/v2-registry-schema';
 import { idOf, unwrapToolResult } from './tool-result';
-
-export interface IsolatedListInfo {
-  _id: string;
-  name: string;
-  roomId: string;
-  isolatedList: boolean;
-  fieldDefinitions: { _id: string; name: string; type: string; options?: { _id?: string; value: string }[] }[];
-  stages: { _id: string; name: string; order: number }[];
-}
 
 function record(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;

@@ -1,16 +1,14 @@
 import { useRef, useState } from 'react';
-import { usePrivosApp, usePrivosContext } from '@privos_ai/app-react';
-import type { RestRequestParams } from '@privos_ai/app-react';
+import type { ProbeEnvironment, ProbeTransport } from './probe-port';
 import { isRoomAdmin } from '../domain/roles';
 import { buildQueryRequest, invalidateProbeSession, nextPageCursor, queryFields, sanitizeProbeData, validateProbeResponse } from './probe-results';
 import type { ParentFilter, ProbeContext, ProbeResult } from './probe-results';
-import { createItem, createList, getListInfo, listRoomLists, updateItem } from '../data/onboarding-lists';
 import { idOf, unwrapToolResult } from '../data/tool-result';
 import { PrivosRestError } from '../../privos-rest';
 import { uploadResultId } from './p0-contracts';
 
 type ProbeId = 'list-create' | 'list-info' | 'item-create' | 'items-query' | 'item-lookup' | 'field-update' | 'file-info' | 'file-upload' | 'stage-crud';
-type ProbeRequest = Pick<RestRequestParams, 'method' | 'path' | 'query' | 'body'>;
+type ProbeRequest = Pick<Parameters<ProbeTransport['rest']>[0], 'method' | 'path' | 'query' | 'body'>;
 const probeIds: readonly ProbeId[] = ['list-create', 'list-info', 'item-create', 'items-query', 'item-lookup', 'field-update', 'file-info', 'file-upload', 'stage-crud'];
 
 function recordFor(id: ProbeId, results: readonly ProbeResult[]): ProbeResult {
@@ -32,9 +30,9 @@ function withId(value: unknown): Record<string, unknown> {
   return { ...value, _id: id };
 }
 
-export default function HubContractProbe() {
-  const app = usePrivosApp();
-  const { roomId, userRoles } = usePrivosContext();
+export default function HubContractProbe({ probe }: { probe: ProbeEnvironment }) {
+  const app = probe.transport;
+  const { roomId, roles: userRoles } = probe.actor;
   const [consent, setConsent] = useState(false);
   const [listId, setListId] = useState('');
   const [listKey, setListKey] = useState('');
@@ -98,12 +96,7 @@ export default function HubContractProbe() {
       let verifiedWrite = true;
       if (id === 'file-upload') {
         if (!file) throw new Error('no selected file');
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('file read failed'));
-          reader.onerror = () => reject(new Error('file read failed'));
-          reader.readAsDataURL(file);
-        });
+        const dataUrl = await probe.readDataUrl(file);
         const upload: unknown = await app.uploadFile({ channelId: roomId, fileName: file.name, base64Data: dataUrl, duplicateAction: 'keep_both' });
         const uploadedId = uploadResultId(upload);
         if (!uploadedId) throw new Error('HUB_FILE_ID_MISSING');
@@ -113,26 +106,26 @@ export default function HubContractProbe() {
         statusCode = 200;
       } else if (id === 'list-create') {
         const name = `P0 probe ${listKey}`;
-        const existing = await listRoomLists(app, roomId);
+        const existing = await app.listRoomLists(roomId);
         if (existing.some((list) => list.key === listKey || list.name === name)) throw new Error('HUB_LIST_ALREADY_EXISTS');
-        const created = await createList(app, { roomId, name, key: listKey, isolated: true,
+        const created = await app.createList({ roomId, name, key: listKey, isolated: true,
           fields: [{ name: 'Probe date', type: 'DATE' }, { name: 'Probe checked', type: 'CHECKBOX' },
             { name: 'Probe choice', type: 'SELECT', options: ['One'] }, { name: 'Probe assignee', type: 'ASSIGNEE' },
             { name: 'Probe files', type: 'FILE_MULTIPLE' }],
           stages: [{ name: 'Week 1', color: '#3b82f6' }, { name: 'Week 2', color: '#22c55e' }],
         });
-        const readback = await getListInfo(app, created._id);
+        const readback = await app.getListInfo(created._id);
         body = { success: true, list: created, readback: { success: true, ...readback } };
         codeSource = body;
         statusCode = 200;
         setListId(created._id);
       } else if (id === 'list-info') {
-        const detail = await getListInfo(app, listId);
+        const detail = await app.getListInfo(listId);
         body = { success: true, ...detail };
         codeSource = body;
         statusCode = 200;
       } else if (id === 'item-create') {
-        const created = await createItem(app, { listId, name: itemKey, stageId,
+        const created = await app.createItem({ listId, name: itemKey, stageId,
           ...(parentId ? { parentId } : {}), customFields: [{ fieldId, value: assigneeId }] });
         body = { success: true, item: created, readback: { success: true, items: [created], count: 1, nextCursor: null } };
         codeSource = body;
@@ -146,7 +139,7 @@ export default function HubContractProbe() {
         if (id === 'field-update') {
           const current = await read();
           if (idOf(current) !== itemId) throw new Error('HUB_ITEM_READBACK_MISMATCH');
-          await updateItem(app, { itemId, customFields: [{ fieldId, value: assigneeId }] });
+          await app.updateItem({ itemId, customFields: [{ fieldId, value: assigneeId }] });
         }
         const item = await read();
         body = { success: true, items: [item], count: 1, nextCursor: null };
@@ -169,14 +162,14 @@ export default function HubContractProbe() {
       const code = errorCode(codeSource);
       const success = statusCode < 400 && verifiedWrite && validateProbeResponse(id, body, context);
       if (id === 'items-query') setNextCursor(success ? nextPageCursor(body) : undefined);
-      setResult({ id, state: success ? 'pass' : 'fail', evidence: `${id === 'file-upload' ? 'SDK resolved' : `HTTP ${statusCode}`}; code=${code ?? 'none'}; ${target}`, checkedAt: new Date().toISOString() });
+      setResult({ id, state: success ? 'pass' : 'fail', evidence: `${id === 'file-upload' ? 'SDK resolved' : `HTTP ${statusCode}`}; code=${code ?? 'none'}; ${target}`, checkedAt: probe.nowIso() });
     } catch (error) {
       if (runGeneration !== generation.current) return;
       setCapture('');
       const evidence = error instanceof PrivosRestError
         ? `tool HTTP ${error.statusCode ?? 'unknown'}; code=${error.code && /^[a-z0-9_-]{1,80}$/i.test(error.code) ? error.code : 'none'}`
         : error instanceof Error && /^(no selected file|file read failed|HUB_[A-Z_]+)$/.test(error.message) ? error.message : 'bridge error';
-      setResult({ id, state: 'fail', evidence, checkedAt: new Date().toISOString() });
+      setResult({ id, state: 'fail', evidence, checkedAt: probe.nowIso() });
     } finally { setBusy(false); }
   }
 

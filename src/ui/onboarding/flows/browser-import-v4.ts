@@ -1,10 +1,10 @@
-import type { McpApp } from '@privos_ai/app-react';
-import type { ImportedPosition } from '../../../../scripts/onboarding-import/models';
-import { parseQuiz } from '../../../../scripts/onboarding-import/parse-quiz';
-import { preflightPosition, type ImportPreflight } from '../../../../scripts/onboarding-import/preflight';
-import type { RoomBinding, TemplateTree, Week } from '../domain/models';
+import type { ImportedPosition } from '../../../shared/import/models';
+import { assemblePosition, sourceFingerprintInput } from '../../../shared/import/assemble-position';
+import { preflightPosition, type ImportPreflight } from '../../../shared/import/preflight';
+import type { PositionSource, SourceDocument } from '../../../shared/import/source';
+import type { Hasher } from '../../../shared/ports/effects';
 import { isRoomAdmin } from '../domain/roles';
-import { createMcpImportV4Gateway, importPositionV4, type ImportPositionOutcome, type ImportV4Gateway } from './import-v4';
+import { importPositionV4, type ImportPositionOutcome, type ImportV4Gateway } from './import-v4';
 
 export interface BrowserImportFile {
   name: string;
@@ -25,11 +25,6 @@ type Branches = Map<string, Map<number, DayFiles>>;
 const commonName = '00_Common_Onboarding';
 const dayPattern = /^Day_(\d+)(?:_(.+))?$/u;
 const weekPattern = /^Week_(\d+)(?:_(.+))?$/u;
-
-async function sha256(input: string): Promise<string> {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-}
 
 function directoryFile(file: BrowserImportFile): string[] {
   const path = file.webkitRelativePath;
@@ -86,46 +81,30 @@ function collectMetadata(files: ArrayLike<BrowserImportFile>): { rootName: strin
   return { rootName, branches };
 }
 
-async function buildPosition(rootName: string, positionName: string, branches: Branches): Promise<ImportedPosition> {
+async function buildPosition(rootName: string, positionName: string, branches: Branches, hasher: Hasher): Promise<ImportedPosition> {
   const selected = new Map(branches.get(commonName) ?? []);
   for (const [number, day] of branches.get(positionName) ?? []) selected.set(number, day);
-  const tree: TemplateTree = { weeks: [], items: [] };
-  const weeks = new Map<string, Week>();
-  const fingerprintParts = [`root\0${rootName}\0`];
+  const documents: SourceDocument[] = [];
   for (const day of [...selected.values()].sort((a, b) => a.number - b.number)) {
-    if (!weeks.has(day.weekId)) weeks.set(day.weekId, { id: day.weekId, name: day.weekName, order: weeks.size });
-    fingerprintParts.push(`day\0${day.sourceKey}\0`);
-    tree.items.push({ id: day.sourceKey, kind: 'day', name: day.name, stageId: day.weekId, order: day.number, parentId: null, content: '' });
-    let order = 0;
     for (const { key, file } of [...day.files].sort((a, b) => a.key.localeCompare(b.key))) {
-      const markdown = await file.text();
-      fingerprintParts.push(`file\0${key}\0${markdown.length}\0${markdown}\0`);
-      if (file.name.toLowerCase().startsWith('quiz')) {
-        for (const question of parseQuiz(markdown, key)) tree.items.push({
-          id: question.sourceKey, kind: 'question', name: question.content,
-          stageId: day.weekId, order: order++, parentId: day.sourceKey,
-          content: question.content, options: question.options, correctLabels: question.correctLabels,
-          explanation: question.explanation, selectedLabels: [], correct: null,
-        });
-      } else {
-        const title = markdown.replace(/^\uFEFF/u, '').replace(/\r\n?/gu, '\n').match(/^#\s+(.+)$/mu)?.[1]?.trim();
-        if (!title) throw new Error(`${key}:1 lesson needs a # title`);
-        tree.items.push({ id: key, kind: 'lesson', name: title, stageId: day.weekId,
-          order: order++, parentId: day.sourceKey, content: markdown, attachments: [], videos: [], read: false });
-      }
+      documents.push({ path: key, text: await file.text() });
     }
-    if (!order) throw new Error(`${day.sourceKey}: no lesson or quiz questions`);
   }
-  tree.weeks = [...weeks.values()];
-  return { sourceKey: positionName, sourceFingerprint: await sha256(fingerprintParts.join('')),
-    name: positionName.replace(/_/gu, ' '), tree };
+  const fingerprint = await hasher.sha256(sourceFingerprintInput(rootName, positionName, documents));
+  return assemblePosition(positionName, documents, fingerprint);
 }
 
-export async function* readBrowserPositions(files: ArrayLike<BrowserImportFile>): AsyncGenerator<ImportedPosition> {
-  const { rootName, branches } = collectMetadata(files);
-  for (const name of [...branches.keys()].filter((branch) => branch !== commonName).sort((a, b) => a.localeCompare(b))) {
-    yield await buildPosition(rootName, name, branches);
-  }
+export function createBrowserPositionSource(files: ArrayLike<BrowserImportFile>, hasher: Hasher): PositionSource {
+  return { async *positions() {
+    const { rootName, branches } = collectMetadata(files);
+    for (const name of [...branches.keys()].filter((branch) => branch !== commonName).sort((a, b) => a.localeCompare(b))) {
+      yield await buildPosition(rootName, name, branches, hasher);
+    }
+  } };
+}
+
+export async function* readBrowserPositions(files: ArrayLike<BrowserImportFile>, hasher: Hasher): AsyncGenerator<ImportedPosition> {
+  yield* createBrowserPositionSource(files, hasher).positions();
 }
 
 export type BrowserImportOptions = { dryRun: true } | {
@@ -133,19 +112,13 @@ export type BrowserImportOptions = { dryRun: true } | {
 };
 export type BrowserImportResult = { state: 'dry-run'; preflight: ImportPreflight } | ImportPositionOutcome;
 
-export async function* importBrowserFilesV4(files: ArrayLike<BrowserImportFile>, options: BrowserImportOptions): AsyncGenerator<BrowserImportResult> {
+export async function* importBrowserFilesV4(files: ArrayLike<BrowserImportFile>, options: BrowserImportOptions, hasher: Hasher): AsyncGenerator<BrowserImportResult> {
   if (!options.dryRun) {
     if (!isRoomAdmin(options.actorRoles)) throw new Error('NOT_ADMIN');
     if (!options.actorRoomId || options.actorRoomId !== options.roomId) throw new Error('ROOM_MISMATCH');
   }
-  for await (const position of readBrowserPositions(files)) {
+  for await (const position of readBrowserPositions(files, hasher)) {
     yield options.dryRun ? { state: 'dry-run', preflight: preflightPosition(position) }
-      : await importPositionV4(options.gateway, position);
+      : await importPositionV4(options.gateway, position, hasher);
   }
-}
-
-export function importBrowserFolderV4(app: McpApp, binding: RoomBinding, actorRoomId: string,
-  actorRoles: readonly string[], files: ArrayLike<BrowserImportFile>): AsyncGenerator<BrowserImportResult> {
-  return importBrowserFilesV4(files, { dryRun: false, roomId: binding.roomId, actorRoomId, actorRoles,
-    gateway: createMcpImportV4Gateway(app, binding) });
 }

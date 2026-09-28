@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { usePrivosApp, usePrivosContext, useProviderEmbed } from '@privos_ai/app-react';
-import { getListInfo, listRoomLists, updateItem } from '../data/onboarding-lists';
+import type { ProbeEnvironment } from './probe-port';
 import { isRoomAdmin } from '../domain/roles';
 import { folderMatches, uploadFileParams, uploadResultId } from './p0-contracts';
 import { idOf, unwrapToolResult } from '../data/tool-result';
@@ -16,15 +15,10 @@ function providerUrl(value: string): boolean {
     return url.protocol === 'https:' && ['www.youtube-nocookie.com', 'player.vimeo.com', 'drive.google.com'].includes(url.hostname);
   } catch { return false; }
 }
-function EmbedCheck({ url }: { url: string }) {
-  const embed = useProviderEmbed(url);
-  return <div><p>Host embed: {embed.state}{embed.reason ? `; reason=${embed.reason}` : ''}</p>
-    <div ref={embed.ref} style={{ width: 320, height: 180, border: '1px solid currentColor' }} aria-label="Provider embed test placeholder" /></div>;
-}
-
-export default function P03LimitsProbe() {
-  const app = usePrivosApp();
-  const { roomId, userId, userRoles, effectiveScopes } = usePrivosContext();
+export default function P03LimitsProbe({ probe }: { probe: ProbeEnvironment }) {
+  const app = probe.transport;
+  const { roomId, userId, roles: userRoles, effectiveScopes } = probe.actor;
+  const { EmbedCheck } = probe;
   const admin = isRoomAdmin(userRoles ?? []);
   const [confirmed, setConfirmed] = useState(false);
   const [listId, setListId] = useState('');
@@ -64,9 +58,9 @@ export default function P03LimitsProbe() {
   }
   async function verifyTarget(requireField: boolean): Promise<boolean> {
     if (!listId || !itemId || !itemKey || requireField && !fieldId) return false;
-    const lists = await listRoomLists(app, roomId);
+    const lists = await app.listRoomLists(roomId);
     if (!lists.some((list) => list._id === listId)) return false;
-    const info = await getListInfo(app, listId);
+    const info = await app.getListInfo(listId);
     return !requireField || Boolean(info.list.fieldDefinitions?.some((field) => field._id === fieldId && field.type === 'TEXTAREA'));
   }
   const readRequest = () => snapshotQueryRequest(listId, itemKey);
@@ -76,7 +70,7 @@ export default function P03LimitsProbe() {
       if (!(await verifyTarget(true))) { report(label, 'invalid-target', target); return; }
       const response = await app.rest(readRequest());
       const next = parseSnapshot(response.statusCode, response.body, itemId, itemKey);
-      if (next) { setSnapshot(next); setSnapshotAt(new Date().toISOString()); }
+      if (next) { setSnapshot(next); setSnapshotAt(probe.nowIso()); }
       const raw = next?.fields.find((field) => field.fieldId === fieldId)?.value;
       let markers = 'unavailable';
       if (typeof raw === 'string') {
@@ -93,7 +87,7 @@ export default function P03LimitsProbe() {
       if (!snapshot || !(await verifyTarget(true))) { report('Bounded TEXTAREA write', 'invalid-target', target); return; }
       const request = buildTextWrite(snapshot, fieldId, bytes);
       if (!request) { report('Bounded TEXTAREA write', 'invalid-size', `cap=8192 bytes; ${target}`); return; }
-      await updateItem(app, { itemId, customFields: request.customFields });
+      await app.updateItem({ itemId, customFields: request.customFields });
       const readback = await app.rest(readRequest());
       const next = readback ? parseSnapshot(readback.statusCode, readback.body, itemId, itemKey) : undefined;
       const expected = request.customFields.find((field) => field.fieldId === fieldId)?.value;
@@ -109,7 +103,7 @@ export default function P03LimitsProbe() {
       if (!snapshot || !(await verifyTarget(true))) { report('Two-tab score write', 'invalid-target', target); return; }
       const request = buildScoreWrite(snapshot, fieldId, marker, score);
       if (!request) { report('Two-tab score write', 'invalid-json-or-size', `cap=8192 bytes; ${target}`); return; }
-      await updateItem(app, { itemId, customFields: request.customFields });
+      await app.updateItem({ itemId, customFields: request.customFields });
       const readback = await app.rest(readRequest());
       const next = readback ? parseSnapshot(readback.statusCode, readback.body, itemId, itemKey) : undefined;
       const expected = request.customFields.find((field) => field.fieldId === fieldId)?.value;
@@ -123,7 +117,7 @@ export default function P03LimitsProbe() {
   }
   async function search() {
     await within('Accent search', async () => {
-      if (!listId || !(await listRoomLists(app, roomId)).some((list) => list._id === listId)) { report('Accent search', 'invalid-target', target); return; }
+      if (!listId || !(await app.listRoomLists(roomId)).some((list) => list._id === listId)) { report('Accent search', 'invalid-target', target); return; }
       const response = await app.rest(searchRequest(listId, searchText));
       const page = record(response.body);
       const keys = Array.isArray(page?.items) ? page.items.map((item) => record(item)?.key).filter((key): key is string => typeof key === 'string') : [];
@@ -134,10 +128,10 @@ export default function P03LimitsProbe() {
   async function readPage() {
     await within('Bounded tree page', async () => {
       if (!listId || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 200 ||
-        !(await listRoomLists(app, roomId)).some((list) => list._id === listId)) { report('Bounded tree page', 'invalid-target', target); return; }
-      const start = performance.now();
+        !(await app.listRoomLists(roomId)).some((list) => list._id === listId)) { report('Bounded tree page', 'invalid-target', target); return; }
+      const start = probe.nowMs();
       const response = await app.rest(pageQueryRequest(listId, pageSize, cursor));
-      const elapsed = Math.round(performance.now() - start);
+      const elapsed = Math.round(probe.nowMs() - start);
       const page = parsePage(response.statusCode, response.body, pageSize);
       const valid = Boolean(page && pageAdvanceValid(page, seenIds, seenCursors, cursor));
       if (page && valid) {
@@ -168,15 +162,10 @@ export default function P03LimitsProbe() {
       if (!folderMatches(rootFolder, positionFolder, roomId, positionId)) {
         report('Representative file upload', 'invalid-folder-binding', `folder tool readback mismatched; ${target}`); return;
       }
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('read failed'));
-        reader.onerror = () => reject(new Error('read failed'));
-        reader.readAsDataURL(file);
-      });
-      const started = performance.now();
+      const dataUrl = await probe.readDataUrl(file);
+      const started = probe.nowMs();
       const outcome: unknown = await app.uploadFile(uploadFileParams(roomId, positionFolderId, file.name, dataUrl));
-      const elapsed = Math.round(performance.now() - started);
+      const elapsed = Math.round(probe.nowMs() - started);
       const uploadedId = uploadResultId(outcome);
       const filePayload = uploadedId ? unwrapToolResult(await app.callServerTool({ name: 'mcpapp.files.get', arguments: { fileId: uploadedId } })) : undefined;
       const rawFile = record(record(filePayload)?.file ?? filePayload);
@@ -196,7 +185,7 @@ export default function P03LimitsProbe() {
   return <section aria-label="P0.3 limits probe">
     <h2>P0.3 limits and concurrency probe (dev)</h2>
     <p>Current session {userId}; {target}. Only a dedicated test fixture. Every request requires a click.</p>
-    <p>Host context has no locale field in installed SDK; browser language={navigator.language}; time zone={Intl.DateTimeFormat().resolvedOptions().timeZone}.</p>
+    <p>Host context has no locale field in installed SDK; browser language={probe.hostLanguage}; time zone={probe.timeZone}.</p>
     <p>Optional scopes: rooms:read={effectiveScopes?.includes('rooms:read') ? 'granted' : 'not reported'}; users:read={effectiveScopes?.includes('users:read') ? 'granted' : 'not reported'}.</p>
     <label>Test list ID <input value={listId} onChange={(event) => change(setListId, event.target.value)} /></label>
     <label>Test item ID <input value={itemId} onChange={(event) => change(setItemId, event.target.value)} /></label>

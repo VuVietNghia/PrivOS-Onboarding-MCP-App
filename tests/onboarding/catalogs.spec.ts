@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createCatalogs } from '../../src/ui/onboarding/data/catalogs';
+import { createPrivosCatalogs as createCatalogs } from '../../src/ui/onboarding/data/privos/catalogs-adapter';
 import { OnboardingError } from '../../src/ui/onboarding/domain/errors';
 import { readAllItems, readItem } from '../../src/ui/onboarding/data/v2-lists';
 import { V2, V2_HIRE_FIELDS, V2_POSITION_FIELDS, V2_TEMPLATE_FIELDS } from '../../src/ui/onboarding/domain/v2-fields';
@@ -47,8 +47,8 @@ describe('v4 Catalogs read adapter', () => {
       { method: 'GET', path: 'lists.info', reply: () => ok({ list: { _id: binding.positionsListId, name: 'Positions', fieldDefinitions: defs(V2_POSITION_FIELDS) }, stages: [{ _id: 'stage-ready', name: 'Sẵn sàng' }] }) },
     ]);
     const catalogs = createCatalogs(app, binding);
-    await expect(catalogs.positions({ text: '', status: 'ready', stageId: 'stage-ready' })).rejects.toMatchObject<OnboardingError>({ code: 'FILTER_INVALID' });
-    await expect(catalogs.positions({ text: '', status: 'draft' })).rejects.toMatchObject<OnboardingError>({ code: 'SCHEMA_DRIFT' });
+    await expect(catalogs.positions({ text: '', status: 'ready', stageId: 'stage-ready' })).rejects.toMatchObject({ code: 'FILTER_INVALID' } satisfies Partial<OnboardingError>);
+    await expect(catalogs.positions({ text: '', status: 'draft' })).rejects.toMatchObject({ code: 'SCHEMA_DRIFT' } satisfies Partial<OnboardingError>);
   });
 
   it('backs off and retries a 429 response from the Hub on a read', async () => {

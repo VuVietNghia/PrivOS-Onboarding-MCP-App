@@ -73,6 +73,7 @@
 .v4-context { display: flex; align-items: center; gap: 8px; color: var(--v4-text-3); font-size: 12px; }
 .v4-context strong { color: var(--v4-text); font-weight: 600; }
 .v4-top-actions { display: flex; align-items: center; gap: 12px; }
+.v4-employee-preview-button { min-height: 32px; padding: 5px 12px; border: 1px solid var(--v4-primary); border-radius: 999px; background: var(--v4-primary); color: var(--v4-on-primary); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .v4-language, .v4-themes { display: flex; gap: 2px; padding: 3px; border: 1px solid var(--v4-border); border-radius: 999px; background: var(--v4-surface); }
 .v4-language button, .v4-theme-dot { border: 0; border-radius: 999px; background: transparent; color: var(--v4-text-3); cursor: pointer; }
 .v4-language button { min-width: 34px; padding: 4px 8px; font-size: 11px; }
@@ -222,7 +223,10 @@
   .v4-nav { flex-direction: row; width: 100%; justify-content: space-around; }
   .v4-nav-button { width: auto; min-width: 48px; }
   .v4-nav-button.active::before { left: 12px; bottom: -6px; width: 24px; height: 3px; border-radius: 3px; }
-  .v4-topbar { min-height: 56px; padding: 0 16px; }
+  .v4-topbar { min-height: 56px; flex-wrap: wrap; padding: 8px 16px; }
+  .v4-context { flex: 1 1 100%; }
+  .v4-top-actions { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  .v4-employee-preview-button { order: 2; width: 100%; }
   .v4-context > span { display: none; }
   .v4-main { padding: 20px 16px; }
   .v4-page-head { display: block; }

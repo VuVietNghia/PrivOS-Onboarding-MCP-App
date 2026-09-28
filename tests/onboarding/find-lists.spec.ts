@@ -1,6 +1,6 @@
 // tests/onboarding/find-lists.spec.ts
 import { describe, expect, it } from 'vitest';
-import { createTemplateList, ensureHiresList, findHiresList, listTemplateLists, loadListWithFields } from '../../src/ui/onboarding/data/find-lists';
+import { createTemplateList, ensureHiresList, findHiresList, listTemplateLists, loadListWithFields } from '../../src/ui/onboarding/data/privos/legacy-discovery';
 import { F, HIRES_FIELDS } from '../../src/ui/onboarding/domain/fields';
 import { fakeRestApp, ok } from './fake-app';
 

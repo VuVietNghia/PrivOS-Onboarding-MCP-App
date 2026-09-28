@@ -3,6 +3,7 @@ import type { McpApp, RestRequestParams, RestResponse } from '@privos_ai/app-rea
 import { describe, expect, it } from 'vitest';
 import { F, HIRES_FIELDS, RUN_FIELDS } from '../../src/ui/onboarding/domain/fields';
 import { toggleTask } from '../../src/ui/onboarding/flows/toggle-task';
+import { legacyDepsForApp } from '../di/support/legacy-adapter';
 import { fakeRestApp, ok, type FakeRoute } from './fake-app';
 
 // Bọc app giả bằng một app có "độ trễ mạng" thật (setTimeout), để Promise.all
@@ -47,7 +48,7 @@ function fixture() {
 describe('toggleTask', () => {
   it('ghi Hoàn thành, đếm lại tuyệt đối và cập nhật hồ sơ', async () => {
     const f = fixture();
-    const p = await toggleTask(f.app, { ...f.base, taskId: 'a', done: true });
+    const p = await toggleTask(legacyDepsForApp(f.app), { ...f.base, taskId: 'a', done: true });
     expect(p).toMatchObject({ done: 1, total: 2, percent: 50 });
     expect(f.hireCount(F.doneCount)).toBe(1);
     expect(f.hireCount(F.totalCount)).toBe(2);
@@ -56,8 +57,8 @@ describe('toggleTask', () => {
 
   it('xong hết thì hồ sơ sang Hoàn tất', async () => {
     const f = fixture();
-    await toggleTask(f.app, { ...f.base, taskId: 'a', done: true });
-    await toggleTask(f.app, { ...f.base, taskId: 'b', done: true });
+    await toggleTask(legacyDepsForApp(f.app), { ...f.base, taskId: 'a', done: true });
+    await toggleTask(legacyDepsForApp(f.app), { ...f.base, taskId: 'b', done: true });
     expect(f.hire.stageId).toBe('HS2');
   });
 
@@ -69,8 +70,8 @@ describe('toggleTask', () => {
     // phải tự sửa lại đúng 2/2.
     const app = delayedApp(f.app, (path) => (path === 'items.query' ? 20 : 0));
     await Promise.all([
-      toggleTask(app, { ...f.base, taskId: 'a', done: true }),
-      toggleTask(app, { ...f.base, taskId: 'b', done: true }),
+      toggleTask(legacyDepsForApp(app), { ...f.base, taskId: 'a', done: true }),
+      toggleTask(legacyDepsForApp(app), { ...f.base, taskId: 'b', done: true }),
     ]);
     expect(f.hireCount(F.doneCount)).toBe(2);
     expect(f.hireCount(F.totalCount)).toBe(2);
@@ -80,7 +81,7 @@ describe('toggleTask', () => {
   it('giữ nguyên "Khởi tạo lỗi", chỉ cập nhật số đếm, khi hồ sơ đang ở stage lỗi', async () => {
     const f = fixture();
     f.hire.stageId = 'HS3'; // Khởi tạo lỗi
-    const p = await toggleTask(f.app, { ...f.base, taskId: 'a', done: true, currentStageId: 'HS3' });
+    const p = await toggleTask(legacyDepsForApp(f.app), { ...f.base, taskId: 'a', done: true, currentStageId: 'HS3' });
     expect(p).toMatchObject({ done: 1, total: 2 });
     expect(f.hireCount(F.doneCount)).toBe(1);
     expect(f.hireCount(F.totalCount)).toBe(2);
@@ -94,7 +95,7 @@ describe('toggleTask', () => {
       { fieldId: f.base.hireIds[F.totalCount], value: 0 },
     ];
     const badRunIds = Object.fromEntries(RUN_FIELDS.map((s, i) => [s.name, `bad-${i}`]));
-    await expect(toggleTask(f.app, { ...f.base, runIds: badRunIds, taskId: 'a', done: true })).rejects.toThrow('SCHEMA_DRIFT');
+    await expect(toggleTask(legacyDepsForApp(f.app), { ...f.base, runIds: badRunIds, taskId: 'a', done: true })).rejects.toThrow('SCHEMA_DRIFT');
     expect(f.hireCount(F.doneCount)).toBe(0);
     expect(f.hireCount(F.totalCount)).toBe(0);
   });
@@ -129,7 +130,7 @@ describe('toggleTask', () => {
     const base = { hireListId: 'H', hireItemId: 'H1', hireIds, hireStages, roadmapListId: 'RUN', runIds, today: '2026-09-21' };
     const hireCount = (name: string) => (hire.customFields as { fieldId: string; value: unknown }[]).find((c) => c.fieldId === hireIds[name])?.value;
 
-    const p = await toggleTask(app, { ...base, taskId: 'a', done: true });
+    const p = await toggleTask(legacyDepsForApp(app), { ...base, taskId: 'a', done: true });
 
     expect(p).toMatchObject({ done: 2, total: 2 }); // (1) trả kết quả của lần đọc thứ hai, không phải lần đầu
     expect(hireCount(F.doneCount)).toBe(2); // (2) lần ghi thứ hai đè lên giá trị cũ 1/2

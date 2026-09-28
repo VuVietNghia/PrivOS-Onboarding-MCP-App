@@ -19,25 +19,16 @@
 import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
 
-import { buildPairingMetadata, pairAndAwaitApproval, type PairingResult } from '@privos_ai/app-server';
+import { buildPairingMetadata, pairAndAwaitApproval } from '@privos_ai/app-server';
 import WebSocket from 'ws';
 
 import { buildRelayAppDescriptor } from '../src/manifest';
+import { createNodePrompt } from './adapters/node-script-effects';
+import { pairAndStart } from './core/pair';
 
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-function prompt(question: string): Promise<string> {
-	const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-	return new Promise((resolve) => {
-		rl.question(question, (answer: string) => {
-			rl.close();
-			resolve(answer.trim());
-		});
-	});
-}
 
 /**
  * Runs the follow-on script through whichever package manager invoked this one,
@@ -64,31 +55,28 @@ function runStandaloneServer(): Promise<number> {
 }
 
 async function main(): Promise<void> {
-	const pairUrl = await prompt('Enter the one-time pairing URL from Hub Admin: ');
-	if (!pairUrl) throw new Error('No pairing URL provided');
-
-	const manifest = JSON.parse(await readFile(path.join(repositoryRoot, 'privos-app.json'), 'utf8'));
-	console.log('\nRegistering… once registered, approve the permission ceiling in Hub Admin > Apps.');
-	console.log('This command will keep waiting and start the app automatically after approval.');
-	const paired: PairingResult = await pairAndAwaitApproval(
-		pairUrl,
-		{ ...buildPairingMetadata(buildRelayAppDescriptor()), manifest },
-		WebSocket,
-		{ onAwaitingApproval: () => process.stdout.write('.') },
-	);
-
-	if (paired.pairingVersion !== 2 || !paired.identityFilePath) {
-		throw new Error(
-			'This Hub did not return standalone dispatch trust (pairingVersion 2). ' +
-				'Standalone production requires a Hub that supports standalone pairing.',
-		);
-	}
-
-	console.log(`\nIdentity saved to ${paired.identityFilePath}`);
-	console.log('Verify the fingerprint printed above out-of-band (e.g. with the operator who issued the');
-	console.log('pairing URL) before trusting dispatch from this Hub.');
-
-	process.exitCode = await runStandaloneServer();
+	const result = await pairAndStart({
+		prompt: createNodePrompt(),
+		readManifest: async () => {
+			const manifest: unknown = JSON.parse(await readFile(path.join(repositoryRoot, 'privos-app.json'), 'utf8'));
+			if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) throw new Error('Invalid manifest');
+			return manifest as Record<string, unknown>;
+		},
+		pair: async (pairUrl, manifest) => {
+			console.log('\nRegistering… once registered, approve the permission ceiling in Hub Admin > Apps.');
+			console.log('This command will keep waiting and start the app automatically after approval.');
+			return pairAndAwaitApproval(pairUrl,
+				{ ...buildPairingMetadata(buildRelayAppDescriptor()), manifest }, WebSocket,
+				{ onAwaitingApproval: () => process.stdout.write('.') });
+		},
+		onApproved: (identityFilePath) => {
+			console.log(`\nIdentity saved to ${identityFilePath}`);
+			console.log('Verify the fingerprint printed above out-of-band (e.g. with the operator who issued the');
+			console.log('pairing URL) before trusting dispatch from this Hub.');
+		},
+		start: runStandaloneServer,
+	});
+	process.exitCode = result.exitCode;
 }
 
 main().catch((err) => {

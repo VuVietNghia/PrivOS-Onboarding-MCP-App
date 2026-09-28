@@ -1,30 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { McpApp } from '@privos_ai/app-react';
+import { useEffect, useState } from 'react';
 import type { Catalogs } from '../data/catalogs';
-import { readItem, readListInfo } from '../data/v2-lists';
 import { describeError } from '../domain/errors';
-import type { Hire, RoomBinding } from '../domain/models';
-import { resolveV2FieldIds, V2, V2_HIRE_FIELDS } from '../domain/v2-fields';
-import { createHrV4Actions, createMcpHrV4Gateway } from '../flows/hr-v4';
-import { resumeV4, templateFingerprint, type PreparedProvisionV4 } from '../flows/provision-v4';
+import type { Hire } from '../domain/models';
+import type { PreparedProvisionV4 } from '../ports/provision';
+import type { OnboardingServices } from '../ports/ui-services';
 
 interface Props {
-  app: McpApp;
-  binding: RoomBinding;
   catalogs: Catalogs;
-  actorRoles: readonly string[];
+  services: Pick<OnboardingServices, 'hr' | 'provision'>;
   hireId: string;
   onClose: () => void;
   onChanged: () => void;
 }
 
-export function HrV4Drawer({ app, binding, catalogs, actorRoles, hireId, onClose, onChanged }: Props) {
+export function HrV4Drawer({ catalogs, services, hireId, onClose, onChanged }: Props) {
   const [hire, setHire] = useState<Hire | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const actions = useMemo(() => createHrV4Actions(createMcpHrV4Gateway(app, binding), binding.roomId, actorRoles),
-    [app, binding, actorRoles]);
+  const actions = services.hr;
   useEffect(() => {
     let active = true;
     setHire(null); setError(null);
@@ -44,18 +38,11 @@ export function HrV4Drawer({ app, binding, catalogs, actorRoles, hireId, onClose
       else {
         const position = await catalogs.position(hire.positionId);
         const tree = await catalogs.template(position.templateListId);
-        const info = await readListInfo(app, binding.hiresListId);
-        const ids = resolveV2FieldIds(info.list.fieldDefinitions, V2_HIRE_FIELDS);
-        const raw = await readItem(app, binding.hiresListId, hire.id);
-        const rawState = raw.customFields?.find((field) => field.fieldId === ids[V2.provision])?.value;
-        if (typeof rawState !== 'string') throw new Error('PROVISION_CHECKPOINT_INVALID');
-        const state: unknown = JSON.parse(rawState) as unknown;
-        if (!state || typeof state !== 'object' || Array.isArray(state) || !('operationId' in state) ||
-          typeof state.operationId !== 'string' || !state.operationId) throw new Error('PROVISION_CHECKPOINT_INVALID');
+        const operationId = await services.provision.operationId(hire.id);
         const prepared: PreparedProvisionV4 = { input: { positionId: hire.positionId, employeeId: hire.employeeId,
-          employeeName: hire.name, startDate: hire.startDate, operationId: state.operationId }, position, tree,
-          fingerprint: await templateFingerprint(tree) };
-        await resumeV4(app, binding, hire.id, prepared, actorRoles, undefined, catalogs);
+          employeeName: hire.name, startDate: hire.startDate, operationId }, position, tree,
+          fingerprint: await services.provision.fingerprint(tree) };
+        await services.provision.resume(hire.id, prepared);
       }
       setConfirmCancel(false);
       if (action === 'cancel' && hire.status === 'failed') onClose();

@@ -4,7 +4,12 @@ import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { OnboardingError } from '../../src/ui/onboarding/domain/errors';
-import { TemplateBuilder } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
+import { TemplateBuilder as PureTemplateBuilder, type TemplateBuilderProps } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
+
+type TestBuilderProps<T> = T extends unknown ? Omit<T, 'ids' | 'focus'> : never;
+function TemplateBuilder(props: TestBuilderProps<TemplateBuilderProps>) {
+  return <PureTemplateBuilder {...props} ids={{ next: () => crypto.randomUUID() }} focus={{ focus: (id) => document.getElementById(id)?.focus() }} />;
+}
 
 afterEach(cleanup);
 

@@ -1,6 +1,6 @@
 import type { McpApp } from '@privos_ai/app-react';
 import { describe, expect, it } from 'vitest';
-import { resolveRoomBinding } from '../../src/ui/onboarding/data/room-bootstrap';
+import { resolvePrivosRoomBinding as resolveRoomBinding } from '../../src/ui/onboarding/data/privos/bootstrap-adapter';
 import { PrivosRestError } from '../../src/ui/privos-rest';
 
 interface FakeList {

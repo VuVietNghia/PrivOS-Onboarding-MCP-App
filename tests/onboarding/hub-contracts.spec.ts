@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { McpApp } from '@privos_ai/app-react';
 import { registryListInput } from '../../src/ui/onboarding/domain/v2-registry-schema';
 import { createItem, createList } from '../../src/ui/onboarding/data/onboarding-lists';
+import { createPrivosProbeTransport } from '../../src/ui/onboarding/dev/privos-probes';
 import { aclQuery, aclUpdate, classifyAclResult, createFolderRequest, moveFileRequest, fileLocation, uploadFileParams, actorAllowed, queryMatches, updateMatches, folderMatches, fileMatches, ordinaryField, itemFolderMatches, assigneeIncludes, hiddenTargetVerdict, uploadResultId, createVerifiedFolder, createRegistryIfVacant } from '../../src/ui/onboarding/dev/p0-contracts';
 import { probeSafetyReducer } from '../../src/ui/onboarding/dev/probe-safety';
 import { fakeRestApp, ok } from './fake-app';
@@ -12,7 +13,7 @@ describe('v2 registry bootstrap', () => {
     expect(positions.key).toBe('onb-positions');
     expect(positions.isolated).toBe(true);
     expect(positions.stages.map(({ name, order }) => ({ name, order }))).toEqual(['Đang soạn', 'Sẵn sàng', 'Ngừng dùng'].map((name, order) => ({ name, order })));
-    expect(positions.stages.every((stage) => /^#[0-9a-f]{6}$/i.test(stage.color))).toBe(true);
+    expect(positions.stages.every((stage) => /^#[0-9a-f]{6}$/i.test(stage.color ?? ''))).toBe(true);
     expect(positions.fields).toEqual([
       ['Template', 'TEXT'], ['Số tuần', 'NUMBER'], ['Số ngày', 'NUMBER'], ['Số bài học', 'NUMBER'],
       ['Số câu hỏi', 'NUMBER'], ['Thiếu đáp án', 'NUMBER'], ['Đang dùng', 'NUMBER'], ['Nguồn nhập', 'TEXT'],
@@ -44,7 +45,7 @@ describe('v2 registry bootstrap', () => {
 
   it('stops before POST when the room already has the v1 hires key', async () => {
     const { app, calls } = fakeRestApp([{ method: 'GET', path: 'lists.listByRoomId', reply: () => ok({ lists: [{ _id: 'old-hire-list', key: 'onb-hires', name: 'v1 hires' }] }) }]);
-    expect(await createRegistryIfVacant(app, 'room-1', 'hires')).toEqual({ status: 'collision' });
+    expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'hires')).toEqual({ status: 'collision' });
     expect(calls).toHaveLength(1);
     expect(calls[0]).toMatchObject({ method: 'GET', path: 'lists.listByRoomId', query: { roomId: 'room-1' } });
   });
@@ -53,14 +54,14 @@ describe('v2 registry bootstrap', () => {
     const { app, calls } = fakeRestApp([{ method: 'GET', path: 'lists.listByRoomId', reply: () => ({
       statusCode: 200, body: { lists: [{ _id: 'existing', key: 'onb-hires', name: 'v1 hires' }] },
     }) }]);
-    expect(await createRegistryIfVacant(app, 'room-1', 'hires')).toEqual({ status: 'collision' });
+    expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'hires')).toEqual({ status: 'collision' });
     expect(calls).toHaveLength(1);
   });
 
   it('accepts an MCP List array without a success envelope', async () => {
     const calls: string[] = [];
-    const app = { callServerTool: async (call: { name: string }) => { calls.push(call.name); return [{ id: 'existing', key: 'onb-hires', name: 'v1 hires' }]; } } as McpApp;
-    expect(await createRegistryIfVacant(app, 'room-1', 'hires')).toEqual({ status: 'collision' });
+    const app = { callServerTool: async (call: { name: string }) => { calls.push(call.name); return [{ id: 'existing', key: 'onb-hires', name: 'v1 hires' }]; } } as unknown as McpApp;
+    expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'hires')).toEqual({ status: 'collision' });
     expect(calls).toEqual(['mcpapp.lists.getAll']);
   });
 
@@ -68,7 +69,7 @@ describe('v2 registry bootstrap', () => {
     const { app, calls } = fakeRestApp([{ method: 'GET', path: 'lists.listByRoomId', reply: () => ok({
       lists: [{ _id: 'existing', key: 'OP', name: 'Onboarding positions' }],
     }) }]);
-    expect(await createRegistryIfVacant(app, 'room-1', 'positions')).toEqual({ status: 'collision' });
+    expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'positions')).toEqual({ status: 'collision' });
     expect(calls).toHaveLength(1);
   });
 
@@ -77,10 +78,10 @@ describe('v2 registry bootstrap', () => {
       { method: 'GET', path: 'lists.listByRoomId', reply: () => ok({ lists: [] }) },
       { method: 'POST', path: 'lists.create', reply: () => ok({ list: { _id: 'new-positions', key: 'onb-positions', name: 'Onboarding positions' } }) },
     ]);
-    expect(await createRegistryIfVacant(app, 'room-1', 'positions')).toEqual({ status: 'created', listId: 'new-positions' });
+    expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'positions')).toEqual({ status: 'created', listId: 'new-positions' });
     expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual(['GET lists.listByRoomId', 'POST lists.create']);
     const malformed = fakeRestApp([{ method: 'GET', path: 'lists.listByRoomId', reply: () => ok({}) }]);
-    await expect(createRegistryIfVacant(malformed.app, 'room-1', 'hires')).rejects.toThrow('HUB_LISTS_MALFORMED');
+    await expect(createRegistryIfVacant(createPrivosProbeTransport(malformed.app), 'room-1', 'hires')).rejects.toThrow('HUB_LISTS_MALFORMED');
     expect(malformed.calls).toHaveLength(1);
   });
 
@@ -91,7 +92,7 @@ describe('v2 registry bootstrap', () => {
       if (call.name === 'mcpapp.lists.createItem') return { item: { id: 'child-1', name: 'Test child', stageId: 'stage-1' } };
       if (call.name === 'mcpapp.lists.getItem') return { item: { id: 'child-1', name: 'Test child', stageId: 'stage-1', parentId: 'parent-1' } };
       throw new Error(`unexpected tool ${call.name}`);
-    } } as McpApp;
+    } } as unknown as McpApp;
     await createItem(app, { listId: 'list-1', name: 'Test child', stageId: 'stage-1', parentId: 'parent-1',
       customFields: [{ fieldId: 'assignee-field', value: 'user-b' }, { fieldId: 'files-field', value: [{ _id: 'file-1' }] }] });
     expect(calls[0]).toEqual({ name: 'mcpapp.lists.createItem', arguments: { listId: 'list-1', title: 'Test child', parentId: 'parent-1',
@@ -163,8 +164,8 @@ describe('room Files requests', () => {
     const invalid = { callServerTool: async (call: { name: string }) => {
       invalidCalls.push(call.name);
       return { folders: [{ id: 'root', name: 'Other', channelId: 'room-1', parentId: null }] };
-    } } as McpApp;
-    const blocked = await createVerifiedFolder(invalid, 'room-1', 'position-1', 'root');
+    } } as unknown as McpApp;
+    const blocked = await createVerifiedFolder(createPrivosProbeTransport(invalid), 'room-1', 'position-1', 'root');
     expect(blocked).toEqual({ ok: false, reason: 'invalid-parent' });
     expect(invalidCalls).toEqual(['mcpapp.folders.getByChannel']);
     const validCalls: { name: string; arguments: Record<string, unknown> }[] = [];
@@ -174,17 +175,17 @@ describe('room Files requests', () => {
       if (call.name === 'mcpapp.folders.create') { created = true; return { id: 'child', name: 'position-1' }; }
       return call.arguments.parentId === 'root' ? { folders: created ? [{ id: 'child', name: 'position-1', parentId: 'root' }] : [] }
         : { folders: [{ id: 'root', name: 'Onboarding', channelId: 'room-1', parentId: null }] };
-    } } as McpApp;
-    expect(await createVerifiedFolder(valid, 'room-1', 'position-1', 'root')).toEqual({ ok: true, folderId: 'child' });
+    } } as unknown as McpApp;
+    expect(await createVerifiedFolder(createPrivosProbeTransport(valid), 'room-1', 'position-1', 'root')).toEqual({ ok: true, folderId: 'child' });
     expect(validCalls.map((call) => call.name)).toEqual(['mcpapp.folders.getByChannel', 'mcpapp.folders.getByChannel', 'mcpapp.folders.create', 'mcpapp.folders.getByChannel']);
   });
 
   it('refuses root creation without a room target and rejects another room on readback', async () => {
-    const unused = { callServerTool: async () => { throw new Error('should not call Hub'); } } as McpApp;
-    expect(await createVerifiedFolder(unused, '', 'Onboarding')).toEqual({ ok: false, reason: 'invalid-room' });
+    const unused = { callServerTool: async () => { throw new Error('should not call Hub'); } } as unknown as McpApp;
+    expect(await createVerifiedFolder(createPrivosProbeTransport(unused), '', 'Onboarding')).toEqual({ ok: false, reason: 'invalid-room' });
     const wrongRoom = { callServerTool: async (call: { name: string }) => call.name === 'mcpapp.folders.create'
-      ? { folder: { id: 'root', name: 'Onboarding' } } : { folders: [] } } as McpApp;
-    expect(await createVerifiedFolder(wrongRoom, 'room-1', 'Onboarding')).toEqual({ ok: false, reason: 'readback-mismatch' });
+      ? { folder: { id: 'root', name: 'Onboarding' } } : { folders: [] } } as unknown as McpApp;
+    expect(await createVerifiedFolder(createPrivosProbeTransport(wrongRoom), 'room-1', 'Onboarding')).toEqual({ ok: false, reason: 'readback-mismatch' });
   });
   it('creates nested folders and moves a file with documented public payload', () => {
     expect(createFolderRequest('room-1', 'Onboarding')).toEqual({ name: 'mcpapp.folders.create', arguments: { name: 'Onboarding', channelId: 'room-1' } });

@@ -1,9 +1,16 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useMemo } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { RestResponse } from '@privos_ai/app-react';
+import type { McpApp, RestResponse } from '@privos_ai/app-react';
 import type { Catalogs } from '../../src/ui/onboarding/data/catalogs';
-import { ProvisionV4Form } from '../../src/ui/onboarding/views/ProvisionV4Form';
+import { ProvisionV4Form as PureProvisionV4Form } from '../../src/ui/onboarding/views/ProvisionV4Form';
+import { listRoomMembers, lookupUser } from '../../src/ui/onboarding/data/room-members';
+import { templateFingerprint } from '../../src/ui/onboarding/flows/provision-v4';
+import { createBrowserEffects } from '../../src/ui/adapters/browser-effects';
+import { provisionV4, resumeV4, recountPositionV4 } from '../../src/ui/onboarding/data/privos/compat-flows';
+import type { RoomBinding } from '../../src/ui/onboarding/domain/models';
+import type { OnboardingServices } from '../../src/ui/onboarding/ports/ui-services';
 import { fakeRestApp, forbidden, ok } from './fake-app';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); });
@@ -17,7 +24,42 @@ const catalogs: Catalogs = {
   roadmap: async () => { throw new Error('unused'); },
 };
 
+function ProvisionV4Form(props: { app: McpApp; roomType: unknown; binding: RoomBinding; catalogs: Catalogs;
+  actorRoles: readonly string[]; services?: Pick<OnboardingServices, 'provision' | 'members' | 'clock' | 'ids'>; onDone: () => void }) {
+  const fallback = useMemo((): Pick<OnboardingServices, 'provision' | 'members' | 'clock' | 'ids'> => ({
+    members: { list: () => listRoomMembers(props.app, props.binding.roomId, props.roomType),
+      lookup: (value) => lookupUser(props.app, value) },
+    provision: { start: (prepared, onProgress) => provisionV4(props.app, props.binding, prepared, props.actorRoles, onProgress, props.catalogs),
+      resume: (hireId, prepared, onProgress) => resumeV4(props.app, props.binding, hireId, prepared, props.actorRoles, onProgress, props.catalogs),
+      recount: (positionId) => recountPositionV4(props.app, props.binding, positionId),
+      fingerprint: (tree) => templateFingerprint(tree, createBrowserEffects().hasher),
+      operationId: async () => { throw new Error('UNEXPECTED_OPERATION_ID'); } },
+    clock: { now: () => new Date() }, ids: { next: () => crypto.randomUUID() },
+  }), [props.app, props.binding.roomId, props.roomType, props.catalogs, props.actorRoles]);
+  return <PureProvisionV4Form binding={props.binding} catalogs={props.catalogs} services={props.services ?? fallback} onDone={props.onDone} />;
+}
+
 describe('ProvisionV4Form', () => {
+  it('uses the injected local clock once and keeps an edited date after rerender', () => {
+    const { app } = fakeRestApp([]);
+    let today = new Date(2026, 8, 25, 23, 30);
+    const services = {
+      clock: { now: () => today }, ids: { next: () => 'operation-1' },
+      members: { list: async () => [], lookup: async () => ({ kind: 'not-found' as const }) },
+      provision: { start: async () => { throw new Error('UNEXPECTED_START'); },
+        resume: async () => { throw new Error('UNEXPECTED_RESUME'); },
+        recount: async () => 0, fingerprint: async () => 'hash', operationId: async () => 'operation-1' },
+    };
+    const props = { app, roomType: 'c', binding: { roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' },
+      catalogs, actorRoles: [], services, onDone: () => {} };
+    const view = render(<ProvisionV4Form {...props} />);
+    const input = screen.getByLabelText('Ngày bắt đầu') as HTMLInputElement;
+    expect(input.value).toBe('2026-09-25');
+    fireEvent.change(input, { target: { value: '2026-09-28' } });
+    today = new Date(2026, 8, 26, 0, 15);
+    view.rerender(<ProvisionV4Form {...props} />);
+    expect(input.value).toBe('2026-09-28');
+  });
   it('defaults to local today and keeps a manually chosen date', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(2026, 8, 25, 9));

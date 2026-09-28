@@ -12,9 +12,13 @@
  * fix, so the fallback asks for a full reload instead.
  */
 import { Component, type ReactNode } from 'react';
+import type { Logger } from '../shared/ports/effects';
+import type { ReloadPage } from './ports/presentation';
 
 interface LazyBoundaryProps {
   children: ReactNode;
+  reloadPage: ReloadPage;
+  logger: Logger;
 }
 
 interface LazyBoundaryState {
@@ -28,8 +32,8 @@ export class LazyBoundary extends Component<LazyBoundaryProps, LazyBoundaryState
     return { hasError: true };
   }
 
-  componentDidCatch(error: unknown): void {
-    console.error('[LazyBoundary] failed to load an app chunk', error);
+  componentDidCatch(): void {
+    this.props.logger.event('ui.chunk_failed', { code: 'CHUNK_UNAVAILABLE' });
   }
 
   render(): ReactNode {
@@ -39,7 +43,7 @@ export class LazyBoundary extends Component<LazyBoundaryProps, LazyBoundaryState
           <div className="error-message">
             A new version of this app is available.
           </div>
-          <button type="button" className="btn-submit" onClick={() => window.location.reload()}>
+          <button type="button" className="btn-submit" onClick={() => this.props.reloadPage.reload()}>
             Reload
           </button>
         </div>

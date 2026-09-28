@@ -1,4 +1,4 @@
-import type { CreateListInput } from '../data/onboarding-lists';
+import type { CreateListInput } from '../ports/lists';
 import type { FieldSpec } from './fields';
 
 type RegistryKind = 'positions' | 'hires';

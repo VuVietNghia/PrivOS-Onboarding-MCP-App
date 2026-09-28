@@ -1,8 +1,9 @@
-import fs from 'node:fs';
 import path from 'node:path';
 import { createManifest } from '../src/manifest';
+import { createNodeWorkspaceFiles } from './adapters/node-script-effects';
+import { generateManifest } from './core/generate-manifest';
 
 const output = path.resolve('dist/manifest.json');
-fs.mkdirSync(path.dirname(output), { recursive: true });
-fs.writeFileSync(output, `${JSON.stringify(createManifest(), null, 2)}\n`);
+await generateManifest({ files: createNodeWorkspaceFiles(), manifest: createManifest(),
+  outputDirectory: path.dirname(output), outputFile: output });
 console.log(`Generated ${output}`);

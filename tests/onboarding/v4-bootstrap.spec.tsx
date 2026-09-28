@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { V4Onboarding } from '../../src/ui/onboarding/views/V4Onboarding';
+import { PrivosOnboardingRoot } from '../../src/ui/composition/PrivosOnboardingRoot';
 import type { RoomBootstrap } from '../../src/ui/onboarding/data/room-bootstrap';
 
 const mocks = vi.hoisted(() => ({
@@ -16,6 +17,7 @@ vi.mock('@privos_ai/app-react', () => ({
   usePrivosContext: () => ({ roomId: 'room-a', userId: 'admin-a', theme: 'light' }),
 }));
 const appMock = { storage: { get: async () => null, set: async () => undefined } };
+const renderV4 = () => render(<PrivosOnboardingRoot><V4Onboarding admin /></PrivosOnboardingRoot>);
 vi.mock('../../src/ui/onboarding/data/room-bootstrap', () => ({
   resolveRoomBinding: mocks.bootstrap,
 }));
@@ -35,9 +37,9 @@ beforeEach(() => {
 describe('v4 room bootstrap surface', () => {
   it('opens the live P2 editor when room Lists are ready', async () => {
     const user = userEvent.setup();
-    render(<V4Onboarding admin />);
+    renderV4();
 
-    await user.click(screen.getByRole('button', { name: 'Templates', exact: true }));
+    await user.click(screen.getByRole('button', { name: /^Templates$/ }));
     await screen.findByText('No matching positions.');
     await user.click(screen.getByRole('button', { name: 'Create template' }));
     expect(screen.getByRole('heading', { name: 'Tạo template onboarding' })).toBeTruthy();
@@ -51,7 +53,7 @@ describe('v4 room bootstrap surface', () => {
   });
 
   it('shows the real catalog surface after resolving the room binding', async () => {
-    render(<V4Onboarding admin />);
+    renderV4();
 
     expect(await screen.findByText('No matching profiles.')).toBeTruthy();
     expect(screen.queryByText('Onboarding Lists are not configured for this room.')).toBeNull();
@@ -60,7 +62,7 @@ describe('v4 room bootstrap surface', () => {
   it('retains the selected hire and template filters while List setup is blocked', async () => {
     mocks.bootstrap.mockResolvedValue({ state: 'blocked', code: 'BOOTSTRAP_STAGE_UNAVAILABLE' });
     const user = userEvent.setup();
-    render(<V4Onboarding admin />);
+    renderV4();
     await screen.findByText('PrivOS did not create the required List stages.');
 
     const hireStatus = screen.getByRole('combobox', { name: 'Filter by status' });
@@ -72,7 +74,7 @@ describe('v4 room bootstrap surface', () => {
     await user.click(screen.getByRole('button', { name: 'Reset' }));
     expect((hireStatus as HTMLSelectElement).value).toBe('all');
 
-    await user.click(screen.getByRole('button', { name: 'Templates', exact: true }));
+    await user.click(screen.getByRole('button', { name: /^Templates$/ }));
     const templateStatus = screen.getByRole('combobox', { name: 'Filter template status' });
     await user.selectOptions(templateStatus, 'ready');
     expect((templateStatus as HTMLSelectElement).value).toBe('ready');
@@ -82,7 +84,7 @@ describe('v4 room bootstrap surface', () => {
 
   it('queries the selected status when the room Lists are ready', async () => {
     const user = userEvent.setup();
-    render(<V4Onboarding admin />);
+    renderV4();
     await screen.findByText('No matching profiles.');
     await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by status' }), 'done');
     await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', status: 'done' }, undefined));

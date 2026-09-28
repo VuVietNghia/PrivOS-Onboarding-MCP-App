@@ -1,24 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { McpApp } from '@privos_ai/app-react';
 import type { FilesGateway } from '../../data/files';
 import { describeError } from '../../domain/errors';
-import type { Day, Lesson, Question, RoomBinding } from '../../domain/models';
+import type { Day, Lesson, Question } from '../../domain/models';
 import type { Answers, GradeResult } from '../../domain/quiz';
-import { loadMyRoadmap, markLessonRead, submitQuiz } from '../../flows/learning-v4';
+import type { LoadedLearning } from '../../ports/learning';
+import type { OnboardingServices } from '../../ports/ui-services';
 import { DayLearningView } from './DayLearningView';
 import { QuizResult } from './QuizResult';
 import { QuizView } from './QuizView';
 import { WeekRoadmap } from './WeekRoadmap';
 
 export interface EmployeeRoadmapScreenProps {
-  app: McpApp;
-  binding: RoomBinding;
-  userId: string;
+  services: Pick<OnboardingServices, 'learning' | 'ids'>;
   filesGateway?: FilesGateway;
 }
 
-export function EmployeeRoadmapScreen({ app, binding, userId, filesGateway }: EmployeeRoadmapScreenProps) {
-  const [loaded, setLoaded] = useState<Awaited<ReturnType<typeof loadMyRoadmap>>>(null);
+export function EmployeeRoadmapScreen({ services, filesGateway }: EmployeeRoadmapScreenProps) {
+  const [loaded, setLoaded] = useState<LoadedLearning | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
   const [view, setView] = useState<'roadmap' | 'day' | 'quiz' | 'result'>('roadmap');
@@ -32,11 +30,11 @@ export function EmployeeRoadmapScreen({ app, binding, userId, filesGateway }: Em
   useEffect(() => {
     let active = true;
     setLoading(true); setLoaded(null); setError(null);
-    void loadMyRoadmap(app, binding, userId).then((value) => { if (active) setLoaded(value); })
+    void services.learning.load().then((value) => { if (active) setLoaded(value); })
       .catch((cause: unknown) => { if (active) setError(describeError(cause).message); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [app, binding, userId]);
+  }, [services]);
 
   const day = loaded?.roadmap.tree.items.find((item): item is Day => item.kind === 'day' && item.id === selectedDayId);
   const children = useMemo(() => loaded?.roadmap.tree.items.filter((item): item is Lesson | Question =>
@@ -46,20 +44,20 @@ export function EmployeeRoadmapScreen({ app, binding, userId, filesGateway }: Em
   const read = async (lessonId: string) => {
     if (!loaded || pendingLessonId) return;
     setPendingLessonId(lessonId); setError(null);
-    try { setLoaded(await markLessonRead(app, binding, userId, loaded.hire.id, lessonId)); }
+    try { setLoaded(await services.learning.markRead(loaded.hire.id, lessonId)); }
     catch (cause) { setError(describeError(cause).message); }
     finally { setPendingLessonId(null); }
   };
   const submit = async (answers: Answers) => {
     if (!loaded || !day || pendingQuiz) return;
-    if (!operationId.current) operationId.current = crypto.randomUUID();
+    if (!operationId.current) operationId.current = services.ids.next();
     setPendingQuiz(true); setError(null);
     try {
-      const saved = await submitQuiz(app, binding, { userId, hireId: loaded.hire.id, dayId: day.id,
+      const saved = await services.learning.submit({ hireId: loaded.hire.id, dayId: day.id,
         operationId: operationId.current, answers });
       const firstScore = saved.hire.scores[String(day.order)]?.first ?? `${saved.grade.score}/${saved.grade.total}`;
       setResult({ grade: saved.grade, attempt: saved.attempt, firstScore });
-      setLoaded(await loadMyRoadmap(app, binding, userId));
+      setLoaded(await services.learning.load());
       setView('result');
       operationId.current = null;
     } catch (cause) { setError(describeError(cause).message); throw cause; }

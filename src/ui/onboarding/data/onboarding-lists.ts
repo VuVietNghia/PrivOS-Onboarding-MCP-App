@@ -1,11 +1,12 @@
 // src/ui/onboarding/data/onboarding-lists.ts
 import type { McpApp } from '@privos_ai/app-react';
 import { OptionalFeatureUnavailableError, PrivosRestError, restCall } from '../../privos-rest';
-import type { FieldDef, FieldSpec, HubItem } from '../domain/fields';
+import type { HubItem } from '../domain/fields';
 import type { StageRef } from '../domain/roadmap-plan';
+import type { HubList, CreateListInput, CreateItemInput } from '../ports/lists';
+import type { RequestBudget } from './request-budget';
+export type { HubList, CreateListInput, CreateItemInput } from '../ports/lists';
 import { idOf, unwrapToolResult } from './tool-result';
-
-export interface HubList { _id: string; name: string; key?: string; isolatedList?: boolean; fieldDefinitions?: FieldDef[] }
 
 const PAGE = 200;
 const MAX_PAGES = 1000;
@@ -69,10 +70,11 @@ export async function listRoomLists(app: McpApp, roomId: string): Promise<HubLis
   return lists.map(hubList);
 }
 
-export async function getListInfo(app: McpApp, listId: string): Promise<{ list: HubList; stages: StageRef[] }> {
+export async function getListInfo(app: McpApp, listId: string, budget?: Pick<RequestBudget, 'run'>): Promise<{ list: HubList; stages: StageRef[] }> {
+  const read = <T>(operation: () => Promise<T>): Promise<T> => budget ? budget.run(operation) : operation();
   const [rawList, rawStages] = await Promise.all([
-    callTool(app, 'mcpapp.lists.get', { listId }),
-    callTool(app, 'mcpapp.stages.getByList', { listId }),
+    read(() => callTool(app, 'mcpapp.lists.get', { listId })),
+    read(() => callTool(app, 'mcpapp.stages.getByList', { listId })),
   ]);
   const list = hubList(object(rawList)?.list ?? rawList);
   const stages = Array.isArray(rawStages) ? rawStages : object(rawStages)?.stages;
@@ -82,11 +84,6 @@ export async function getListInfo(app: McpApp, listId: string): Promise<{ list: 
     if (!stage || typeof stage.name !== 'string') throw new Error('HUB_STAGE_MALFORMED');
     return { _id: requiredId(stage), name: stage.name, order: typeof stage.order === 'number' ? stage.order : order };
   }) };
-}
-
-export interface CreateListInput {
-  roomId: string; name: string; key: string; fields: FieldSpec[];
-  stages: { name: string; color?: string; order?: number }[]; isolated: boolean;
 }
 
 export async function createList(app: McpApp, input: CreateListInput): Promise<HubList> {
@@ -116,12 +113,6 @@ export async function deleteList(app: McpApp, listId: string): Promise<boolean> 
     if (err instanceof OptionalFeatureUnavailableError) return false;
     throw err;
   }
-}
-
-export interface CreateItemInput {
-  listId: string; name: string; stageId: string; parentId?: string;
-  description?: string;
-  customFields: { fieldId: string; value: unknown }[];
 }
 
 export async function createItem(app: McpApp, input: CreateItemInput): Promise<HubItem> {
@@ -158,7 +149,8 @@ export async function deleteItem(app: McpApp, itemId: string): Promise<void> {
   await callTool(app, 'mcpapp.lists.deleteItem', { itemId });
 }
 
-export async function listAllItems(app: McpApp, listId: string): Promise<{ items: HubItem[]; capped: boolean }> {
+export async function listAllItems(app: McpApp, listId: string, budget?: Pick<RequestBudget, 'run'>): Promise<{ items: HubItem[]; capped: boolean }> {
+  const read = <T>(operation: () => Promise<T>): Promise<T> => budget ? budget.run(operation) : operation();
   try {
     const items: HubItem[] = [];
     let cursor: string | undefined;
@@ -167,9 +159,9 @@ export async function listAllItems(app: McpApp, listId: string): Promise<{ items
       pages += 1;
       if (pages > MAX_PAGES) throw new Error('ITEM_PAGING_RUNAWAY');
       const requestedCursor = cursor;
-      const body = await restCall<{ items?: HubItem[]; nextCursor?: string | null }>(app, 'POST', 'items.query', {
+      const body = await read(() => restCall<{ items?: HubItem[]; nextCursor?: string | null }>(app, 'POST', 'items.query', {
         body: { listId, sort: { field: 'order', direction: 1 }, count: PAGE, ...(cursor ? { cursor } : {}) },
-      });
+      }));
       items.push(...(Array.isArray(body.items) ? body.items : []));
       const nextCursor = body.nextCursor ?? undefined;
       if (nextCursor !== undefined && nextCursor === requestedCursor) throw new Error('ITEM_PAGING_RUNAWAY');
@@ -178,7 +170,7 @@ export async function listAllItems(app: McpApp, listId: string): Promise<{ items
     return { items, capped: false };
   } catch (err) {
     if (!(err instanceof OptionalFeatureUnavailableError)) throw err;
-    const body = await restCall<{ items?: HubItem[]; truncated?: boolean }>(app, 'GET', 'items.listByListId', { query: { listId } });
+    const body = await read(() => restCall<{ items?: HubItem[]; truncated?: boolean }>(app, 'GET', 'items.listByListId', { query: { listId } }));
     return { items: Array.isArray(body.items) ? body.items : [], capped: Boolean(body.truncated) };
   }
 }

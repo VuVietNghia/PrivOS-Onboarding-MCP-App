@@ -24,6 +24,13 @@ function fakeFolderApp(initial: ReturnType<typeof folder>[] = []) {
 }
 
 describe('ensurePositionFolder', () => {
+  it('does not share a fulfilled folder cache across independent calls', async () => {
+    const { app, calls } = fakeFolderApp();
+    await ensurePositionFolder(app, 'room-1', 'position-a');
+    const firstReads = calls.filter((call) => call.name === 'mcpapp.folders.getByChannel').length;
+    await ensurePositionFolder(app, 'room-1', 'position-a');
+    expect(calls.filter((call) => call.name === 'mcpapp.folders.getByChannel').length).toBeGreaterThan(firstReads);
+  });
   it('creates Onboarding and position child with readback in the current room', async () => {
     const { app, calls } = fakeFolderApp();
     expect(await ensurePositionFolder(app, 'room-1', 'position-a')).toEqual({

@@ -1,15 +1,16 @@
 import type { ContentItem, Day, Lesson, Question, TemplateTree, Week } from './models';
 import { validateTree } from './tree';
+import type { IdGenerator } from '../../../shared/ports/effects';
 
 export type CopySelection =
   | { kind: 'all' }
   | { kind: 'weeks'; weekIds: string[] }
   | { kind: 'days'; dayIds: string[] };
 
-function draftId(): string { return `draft:copy:${crypto.randomUUID()}`; }
+function draftId(ids: IdGenerator): string { return `draft:copy:${ids.next()}`; }
 function fail(): never { throw new Error('COPY_SELECTION_INVALID'); }
 
-export function selectTemplate(tree: TemplateTree, selection: CopySelection): TemplateTree {
+export function selectTemplate(tree: TemplateTree, selection: CopySelection, ids: IdGenerator): TemplateTree {
   const weekById = new Map(tree.weeks.map((week) => [week.id, week]));
   const days = tree.items.filter((item): item is Day => item.kind === 'day');
   const dayById = new Map(days.map((day) => [day.id, day]));
@@ -34,15 +35,15 @@ export function selectTemplate(tree: TemplateTree, selection: CopySelection): Te
   const copiedWeeks: Week[] = [];
   const copiedItems: ContentItem[] = [];
   for (const week of selectedWeeks) {
-    const weekId = draftId();
+    const weekId = draftId(ids);
     copiedWeeks.push({ ...week, id: weekId });
     for (const day of selectedDays.filter((item) => item.stageId === week.id).sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))) {
-      const dayId = draftId();
+      const dayId = draftId(ids);
       copiedItems.push({ ...day, id: dayId, stageId: weekId, parentId: null, sourceId: day.id });
       const children = tree.items.filter((item): item is Lesson | Question => item.kind !== 'day' && item.parentId === day.id)
         .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
       for (const item of children) {
-        const base = { id: draftId(), stageId: weekId, parentId: dayId, sourceId: item.id };
+        const base = { id: draftId(ids), stageId: weekId, parentId: dayId, sourceId: item.id };
         if (item.kind === 'lesson') copiedItems.push({ ...item, ...base,
           attachments: item.attachments.map((ref) => ({ ...ref, ...(ref.raw ? { raw: structuredClone(ref.raw) } : {}) })),
           videos: [...item.videos], read: false });

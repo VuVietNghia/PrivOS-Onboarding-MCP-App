@@ -1,14 +1,16 @@
 import type { Question } from '../../domain/models';
 import { answerLabels, moveOption, removeOption, type OptionDraft } from '../../domain/template-draft';
+import type { IdGenerator } from '../../../../shared/ports/effects';
 
 interface QuestionEditorProps {
   question: Question;
   options: readonly OptionDraft[];
   onChange: (question: Question, options: OptionDraft[]) => void;
   onRemove: () => void;
+  ids: IdGenerator;
 }
 
-export function QuestionEditor({ question, options, onChange, onRemove }: QuestionEditorProps) {
+export function QuestionEditor({ question, options, onChange, onRemove, ids }: QuestionEditorProps) {
   const change = (next: OptionDraft[], patch: Partial<Question> = {}) => onChange({ ...question, ...patch, options: next.map((option) => option.text), correctLabels: answerLabels(next) }, next);
   return <article className="v4-builder-entry">
     <div className="v4-builder-entry-head"><strong>Câu hỏi</strong><button type="button" onClick={onRemove}>Xóa câu hỏi</button></div>
@@ -21,7 +23,7 @@ export function QuestionEditor({ question, options, onChange, onRemove }: Questi
       <button type="button" aria-label={`Xuống ${index + 1}`} disabled={index === options.length - 1} onClick={() => change(moveOption(options, option.id, index + 1))}>↓</button>
       <button type="button" aria-label={`Xóa lựa chọn ${index + 1}`} disabled={options.length <= 2} onClick={() => change(removeOption(options, option.id))}>×</button>
     </div>)}</div>
-    <button type="button" disabled={options.length >= 10} onClick={() => change([...options, { id: `draft:${crypto.randomUUID()}`, text: '', correct: false }])}>Thêm lựa chọn</button>
+    <button type="button" disabled={options.length >= 10} onClick={() => change([...options, { id: `draft:${ids.next()}`, text: '', correct: false }])}>Thêm lựa chọn</button>
     <label>Giải thích sau khi nộp<textarea value={question.explanation} onChange={(event) => change([...options], { explanation: event.target.value })} /></label>
   </article>;
 }

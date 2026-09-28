@@ -1,5 +1,4 @@
 // src/ui/onboarding/domain/errors.ts
-import { OptionalFeatureUnavailableError, PrivosRestError } from '../../privos-rest';
 
 export type OnboardingErrorCode = 'NOT_ADMIN' | 'TEMPLATE_INVALID' | 'HIRE_EXISTS' | 'SCHEMA_DRIFT' | 'SCHEMA_MIGRATION_REQUIRED' | 'SCORES_INVALID' | 'ROOM_NOT_CONFIGURED' | 'PAGINATION_INVALID' | 'FILTER_INVALID' | 'START_NOT_WORKING_DAY' | 'PROVISION_FAILED';
 
@@ -37,15 +36,18 @@ const DOMAIN_ERROR_CODES = Object.keys(DOMAIN_ERROR_MESSAGES);
 
 export function describeError(err: unknown): { message: string; code: string } {
   if (err instanceof OnboardingError) return { code: err.code, message: ONBOARDING_MESSAGES[err.code] };
-  if (err instanceof OptionalFeatureUnavailableError) return { code: 'SCOPE_MISSING', message: 'App chưa được cấp quyền cần thiết. Hãy nhờ admin bật quyền trong cài đặt app.' };
-  if (err instanceof PrivosRestError) {
-    if (err.statusCode === 429) return { code: 'RATE_LIMITED', message: 'Đang có quá nhiều yêu cầu. Thử lại sau.' };
-    if (err.code === 'error-not-allowed' || err.code === 'error-unauthorized' || err.statusCode === 401 || err.statusCode === 403) {
+  if (err instanceof Error && err.name === 'OptionalFeatureUnavailableError') return { code: 'SCOPE_MISSING', message: 'App chưa được cấp quyền cần thiết. Hãy nhờ admin bật quyền trong cài đặt app.' };
+  if (err instanceof Error && err.name === 'PrivosRestError') {
+    const detail = err as Error & { statusCode?: unknown; code?: unknown };
+    const statusCode = typeof detail.statusCode === 'number' ? detail.statusCode : undefined;
+    const code = typeof detail.code === 'string' ? detail.code : undefined;
+    if (statusCode === 429) return { code: 'RATE_LIMITED', message: 'Đang có quá nhiều yêu cầu. Thử lại sau.' };
+    if (code === 'error-not-allowed' || code === 'error-unauthorized' || statusCode === 401 || statusCode === 403) {
       return { code: 'NOT_ALLOWED', message: 'Bạn không có quyền thực hiện thao tác này.' };
     }
     // Never echo the Hub's own `errorType`: it is a server-internal identifier, and it also lands in
     // the hire record's `Mã lỗi` field via markFailed. The HTTP status is enough to act on.
-    return { code: `HTTP_${err.statusCode ?? 'ERR'}`, message: 'Hub từ chối thao tác. Thử lại sau.' };
+    return { code: `HTTP_${statusCode ?? 'ERR'}`, message: 'Hub từ chối thao tác. Thử lại sau.' };
   }
   if (err instanceof TypeError && /fetch|network/i.test(err.message)) return { code: 'NETWORK', message: 'Mất kết nối. Thử lại.' };
   if (err instanceof Error && err.message === 'START_NOT_WORKING_DAY') return { code: 'START_NOT_WORKING_DAY', message: ONBOARDING_MESSAGES.START_NOT_WORKING_DAY };

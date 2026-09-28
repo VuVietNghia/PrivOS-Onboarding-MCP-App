@@ -20,6 +20,8 @@ describe('readPositions', () => {
       const expectedQuestions = position.sourceKey === 'Marketing_Executive' ? 23 : 22;
       expect(position.tree.items.filter((item) => item.kind === 'question')).toHaveLength(expectedQuestions);
       expect(position.sourceFingerprint).toMatch(/^[a-f0-9]{64}$/);
+      expect(position.legacySourceFingerprint).toMatch(/^[a-f0-9]{64}$/);
+      expect(position.legacySourceFingerprint).not.toBe(position.sourceFingerprint);
       expect(position.tree.items.some((item) => item.kind === 'lesson' && item.content.includes('[CẦN ĐIỀN]'))).toBe(true);
       expect(position.tree.items.every((item) => !item.id.includes('00_master_index.md'))).toBe(true);
     }

@@ -1,4 +1,4 @@
-import type { RuntimeMode } from '@privos_ai/app-server';
+export type RuntimeMode = 'managed' | 'runtime-v3' | 'standalone-production' | 'development' | 'manifest-only';
 
 type DevUiEnvironment = Readonly<{ NODE_ENV?: string; PRIVOS_DEV_UI?: string }>;
 

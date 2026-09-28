@@ -1,13 +1,17 @@
 // src/ui/onboarding/views/OnboardingPanel.tsx
-// Call site cho basic:information (usePrivosContext: roomId, userRoles) và lists:read / lists:write / lists:query (scope-audit).
 import { lazy, Suspense, useState } from 'react';
-import { usePrivosContext } from '@privos_ai/app-react';
+import { useOnboardingSession } from '../../composition/PrivosOnboardingRoot';
 import { isRoomAdmin } from '../domain/roles';
 import { V4Onboarding } from './V4Onboarding';
+import type { ProbeEnvironment } from '../dev/probe-port';
 
+const PrivosProbeProvider = import.meta.env.DEV ? lazy(() => import('../dev/privos-probes')) : null;
 const HubContractProbe = import.meta.env.DEV ? lazy(() => import('../dev/HubContractProbe')) : null;
 const P02ContractProbe = import.meta.env.DEV ? lazy(() => import('../dev/P02ContractProbe')) : null;
 const P03LimitsProbe = import.meta.env.DEV ? lazy(() => import('../dev/P03LimitsProbe')) : null;
+
+// Set to false to hide the temporary employee preview button after testing.
+const ENABLE_EMPLOYEE_PREVIEW = true;
 
 export function probeIdentityKey(roomId: string, userId?: string): string {
   return JSON.stringify([roomId, userId ?? null]);
@@ -17,7 +21,7 @@ export function probeSurfaceKey(roomId: string, userId: string | undefined, admi
   return JSON.stringify([roomId, userId ?? null, admin]);
 }
 
-function P0ProbeSurface({ roomId, userId, admin }: { roomId: string; userId?: string; admin: boolean }) {
+function P0ProbeSurface({ roomId, userId, admin, probe }: { roomId: string; userId?: string; admin: boolean; probe: ProbeEnvironment }) {
   const [screen, setScreen] = useState<'probe' | 'p02' | 'p03'>(admin ? 'probe' : 'p02');
   const identity = probeIdentityKey(roomId, userId);
   return (
@@ -29,25 +33,35 @@ function P0ProbeSurface({ roomId, userId, admin }: { roomId: string; userId?: st
         {P02ContractProbe && <button type="button" aria-current={screen === 'p02' ? 'page' : undefined} onClick={() => setScreen('p02')}>P0.2 ACL and Files</button>}
         {admin && P03LimitsProbe && <button type="button" aria-current={screen === 'p03' ? 'page' : undefined} onClick={() => setScreen('p03')}>P0.3 limits</button>}
       </nav>
-      {admin && screen === 'probe' && HubContractProbe && <Suspense fallback={<p>Đang mở P0.1…</p>}><HubContractProbe key={identity} /></Suspense>}
-      {screen === 'p02' && P02ContractProbe && <Suspense fallback={<p>Đang mở P0.2…</p>}><P02ContractProbe key={identity} /></Suspense>}
-      {admin && screen === 'p03' && P03LimitsProbe && <Suspense fallback={<p>Đang mở P0.3…</p>}><P03LimitsProbe key={identity} /></Suspense>}
+      {admin && screen === 'probe' && HubContractProbe && <Suspense fallback={<p>Đang mở P0.1…</p>}><HubContractProbe key={identity} probe={probe} /></Suspense>}
+      {screen === 'p02' && P02ContractProbe && <Suspense fallback={<p>Đang mở P0.2…</p>}><P02ContractProbe key={identity} probe={probe} /></Suspense>}
+      {admin && screen === 'p03' && P03LimitsProbe && <Suspense fallback={<p>Đang mở P0.3…</p>}><P03LimitsProbe key={identity} probe={probe} /></Suspense>}
     </div>
   );
 }
 
 export default function OnboardingPanel() {
-  const { roomId, userId, userRoles } = usePrivosContext();
+  const session = useOnboardingSession();
+  if (!session) throw new Error('ONBOARDING_SESSION_MISSING');
+  const { roomId, userId, roles: userRoles } = session.actor;
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [employeePreview, setEmployeePreview] = useState({ key: session.key, active: false });
   if (!roomId) return <div className="container"><p className="loading-text">Mở app bên trong một room.</p></div>;
   const admin = isRoomAdmin(userRoles ?? []);
+  const previewActive = admin && employeePreview.key === session.key && employeePreview.active;
   if (import.meta.env.DEV && showDiagnostics) return <>
     <button type="button" onClick={() => setShowDiagnostics(false)}>Trở lại giao diện v4</button>
-    <P0ProbeSurface key={probeSurfaceKey(roomId, userId, admin)} roomId={roomId} userId={userId} admin={admin} />
+    {PrivosProbeProvider && <Suspense fallback={<p>Đang mở kiểm tra P0…</p>}><PrivosProbeProvider>{(probe) =>
+      <P0ProbeSurface key={probeSurfaceKey(roomId, userId, admin)} roomId={roomId} userId={userId} admin={admin} probe={probe} />
+    }</PrivosProbeProvider></Suspense>}
   </>;
   return (
     <>
-      <V4Onboarding admin={admin} />
+      <V4Onboarding key={session.key} admin={admin && !previewActive}
+        employeePreviewControl={ENABLE_EMPLOYEE_PREVIEW && admin ? {
+          active: previewActive,
+          onToggle: () => setEmployeePreview({ key: session.key, active: !previewActive }),
+        } : undefined} />
       {import.meta.env.DEV && <button className="v4-diagnostics-entry" type="button" onClick={() => setShowDiagnostics(true)}>Kiểm tra kỹ thuật P0</button>}
     </>
   );

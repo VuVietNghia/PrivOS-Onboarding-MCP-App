@@ -3,7 +3,11 @@ import type { McpApp } from '@privos_ai/app-react';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { V2, V2_HIRE_FIELDS, V2_POSITION_FIELDS } from '../../src/ui/onboarding/domain/v2-fields';
 import type { Catalogs } from '../../src/ui/onboarding/data/catalogs';
-import { planRunNodes, provisionV4, resumeV4, templateFingerprint, type PreparedProvisionV4 } from '../../src/ui/onboarding/flows/provision-v4';
+import { planRunNodes, templateFingerprint, type PreparedProvisionV4 } from '../../src/ui/onboarding/flows/provision-v4';
+import { provisionV4, resumeV4 } from '../../src/ui/onboarding/data/privos/compat-flows';
+import { createBrowserEffects } from '../../src/ui/adapters/browser-effects';
+
+const hasher = createBrowserEffects().hasher;
 
 const tree: TemplateTree = {
   weeks: [
@@ -34,9 +38,9 @@ describe('P4 run planning', () => {
 
   it('uses a canonical fingerprint independent of query order', async () => {
     const shuffled = { weeks: [...tree.weeks].reverse(), items: [...tree.items].reverse() };
-    expect(await templateFingerprint(tree)).toBe(await templateFingerprint(shuffled));
-    expect(await templateFingerprint({ ...tree, items: tree.items.map((item) => item.id === 'lesson-1' && item.kind === 'lesson' ? { ...item, content: 'Changed' } : item) }))
-      .not.toBe(await templateFingerprint(tree));
+    expect(await templateFingerprint(tree, hasher)).toBe(await templateFingerprint(shuffled, hasher));
+    expect(await templateFingerprint({ ...tree, items: tree.items.map((item) => item.id === 'lesson-1' && item.kind === 'lesson' ? { ...item, content: 'Changed' } : item) }, hasher))
+      .not.toBe(await templateFingerprint(tree, hasher));
   });
 
   it('refuses non-admin actors before a Hub write', async () => {
@@ -147,7 +151,7 @@ function catalogsFor(hub: ReturnType<typeof hubFixture>, input: PreparedProvisio
 describe('provisionV4 writer', () => {
   it('creates a private run, copies the hierarchy and content, then grants access and activates', async () => {
     const hub = hubFixture();
-    const fingerprint = await templateFingerprint(tree);
+    const fingerprint = await templateFingerprint(tree, hasher);
     const input = prepared(fingerprint);
     const catalogs: Pick<Catalogs, 'position' | 'template' | 'hires'> = {
       position: async () => input.position,
@@ -183,7 +187,7 @@ describe('provisionV4 writer', () => {
 
   it('resumes a run after list creation succeeded but its response was lost', async () => {
     const hub = hubFixture({ loseListResponse: true });
-    const input = prepared(await templateFingerprint(tree));
+    const input = prepared(await templateFingerprint(tree, hasher));
     const catalogs: Pick<Catalogs, 'position' | 'template' | 'hires'> = {
       position: async () => input.position, template: async () => tree,
       hires: async () => ({ items: [], nextCursor: null }),
@@ -198,7 +202,7 @@ describe('provisionV4 writer', () => {
 
   it('rejects a run item when Hub drops its logical parent field on readback', async () => {
     const hub = hubFixture({ ignoreParentField: true });
-    const input = prepared(await templateFingerprint(tree));
+    const input = prepared(await templateFingerprint(tree, hasher));
     const binding = { roomId: 'room-1', positionsListId: 'positions-1', hiresListId: 'hires-1' };
     await expect(provisionV4(hub.app, binding, input, ['owner'], undefined, catalogsFor(hub, input)))
       .rejects.toThrow('SCHEMA_DRIFT');
@@ -207,7 +211,7 @@ describe('provisionV4 writer', () => {
 
   it('rechecks logical parents before granting access when a later read changes', async () => {
     const hub = hubFixture({ corruptParentBeforeFinalRead: true });
-    const input = prepared(await templateFingerprint(tree));
+    const input = prepared(await templateFingerprint(tree, hasher));
     const binding = { roomId: 'room-1', positionsListId: 'positions-1', hiresListId: 'hires-1' };
     await expect(provisionV4(hub.app, binding, input, ['owner'], undefined, catalogsFor(hub, input)))
       .rejects.toThrow('SCHEMA_DRIFT');
@@ -218,7 +222,7 @@ describe('provisionV4 writer', () => {
 
   it('reuses the B1 hire after create succeeds but its response is lost', async () => {
     const hub = hubFixture({ loseHireResponse: true });
-    const input = prepared(await templateFingerprint(tree));
+    const input = prepared(await templateFingerprint(tree, hasher));
     const binding = { roomId: 'room-1', positionsListId: 'positions-1', hiresListId: 'hires-1' };
     const catalogs = catalogsFor(hub, input);
     await expect(provisionV4(hub.app, binding, input, ['owner'], undefined, catalogs)).rejects.toThrow('lost hire response');
@@ -229,7 +233,7 @@ describe('provisionV4 writer', () => {
 
   it('continues a failed checkpoint without making another hire or run', async () => {
     const hub = hubFixture({ loseListResponse: true });
-    const input = prepared(await templateFingerprint(tree));
+    const input = prepared(await templateFingerprint(tree, hasher));
     const binding = { roomId: 'room-1', positionsListId: 'positions-1', hiresListId: 'hires-1' };
     const catalogs = catalogsFor(hub, input);
     await expect(provisionV4(hub.app, binding, input, ['owner'], undefined, catalogs)).rejects.toThrow('lost list response');
@@ -242,7 +246,7 @@ describe('provisionV4 writer', () => {
 
   it('rejects a resume request carrying a different operation ID', async () => {
     const hub = hubFixture({ loseListResponse: true });
-    const input = prepared(await templateFingerprint(tree));
+    const input = prepared(await templateFingerprint(tree, hasher));
     const binding = { roomId: 'room-1', positionsListId: 'positions-1', hiresListId: 'hires-1' };
     const catalogs = catalogsFor(hub, input);
     await expect(provisionV4(hub.app, binding, input, ['owner'], undefined, catalogs)).rejects.toThrow('lost list response');

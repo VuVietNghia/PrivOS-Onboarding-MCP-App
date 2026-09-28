@@ -1,30 +1,27 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import type { McpApp } from '@privos_ai/app-react';
 import type { Catalogs } from '../data/catalogs';
-import { lookupUser, listRoomMembers } from '../data/room-members';
 import { localTodayIso } from '../domain/local-date';
 import type { Position, RoomBinding, TemplateTree } from '../domain/models';
 import { pickEmployee, type RoomMember } from '../domain/pick-employee';
 import { isWorkingDay } from '../domain/working-days';
 import { describeError } from '../domain/errors';
-import { provisionV4, templateFingerprint, type PreparedProvisionV4, type ProvisionProgress } from '../flows/provision-v4';
+import type { PreparedProvisionV4, ProvisionProgress } from '../ports/provision';
+import type { OnboardingServices } from '../ports/ui-services';
 
 export interface ProvisionV4FormProps {
-  app: McpApp;
-  roomType: unknown;
   binding: RoomBinding;
   catalogs: Catalogs;
-  actorRoles: readonly string[];
+  services: Pick<OnboardingServices, 'provision' | 'members' | 'clock' | 'ids'>;
   onDone: () => void;
 }
 
-export function ProvisionV4Form({ app, roomType, binding, catalogs, actorRoles, onDone }: ProvisionV4FormProps) {
+export function ProvisionV4Form({ binding, catalogs, services, onDone }: ProvisionV4FormProps) {
   const [positions, setPositions] = useState<Position[]>([]);
   const [members, setMembers] = useState<RoomMember[] | null | undefined>(undefined);
   const [positionId, setPositionId] = useState('');
   const [employeeId, setEmployeeId] = useState('');
   const [username, setUsername] = useState('');
-  const [startDate, setStartDate] = useState(localTodayIso);
+  const [startDate, setStartDate] = useState(() => localTodayIso(services.clock.now()));
   const [tree, setTree] = useState<TemplateTree | null>(null);
   const [loadingTree, setLoadingTree] = useState(false);
   const [pending, setPending] = useState(false);
@@ -57,16 +54,17 @@ export function ProvisionV4Form({ app, roomType, binding, catalogs, actorRoles, 
     let active = true;
     setMembers(undefined);
     setMemberError(null);
-    void listRoomMembers(app, binding.roomId, roomType).then((result) => { if (active) setMembers(result); })
+    void services.members.list()
+      .then((result) => { if (active) setMembers(result); })
       .catch((cause: unknown) => { if (active) setMemberError(describeError(cause).message); });
     return () => { active = false; };
-  }, [app, binding.roomId, roomType, memberRetry]);
+  }, [binding.roomId, memberRetry, services]);
 
   useEffect(() => {
     setEmployeeId('');
     setUsername('');
     operationId.current = null;
-  }, [binding.roomId, roomType]);
+  }, [binding.roomId]);
 
   useEffect(() => {
     let active = true;
@@ -97,7 +95,7 @@ export function ProvisionV4Form({ app, roomType, binding, catalogs, actorRoles, 
       let targetId = selectedMember?.id ?? '';
       let targetName = selectedMember?.name ?? '';
       if (members === null) {
-        const found = await lookupUser(app, username.trim());
+        const found = await services.members.lookup(username.trim());
         const picked = pickEmployee(username, found);
         if (!picked.ok) throw new Error('EMPLOYEE_NOT_FOUND');
         targetId = picked.employeeId;
@@ -107,11 +105,11 @@ export function ProvisionV4Form({ app, roomType, binding, catalogs, actorRoles, 
       const freshPosition = await catalogs.position(position.id);
       if (freshPosition.status !== 'ready') throw new Error('POSITION_NOT_READY');
       const freshTree = await catalogs.template(freshPosition.templateListId);
-      if (!operationId.current) operationId.current = crypto.randomUUID();
+      if (!operationId.current) operationId.current = services.ids.next();
       const prepared: PreparedProvisionV4 = { input: { positionId: freshPosition.id, employeeId: targetId,
         employeeName: targetName, startDate, operationId: operationId.current }, position: freshPosition,
-        tree: freshTree, fingerprint: await templateFingerprint(freshTree) };
-      await provisionV4(app, binding, prepared, actorRoles, setProgress, catalogs);
+        tree: freshTree, fingerprint: await services.provision.fingerprint(freshTree) };
+      await services.provision.start(prepared, setProgress);
       operationId.current = null;
       onDone();
     } catch (cause) { setError(describeError(cause).message); }

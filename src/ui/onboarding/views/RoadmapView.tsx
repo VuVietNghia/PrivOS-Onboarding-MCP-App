@@ -1,26 +1,25 @@
 // src/ui/onboarding/views/RoadmapView.tsx
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { usePrivosApp, usePrivosContext } from '@privos_ai/app-react';
-import type { HubList } from '../data/onboarding-lists';
+import { useOnboardingServices, useOnboardingSession } from '../../composition/PrivosOnboardingRoot';
+import type { HubList } from '../ports/lists';
 import type { FieldIds } from '../domain/fields';
 import { canToggle, computeProgress, groupByStage, taskBadge, type TaskBadge } from '../domain/progress';
 import type { StageRef } from '../domain/roadmap-plan';
 import type { Hire, RoadmapTask } from '../domain/schemas';
-import { loadRoadmap, type LoadedRoadmap } from '../flows/load-roadmap';
-import { recountHire, toggleTask } from '../flows/toggle-task';
+import type { LoadedRoadmap } from '../flows/load-roadmap';
 import { ErrorBanner } from './ErrorBanner';
 
 const BADGE_TEXT: Record<Exclude<TaskBadge, null>, string> = { overdue: 'Quá hạn', dueSoon: 'Sắp đến hạn', hr: 'HR thực hiện', done: 'Xong' };
-
-function today(): string { return new Date().toISOString().slice(0, 10); }
 
 export interface RoadmapViewProps {
   hire: Hire; hiresList: HubList; hireIds: FieldIds; hireStages: StageRef[]; isAdmin: boolean; onChanged: () => void;
 }
 
 export function RoadmapView({ hire, hiresList, hireIds, hireStages, isAdmin, onChanged }: RoadmapViewProps) {
-  const app = usePrivosApp();
-  const { userId } = usePrivosContext();
+  const services = useOnboardingServices();
+  const session = useOnboardingSession();
+  if (!session) throw new Error('ONBOARDING_SESSION_UNAVAILABLE');
+  const userId = session.actor.userId;
   const [data, setData] = useState<LoadedRoadmap | null>(null);
   const [error, setError] = useState<unknown | null>(null);
   const [busyIds, setBusyIds] = useState<ReadonlySet<string>>(new Set());
@@ -30,7 +29,7 @@ export function RoadmapView({ hire, hiresList, hireIds, hireStages, isAdmin, onC
     if (!hire.roadmapListId) return;
     const seq = ++loadSeq.current;
     try {
-      const next = await loadRoadmap(app, hire.roadmapListId);
+      const next = await services.legacy.loadRoadmap(hire.roadmapListId);
       if (loadSeq.current !== seq) return; // một load() mới hơn đã khởi chạy, bỏ kết quả cũ này
       setData(next);
       setError(null);
@@ -38,7 +37,7 @@ export function RoadmapView({ hire, hiresList, hireIds, hireStages, isAdmin, onC
       if (loadSeq.current !== seq) return;
       setError(err);
     }
-  }, [app, hire.roadmapListId]);
+  }, [services, hire.roadmapListId]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -46,7 +45,7 @@ export function RoadmapView({ hire, hiresList, hireIds, hireStages, isAdmin, onC
   if (error && !data) return <ErrorBanner error={error} />;
   if (!data) return <p className="loading-text">Đang tải lộ trình…</p>;
 
-  const now = today();
+  const now = services.clock.now().toISOString().slice(0, 10);
   const progress = computeProgress(data.tasks, now);
   const recountInput = { hireListId: hiresList._id, hireItemId: hire.id, hireIds, hireStages, roadmapListId: data.listId, runIds: data.ids, today: now, currentStageId: hire.stageId };
 
@@ -54,7 +53,7 @@ export function RoadmapView({ hire, hiresList, hireIds, hireStages, isAdmin, onC
     setError(null);
     setBusyIds((prev) => new Set(prev).add(task.id));
     setData((d) => d && { ...d, tasks: d.tasks.map((t) => (t.id === task.id ? { ...t, done } : t)) });
-    try { await toggleTask(app, { ...recountInput, taskId: task.id, done }); onChanged(); }
+    try { await services.legacy.toggleTask({ ...recountInput, taskId: task.id, done }); onChanged(); }
     catch (err) { setError(err); setData((d) => d && { ...d, tasks: d.tasks.map((t) => (t.id === task.id ? { ...t, done: !done } : t)) }); }
     finally {
       setBusyIds((prev) => { const next = new Set(prev); next.delete(task.id); return next; });
@@ -64,7 +63,7 @@ export function RoadmapView({ hire, hiresList, hireIds, hireStages, isAdmin, onC
 
   async function onRecount() {
     setError(null);
-    try { await recountHire(app, recountInput); onChanged(); } catch (err) { setError(err); }
+    try { await services.legacy.recountHire(recountInput); onChanged(); } catch (err) { setError(err); }
   }
 
   return (

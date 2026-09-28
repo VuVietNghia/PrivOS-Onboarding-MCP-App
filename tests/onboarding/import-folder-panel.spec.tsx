@@ -2,17 +2,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { fakeRestApp } from './fake-app';
 import { ImportFolderPanel } from '../../src/ui/onboarding/views/templates/ImportFolderPanel';
-
-vi.mock('../../src/ui/onboarding/flows/browser-import-v4', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../src/ui/onboarding/flows/browser-import-v4')>();
-  return { ...actual, importBrowserFolderV4: async function* (_app: unknown, _binding: unknown, _roomId: unknown, _roles: unknown, files: FileList) {
-    for await (const preflight of actual.importBrowserFilesV4(files, { dryRun: true })) {
-      if (preflight.state === 'dry-run') yield { state: 'created', positionId: 'p1', preflight: preflight.preflight };
-    }
-  } };
-});
+import { preflightPosition } from '../../src/shared/import/preflight';
+import { createBrowserEffects } from '../../src/ui/adapters/browser-effects';
 
 afterEach(cleanup);
 
@@ -25,12 +17,15 @@ function selectedFile(path: string, content: string): File {
 }
 
 const binding = { roomId: 'room', positionsListId: 'positions', hiresListId: 'hires' };
+const services = { hasher: createBrowserEffects().hasher,
+  imports: { importPosition: async (position: Parameters<typeof preflightPosition>[0]) => ({
+    state: 'created' as const, positionId: 'p1', preflight: preflightPosition(position),
+  }) } };
 
 describe('ImportFolderPanel', () => {
   it('requires a selected folder and shows its dry-run report before confirmation', async () => {
     const user = userEvent.setup();
-    const { app } = fakeRestApp([]);
-    render(<ImportFolderPanel app={app} binding={binding} roomId="room" userRoles={['admin']} onDone={() => {}} />);
+    render(<ImportFolderPanel services={services} binding={binding} roomId="room" userRoles={['admin']} onDone={() => {}} />);
     expect(screen.getByLabelText('Thư mục Markdown').hasAttribute('webkitdirectory')).toBe(true);
     expect((screen.getByRole('button', { name: 'Kiểm tra nguồn' }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole('button', { name: /Xác nhận nhập/ }) as HTMLButtonElement).disabled).toBe(true);
@@ -45,9 +40,8 @@ describe('ImportFolderPanel', () => {
 
   it('imports only after confirmation, reports completion and calls onDone once', async () => {
     const user = userEvent.setup();
-    const { app } = fakeRestApp([]);
     const onDone = vi.fn();
-    render(<ImportFolderPanel app={app} binding={binding} roomId="room" userRoles={['admin']} onDone={onDone} />);
+    render(<ImportFolderPanel services={services} binding={binding} roomId="room" userRoles={['admin']} onDone={onDone} />);
     fireEvent.change(screen.getByLabelText('Thư mục Markdown'), { target: { files: [
       selectedFile('AgentFiles/Role/Day_01_Start/01_intro.md', '# Bài giới thiệu\n\nNội dung'),
     ] } });
@@ -61,8 +55,7 @@ describe('ImportFolderPanel', () => {
 
   it('keeps import disabled for a non-admin while allowing dry-run', async () => {
     const user = userEvent.setup();
-    const { app } = fakeRestApp([]);
-    render(<ImportFolderPanel app={app} binding={binding} roomId="room" userRoles={['member']} onDone={() => {}} />);
+    render(<ImportFolderPanel services={services} binding={binding} roomId="room" userRoles={['member']} onDone={() => {}} />);
     fireEvent.change(screen.getByLabelText('Thư mục Markdown'), { target: { files: [
       selectedFile('AgentFiles/Role/Day_01_Start/01_intro.md', '# Bài giới thiệu\n\nNội dung'),
     ] } });
@@ -73,8 +66,7 @@ describe('ImportFolderPanel', () => {
 
   it('shows a source error without enabling import', async () => {
     const user = userEvent.setup();
-    const { app } = fakeRestApp([]);
-    render(<ImportFolderPanel app={app} binding={binding} roomId="room" userRoles={['admin']} onDone={() => {}} />);
+    render(<ImportFolderPanel services={services} binding={binding} roomId="room" userRoles={['admin']} onDone={() => {}} />);
     fireEvent.change(screen.getByLabelText('Thư mục Markdown'), { target: { files: [
       selectedFile('AgentFiles/Role/Day_01_Start/quiz_day_01.md', '**Q1.1 (Trắc nghiệm).** Câu?\na) Một'),
     ] } });

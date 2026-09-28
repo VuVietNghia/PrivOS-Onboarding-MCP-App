@@ -1,6 +1,5 @@
 import { useReducer, useState } from 'react';
-import { usePrivosApp, usePrivosContext } from '@privos_ai/app-react';
-import { getListInfo, listRoomLists } from '../data/onboarding-lists';
+import type { ProbeEnvironment } from './probe-port';
 import { OptionalFeatureUnavailableError, PrivosRestError } from '../../privos-rest';
 import { registryListInput } from '../domain/v2-registry-schema';
 import { isRoomAdmin } from '../domain/roles';
@@ -19,9 +18,9 @@ function fieldsAt(value: unknown): { fieldId: string; value: unknown }[] | undef
 }
 function codeAt(value: unknown): string { const code = stringAt(value, 'errorType'); return code && /^[a-z0-9_-]{1,80}$/i.test(code) ? code : 'none'; }
 
-export default function P02ContractProbe() {
-  const app = usePrivosApp();
-  const { roomId, userId, userRoles } = usePrivosContext();
+export default function P02ContractProbe({ probe }: { probe: ProbeEnvironment }) {
+  const app = probe.transport;
+  const { roomId, userId, roles: userRoles } = probe.actor;
   const admin = isRoomAdmin(userRoles ?? []);
   const [safety, dispatchSafety] = useReducer(probeSafetyReducer, initialProbeSafety);
   const { confirmed, openUrl, downloadConfirmation } = safety;
@@ -69,7 +68,7 @@ export default function P02ContractProbe() {
     }
   }
   async function listInRoom(listId: string): Promise<boolean> {
-    return Boolean(listId && (await listRoomLists(app, room)).some((list) => list._id === listId));
+    return Boolean(listId && (await app.listRoomLists(room)).some((list) => list._id === listId));
   }
   async function readFolder(folderId: string, parentId?: string): Promise<JsonRecord | undefined> {
     const payload = unwrapToolResult(await app.callServerTool({ name: 'mcpapp.folders.getByChannel',
@@ -113,7 +112,7 @@ export default function P02ContractProbe() {
       const input = registryListInput(room, kind);
       const outcome = await createRegistryIfVacant(app, room, kind);
       if (outcome.status === 'collision') { report(`create-${kind}`, 'registry-collision-stop', `room already has registry name/key; no POST sent; ${target}`); return; }
-      const readback = await getListInfo(app, outcome.listId);
+      const readback = await app.getListInfo(outcome.listId);
       const expected = input.fields.map((field) => `${field.name}:${field.type}`);
       const actual = readback.list.fieldDefinitions?.map((field) => `${field.name}:${field.type}`) ?? [];
       const stageNames = readback.stages.map((stage) => stage.name);
@@ -158,7 +157,7 @@ export default function P02ContractProbe() {
         return;
       }
       if (!(await listInRoom(hireListId))) { report(label, 'target-list-not-in-room', target); return; }
-      const defs = (await getListInfo(app, hireListId)).list.fieldDefinitions ?? [];
+      const defs = (await app.getListInfo(hireListId)).list.fieldDefinitions ?? [];
       if (label === 'A assign B' ? !defs.some((field) => field._id === targetFieldId && field.type === 'ASSIGNEE') : !ordinaryField(defs, targetFieldId)) {
         report(label, 'invalid-field-type', target); return;
       }
@@ -205,7 +204,7 @@ export default function P02ContractProbe() {
   async function upload() {
     await perform('Upload to room folder', async () => {
       if (!admin || !file || file.size > 65536 || !(await roomFolderValid())) { report('Upload to room folder', 'invalid-target', target); return; }
-      const dataUrl = await new Promise<string>((resolve, reject) => { const reader = new FileReader(); reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('read failed')); reader.onerror = () => reject(new Error('read failed')); reader.readAsDataURL(file); });
+      const dataUrl = await probe.readDataUrl(file);
       // files:write — upload into the verified room folder before linking an item.
       const result: unknown = await app.uploadFile(uploadFileParams(room, roomFolderId, file.name, dataUrl));
       const uploadedId = uploadResultId(result);

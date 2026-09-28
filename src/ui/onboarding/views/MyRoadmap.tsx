@@ -1,13 +1,16 @@
 // src/ui/onboarding/views/MyRoadmap.tsx
-import { usePrivosContext } from '@privos_ai/app-react';
+import { useOnboardingServices, useOnboardingSession } from '../../composition/PrivosOnboardingRoot';
 import { HIRE_STAGES } from '../domain/fields';
 import { ErrorBanner } from './ErrorBanner';
 import { RoadmapView } from './RoadmapView';
 import { useHires } from './use-hires';
 
 export function MyRoadmap() {
-  const { roomId, userId } = usePrivosContext();
-  const hires = useHires(roomId);
+  const services = useOnboardingServices();
+  const session = useOnboardingSession();
+  if (!session) throw new Error('ONBOARDING_SESSION_UNAVAILABLE');
+  const { roomId, userId } = session.actor;
+  const hires = useHires(roomId, services.legacyData);
   if (hires.state === 'loading') return <p className="loading-text">Đang tải…</p>;
   if (hires.state === 'error') return <ErrorBanner error={hires.error} />;
   const mine = hires.hires.find((h) => h.employeeIds.includes(userId));

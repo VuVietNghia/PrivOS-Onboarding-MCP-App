@@ -3,6 +3,7 @@ import type { McpApp } from '@privos_ai/app-react';
 import { createFilesGateway } from '../../src/ui/onboarding/data/files';
 
 type Call = { name: string; arguments: Record<string, unknown> };
+const scheduler = { after(ms: number, task: () => void) { const timer = setTimeout(task, ms); return () => clearTimeout(timer); } };
 
 describe('FilesGateway', () => {
   it('uploads into verified position folder and keeps full upload object', async () => {
@@ -16,8 +17,8 @@ describe('FilesGateway', () => {
         : [{ _id: 'root', name: 'Onboarding', father: null, channel_id: 'room-1' }] };
       if (call.name === 'mcpapp.files.get') return { file: raw };
       throw new Error('Unexpected tool');
-    }, uploadFile: async (args: Record<string, unknown>) => { uploadCalls.push(args); return { success: true, file: raw }; } } as McpApp;
-    const gateway = createFilesGateway(app, 'room-1');
+    }, uploadFile: async (args: Record<string, unknown>) => { uploadCalls.push(args); return { success: true, file: raw }; } } as unknown as McpApp;
+    const gateway = createFilesGateway(app, 'room-1', scheduler);
     const result = await gateway.upload('position-a', new File(['data'], 'guide.pdf', { type: 'application/pdf' }));
     expect(uploadCalls[0]).toMatchObject({ channelId: 'room-1', folderId: 'child', fileName: 'guide.pdf', duplicateAction: 'keep_both' });
     expect(result).toMatchObject({ id: 'file-1', roomId: 'room-1', folderId: 'child', raw });
@@ -30,14 +31,14 @@ describe('FilesGateway', () => {
         ? [{ _id: 'child', name: 'position-a', father: 'root', channel_id: 'room-1' }]
         : [{ _id: 'root', name: 'Onboarding', father: null, channel_id: 'room-1' }] }
       : { file: { _id: 'file-1', channel_id: 'room-2', folder_id: 'child' } },
-    uploadFile: async () => ({ file: { _id: 'file-1', name: 'guide.pdf' } }) } as McpApp;
-    await expect(createFilesGateway(app, 'room-1').upload('position-a', new File(['x'], 'guide.pdf'))).rejects.toThrow('FILE_LOCATION_INVALID');
+    uploadFile: async () => ({ file: { _id: 'file-1', name: 'guide.pdf' } }) } as unknown as McpApp;
+    await expect(createFilesGateway(app, 'room-1', scheduler).upload('position-a', new File(['x'], 'guide.pdf'))).rejects.toThrow('FILE_LOCATION_INVALID');
   });
 
   it('reads current metadata for each access and rejects wrong-room files', async () => {
     let count = 0;
-    const app = { callServerTool: async () => { count += 1; return { file: { _id: 'file-1', name: 'guide.pdf', channel_id: 'room-1', folder_id: 'child', downloadUrl: `https://example.test/${count}` } }; } } as McpApp;
-    const gateway = createFilesGateway(app, 'room-1');
+    const app = { callServerTool: async () => { count += 1; return { file: { _id: 'file-1', name: 'guide.pdf', channel_id: 'room-1', folder_id: 'child', downloadUrl: `https://example.test/${count}` } }; } } as unknown as McpApp;
+    const gateway = createFilesGateway(app, 'room-1', scheduler);
     expect((await gateway.metadata('file-1')).downloadUrl).toBe('https://example.test/1');
     expect((await gateway.metadata('file-1')).downloadUrl).toBe('https://example.test/2');
     expect(count).toBe(2);
@@ -48,8 +49,8 @@ describe('FilesGateway', () => {
     const app = { callServerTool: async (call: Call) => {
       calls.push(call);
       return { file: { _id: 'file-1', channel_id: 'room-1', folder_id: 'source-folder' } };
-    } } as McpApp;
-    await expect(createFilesGateway(app, 'room-1').move('file-1', 'destination-folder')).rejects.toThrow('FILE_LOCATION_UNVERIFIED');
+    } } as unknown as McpApp;
+    await expect(createFilesGateway(app, 'room-1', scheduler).move('file-1', 'destination-folder')).rejects.toThrow('FILE_LOCATION_UNVERIFIED');
     expect(calls.map((call) => call.name)).toEqual(['mcpapp.files.get']);
   });
 
@@ -64,8 +65,8 @@ describe('FilesGateway', () => {
         : [{ _id: 'root', name: 'Onboarding', father: null, channel_id: 'room-1' }] };
       if (call.name === 'mcpapp.files.update') { fileFolder = 'destination-folder'; return { success: true }; }
       throw new Error('Unexpected tool');
-    } } as McpApp;
-    await createFilesGateway(app, 'room-1').move('file-1', 'destination-folder', 'lesson-1');
+    } } as unknown as McpApp;
+    await createFilesGateway(app, 'room-1', scheduler).move('file-1', 'destination-folder', 'lesson-1');
     expect(calls.map((call) => call.name)).toEqual([
       'mcpapp.files.get', 'mcpapp.folders.getByChannel', 'mcpapp.folders.getByChannel', 'mcpapp.files.update', 'mcpapp.files.get',
     ]);

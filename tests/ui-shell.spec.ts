@@ -3,8 +3,15 @@ import { spawnSync } from 'node:child_process';
 import { createElement } from 'react';
 import { beforeAll, describe, expect, it } from 'vitest';
 import appManifest from '../privos-app.json';
-import { handleMcpMessage, TOOL_NAME } from '../src/mcp-message-handlers';
+import { createAppMcpHandler, TOOL_NAME } from '../src/mcp-message-handlers';
 import { LazyBoundary } from '../src/ui/lazy-boundary';
+
+const handleMcpMessage = createAppMcpHandler().handle;
+
+interface ResourceResult { contents: { text: string; mimeType?: string }[] }
+async function readResource(id: number, params: { uri: string }): Promise<ResourceResult> {
+  return await handleMcpMessage('resources/read', id, params) as ResourceResult;
+}
 
 // Read the real `resourceUri` off the published manifest rather than duplicating it as a second
 // literal — the wire contract requires `appSlug` (the `ui://` host) to equal `app.appId`
@@ -35,7 +42,7 @@ describe('UI resource identity (appSlug = app.appId, never a different host)', (
 
 describe('built UI shell and split assets', () => {
   it('serves a shell with the relay meta tag, the boot watchdog, and only relative asset tags', async () => {
-    const result = await handleMcpMessage('resources/read', 1, { uri: UI_RESOURCE_URI });
+    const result = await readResource(1, { uri: UI_RESOURCE_URI });
     const html = result.contents[0].text as string;
 
     expect(html).toContain('<meta name="privos-ui-assets" content="relay">');
@@ -48,7 +55,7 @@ describe('built UI shell and split assets', () => {
   });
 
   it('lists build files through the sibling assets-manifest resource', async () => {
-    const result = await handleMcpMessage('resources/read', 2, { uri: ASSETS_MANIFEST_URI });
+    const result = await readResource(2, { uri: ASSETS_MANIFEST_URI });
     const manifest = JSON.parse(result.contents[0].text as string) as { files: { name: string; size: number; type: string }[] };
 
     expect(Array.isArray(manifest.files)).toBe(true);
@@ -57,11 +64,11 @@ describe('built UI shell and split assets', () => {
   });
 
   it('serves a listed asset and refuses an unlisted or .map uri with JSON-RPC -32602', async () => {
-    const manifestResult = await handleMcpMessage('resources/read', 3, { uri: ASSETS_MANIFEST_URI });
+    const manifestResult = await readResource(3, { uri: ASSETS_MANIFEST_URI });
     const { files } = JSON.parse(manifestResult.contents[0].text as string) as { files: { name: string }[] };
     const jsFile = files.find((f) => f.name.endsWith('.js'))!;
 
-    const asset = await handleMcpMessage('resources/read', 4, {
+    const asset = await readResource(4, {
       uri: `${ASSET_URI_PREFIX}${jsFile.name}`,
     });
     expect(asset.contents[0].mimeType).toBe('text/javascript');
@@ -75,11 +82,11 @@ describe('built UI shell and split assets', () => {
   });
 
   it('serves the identical shell from both the tools/call embedded resource and resources/read', async () => {
-    const viaResourcesRead = await handleMcpMessage('resources/read', 6, { uri: UI_RESOURCE_URI });
+    const viaResourcesRead = await readResource(6, { uri: UI_RESOURCE_URI });
     const viaToolsCall = await handleMcpMessage('tools/call', 7, {
       name: TOOL_NAME,
       arguments: {},
-    });
+    }) as { content: { resource: { text: string } }[] };
     expect(viaToolsCall.content[0].resource.text).toBe(viaResourcesRead.contents[0].text);
   });
 });
@@ -89,7 +96,9 @@ describe('lazy panel error boundary — Reload fallback', () => {
     const derived = LazyBoundary.getDerivedStateFromError();
     expect(derived).toEqual({ hasError: true });
 
-    const boundary = new LazyBoundary({ children: createElement('div') });
+    let called = false;
+    const reloadPage = { reload: () => { called = true; } };
+    const boundary = new LazyBoundary({ children: createElement('div'), reloadPage, logger: { event() {} } });
     boundary.state = derived;
     const output = boundary.render() as any;
 
@@ -100,19 +109,13 @@ describe('lazy panel error boundary — Reload fallback', () => {
     // The Reload button must actually trigger a full page reload, not a re-render.
     const button = output.props.children[1];
     expect(button.type).toBe('button');
-    const reload = { reload: () => {} };
-    let called = false;
-    reload.reload = () => {
-      called = true;
-    };
-    (globalThis as any).window = { location: reload };
     button.props.onClick();
     expect(called).toBe(true);
   });
 
   it('renders children unchanged before any error is caught', () => {
     const child = createElement('span', { id: 'ok' }, 'content');
-    const boundary = new LazyBoundary({ children: child });
+    const boundary = new LazyBoundary({ children: child, reloadPage: { reload() {} }, logger: { event() {} } });
     expect(boundary.render()).toBe(child);
   });
 });

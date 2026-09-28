@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { usePrivosApp, usePrivosContext } from '@privos_ai/app-react';
-import { createTemplateList, listTemplateLists, loadListWithFields } from '../data/find-lists';
-import { createItem, deleteItem, listAllItems, updateItem, type HubList } from '../data/onboarding-lists';
+import { useOnboardingServices, useOnboardingSession } from '../../composition/PrivosOnboardingRoot';
+import type { HubList } from '../ports/lists';
 import { F, OWNER_OPTIONS, TEMPLATE_FIELDS, type FieldIds } from '../domain/fields';
 import type { StageRef } from '../domain/roadmap-plan';
 import { parseTemplateTask, type TemplateTask } from '../domain/schemas';
@@ -15,8 +14,11 @@ function taskFields(ids: FieldIds, form: TaskForm) {
 }
 
 export function TemplateEditor({ onBack }: { onBack: () => void }) {
-  const app = usePrivosApp();
-  const { roomId } = usePrivosContext();
+  const services = useOnboardingServices();
+  const session = useOnboardingSession();
+  if (!session) throw new Error('ONBOARDING_SESSION_UNAVAILABLE');
+  const { roomId } = session.actor;
+  const { read, write, discovery } = services.legacyData;
   const [templates, setTemplates] = useState<HubList[]>([]);
   const [selectedId, setSelectedId] = useState('');
   const [stages, setStages] = useState<StageRef[]>([]);
@@ -33,15 +35,15 @@ export function TemplateEditor({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState<unknown | null>(null);
   const loadSeq = useRef(0);
 
-  const reloadTemplates = useCallback(() => listTemplateLists(app, roomId).then(setTemplates).catch(setError), [app, roomId]);
+  const reloadTemplates = useCallback(() => discovery.listTemplateLists(roomId).then(setTemplates).catch(setError), [discovery, roomId]);
   useEffect(() => { void reloadTemplates(); }, [reloadTemplates]);
 
   const loadTemplate = useCallback(async (listId: string) => {
     const seq = ++loadSeq.current;
     if (!listId) { setStages([]); setTasks([]); setCapped(false); return; }
     try {
-      const loaded = await loadListWithFields(app, listId, TEMPLATE_FIELDS);
-      const { items, capped: itemsCapped } = await listAllItems(app, listId);
+      const loaded = await discovery.loadListWithFields(listId, TEMPLATE_FIELDS);
+      const { items, capped: itemsCapped } = await read.listAllItems(listId);
       if (loadSeq.current !== seq) return; // một loadTemplate() mới hơn đã khởi chạy, bỏ kết quả cũ này
       const parsed = items.map((i) => parseTemplateTask(i, loaded.ids));
       setStages(loaded.stages); setIds(loaded.ids);
@@ -54,7 +56,7 @@ export function TemplateEditor({ onBack }: { onBack: () => void }) {
       if (loadSeq.current !== seq) return;
       setError(err);
     }
-  }, [app]);
+  }, [discovery, read]);
 
   useEffect(() => { void loadTemplate(selectedId); }, [selectedId, loadTemplate]);
 
@@ -63,7 +65,7 @@ export function TemplateEditor({ onBack }: { onBack: () => void }) {
     const stageNames = parseStageNames(newStages);
     if (!newPosition.trim() || stageNames.length === 0) { setFormError('Nhập tên vị trí và ít nhất một giai đoạn.'); return; }
     try {
-      const list = await createTemplateList(app, roomId, newPosition.trim(), stageNames);
+      const list = await discovery.createTemplateList(roomId, newPosition.trim(), stageNames);
       setNewPosition(''); await reloadTemplates(); setSelectedId(list._id); setFormError(null);
     } catch (err) { setError(err); }
   }
@@ -74,15 +76,15 @@ export function TemplateEditor({ onBack }: { onBack: () => void }) {
     if (!parsed.success) { setFormError(parsed.error.issues[0]?.message ?? 'Dữ liệu không hợp lệ'); return; }
     if (!ids[F.dayOffset] || !ids[F.owner]) { setFormError('Template chưa tải xong, thử lại sau.'); return; }
     try {
-      if (editingId) await updateItem(app, { itemId: editingId, name: parsed.data.name, stageId: parsed.data.stageId, customFields: taskFields(ids, parsed.data) });
-      else await createItem(app, { listId: selectedId, name: parsed.data.name, stageId: parsed.data.stageId, customFields: taskFields(ids, parsed.data) });
+      if (editingId) await write.updateItem({ itemId: editingId, name: parsed.data.name, stageId: parsed.data.stageId, customFields: taskFields(ids, parsed.data) });
+      else await write.createItem({ listId: selectedId, name: parsed.data.name, stageId: parsed.data.stageId, customFields: taskFields(ids, parsed.data) });
       setEditingId(null); setForm({ ...EMPTY_FORM, stageId: stages[0]?._id ?? '' }); setFormError(null);
       await loadTemplate(selectedId);
     } catch (err) { setError(err); }
   }
 
   async function onDeleteTask(task: TemplateTask) {
-    try { await deleteItem(app, task.id); await loadTemplate(selectedId); } catch (err) { setError(err); }
+    try { await write.deleteItem(task.id); await loadTemplate(selectedId); } catch (err) { setError(err); }
   }
 
   return (

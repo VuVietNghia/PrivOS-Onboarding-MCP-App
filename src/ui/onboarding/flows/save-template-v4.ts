@@ -1,14 +1,12 @@
-import type { McpApp } from '@privos_ai/app-react';
-import { createIsolatedListViaTool, getIsolatedListViaTool } from '../data/isolated-lists';
 import { appendFileMarker } from '../data/file-refs';
-import { createItem, deleteItem, listRoomLists, updateItem } from '../data/onboarding-lists';
-import { readAllItems, readItem } from '../data/v2-lists';
 import { OnboardingError } from '../domain/errors';
-import type { ContentItem, RoomBinding, TemplateTree, Week } from '../domain/models';
+import type { ContentItem, TemplateTree, Week } from '../domain/models';
 import { decodeTemplateTree, encodeTemplateFields } from '../domain/template-item-model';
 import { validateReady } from '../domain/template-readiness';
 import { V2, V2_POSITION_FIELDS, V2_TEMPLATE_FIELDS, resolveV2FieldIds } from '../domain/v2-fields';
-import { unwrapToolResult } from '../data/tool-result';
+import type { SaveTemplateV4Input, TemplateDeps, TemplateService } from '../ports/template';
+
+export type { SaveTemplateV4Input } from '../ports/template';
 
 const CONTENT_STAGE = 'Nội dung';
 const DRAFT_STAGE = 'Đang soạn';
@@ -87,15 +85,15 @@ function descriptionFor(node: Week | ContentItem, previous?: string): string | u
 
 function listName(positionName: string, key: string): string { return `Onboarding template · ${positionName} · ${key.slice(-8)}`; }
 
-async function writeTree(app: McpApp, listId: string, roomId: string, draft: TemplateTree): Promise<TemplateTree> {
-  const info = await getIsolatedListViaTool(app, listId);
+async function writeTree(deps: TemplateDeps, listId: string, roomId: string, draft: TemplateTree): Promise<TemplateTree> {
+  const info = await deps.read.isolatedInfo(listId);
   if (!info.isolatedList || info.roomId !== roomId || info.stages.length !== 1 || info.stages[0].name !== CONTENT_STAGE) throw new OnboardingError('SCHEMA_DRIFT');
   if (!info.fieldDefinitions.some((definition) => definition.name === V2.parent && definition.type === 'TEXT')) {
     throw new OnboardingError('SCHEMA_MIGRATION_REQUIRED', V2.parent);
   }
   const fields = resolveV2FieldIds(info.fieldDefinitions, V2_TEMPLATE_FIELDS);
   const stageId = info.stages[0]._id;
-  const existing = await readAllItems(app, listId);
+  const existing = await deps.read.readAllItems(listId);
   const byId = new Map(existing.map((item) => [item._id, item]));
   const bySource = new Map<string, typeof existing[number]>();
   for (const item of existing) {
@@ -113,8 +111,8 @@ async function writeTree(app: McpApp, listId: string, roomId: string, draft: Tem
     const description = descriptionFor(node, previous?.description);
     if (previous) {
       if (fieldValue(previous, fields[V2.parent]) !== (parentId ?? '')) throw new OnboardingError('SCHEMA_DRIFT');
-      await updateItem(app, { itemId: previous._id, name: node.name, ...(description !== undefined ? { description } : {}), customFields: encoded });
-      const verified = await readItem(app, listId, previous._id);
+      await deps.write.updateItem({ itemId: previous._id, name: node.name, ...(description !== undefined ? { description } : {}), customFields: encoded });
+      const verified = await deps.read.readItem(listId, previous._id);
       if (verified.name !== node.name || verified.stageId !== stageId || fieldValue(verified, fields[V2.parent]) !== (parentId ?? '') ||
         (description !== undefined && verified.description !== description) || !scalarFieldsPersisted(verified, encoded, fields)) throw new OnboardingError('SCHEMA_DRIFT');
       mapped.set(node.id, previous._id);
@@ -124,10 +122,10 @@ async function writeTree(app: McpApp, listId: string, roomId: string, draft: Tem
     if (!isDraftId(node.id)) throw new OnboardingError('SCHEMA_DRIFT');
     let created: typeof existing[number];
     try {
-      created = await createItem(app, { listId, name: node.name, stageId, ...(description !== undefined ? { description } : {}),
+      created = await deps.write.createItem({ listId, name: node.name, stageId, ...(description !== undefined ? { description } : {}),
         customFields: encoded });
     } catch (error) {
-      const matches = (await readAllItems(app, listId)).filter((item) => fieldValue(item, fields[V2.importSource]) === node.id);
+      const matches = (await deps.read.readAllItems(listId)).filter((item) => fieldValue(item, fields[V2.importSource]) === node.id);
       if (matches.length !== 1) throw error;
       created = matches[0];
     }
@@ -162,26 +160,18 @@ async function writeTree(app: McpApp, listId: string, roomId: string, draft: Tem
     }
     return count;
   };
-  for (const item of stale.sort((a, b) => depth(b) - depth(a))) await deleteItem(app, item._id);
-  const readback = decodeTemplateTree(await readAllItems(app, listId), info.fieldDefinitions, stageId);
+  for (const item of stale.sort((a, b) => depth(b) - depth(a))) await deps.write.deleteItem(item._id);
+  const readback = decodeTemplateTree(await deps.read.readAllItems(listId), info.fieldDefinitions, stageId);
   if (readback.weeks.length !== draft.weeks.length || readback.items.length !== draft.items.length) throw new OnboardingError('SCHEMA_DRIFT');
   return readback;
 }
 
-export interface SaveTemplateV4Input {
-  positionId?: string;
-  tree: TemplateTree;
-  name: string;
-  status: 'draft' | 'ready';
-  importSource?: string;
-  templateKey?: string;
-}
-
-export async function saveTemplateV4(app: McpApp, binding: RoomBinding, input: SaveTemplateV4Input): Promise<string> {
+async function saveTemplateWithPorts(deps: TemplateDeps, input: SaveTemplateV4Input): Promise<string> {
+  const { binding } = deps;
   const name = input.name.trim();
   if (!name || !input.tree.weeks.length) throw new OnboardingError('TEMPLATE_INVALID');
   if (input.status === 'ready' && validateReady(input.tree, name).length) throw new OnboardingError('TEMPLATE_INVALID');
-  const positionInfo = await getIsolatedListViaTool(app, binding.positionsListId);
+  const positionInfo = await deps.read.isolatedInfo(binding.positionsListId);
   if (!positionInfo.isolatedList || positionInfo.roomId !== binding.roomId) throw new OnboardingError('SCHEMA_DRIFT');
   const positionIds = resolveV2FieldIds(positionInfo.fieldDefinitions, V2_POSITION_FIELDS);
   const draftStage = positionInfo.stages.find((stage) => stage.name === DRAFT_STAGE)?._id;
@@ -191,48 +181,52 @@ export async function saveTemplateV4(app: McpApp, binding: RoomBinding, input: S
   let positionId = input.positionId;
   let listId: string;
   if (positionId) {
-    const position = await readItem(app, binding.positionsListId, positionId);
+    const position = await deps.read.readItem(binding.positionsListId, positionId);
     if (position.stageId !== draftStage && position.stageId !== readyStage && position.stageId !== disabledStage) throw new OnboardingError('SCHEMA_DRIFT');
     const linked = fieldValue(position, positionIds[V2.template]);
     if (typeof linked !== 'string' || !linked) throw new OnboardingError('SCHEMA_DRIFT');
     listId = linked;
   } else {
-    const key = input.templateKey ?? `onb-tpl-${crypto.randomUUID()}`;
+    const key = input.templateKey ?? `onb-tpl-${deps.ids.next()}`;
     if (!/^onb-tpl-[a-zA-Z0-9_-]+$/.test(key)) throw new OnboardingError('TEMPLATE_INVALID');
-    const existing = input.templateKey ? (await listRoomLists(app, binding.roomId)).filter((list) => list.key === key) : [];
+    const existing = input.templateKey ? (await deps.read.listRoomLists(binding.roomId)).filter((list) => list.key === key) : [];
     if (existing.length > 1) throw new OnboardingError('SCHEMA_DRIFT');
     if (existing.length === 1) listId = existing[0]._id;
     else {
       try {
-        const created = await createIsolatedListViaTool(app, { roomId: binding.roomId, name: listName(name, key), key,
+        const created = await deps.lifecycle.createIsolatedList({ roomId: binding.roomId, name: listName(name, key), key,
           isolated: true, fields: [...V2_TEMPLATE_FIELDS], stages: [{ name: CONTENT_STAGE, color: '#3b82f6' }] });
         listId = created._id;
       } catch (error) {
-        const recovered = (await listRoomLists(app, binding.roomId)).filter((list) => list.key === key);
+        const recovered = (await deps.read.listRoomLists(binding.roomId)).filter((list) => list.key === key);
         if (recovered.length !== 1) throw error;
         listId = recovered[0]._id;
       }
     }
   }
   if (positionId && input.status === 'draft') {
-    const current = await readItem(app, binding.positionsListId, positionId);
-    if (current.stageId !== draftStage) unwrapToolResult(await app.callServerTool({ name: 'mcpapp.lists.moveItemToStage', arguments: { itemId: positionId, stageId: draftStage } }));
+    const current = await deps.read.readItem(binding.positionsListId, positionId);
+    if (current.stageId !== draftStage) await deps.write.moveItemToStage(positionId, draftStage);
   }
-  const readback = await writeTree(app, listId, binding.roomId, input.tree);
+  const readback = await writeTree(deps, listId, binding.roomId, input.tree);
   if (input.status === 'ready' && validateReady(readback, name).length) throw new OnboardingError('TEMPLATE_INVALID');
   const expectedRegistryFields = registryFields(positionIds, listId, readback, input.importSource);
   if (!positionId) {
-    const created = await createItem(app, { listId: binding.positionsListId, name, stageId: draftStage,
+    const created = await deps.write.createItem({ listId: binding.positionsListId, name, stageId: draftStage,
       customFields: [...expectedRegistryFields, { fieldId: positionIds[V2.inUse], value: 0 }] });
     positionId = created._id;
   } else {
-    await updateItem(app, { itemId: positionId, name, customFields: expectedRegistryFields });
+    await deps.write.updateItem({ itemId: positionId, name, customFields: expectedRegistryFields });
   }
   if (input.status === 'ready') {
-    unwrapToolResult(await app.callServerTool({ name: 'mcpapp.lists.moveItemToStage', arguments: { itemId: positionId, stageId: readyStage } }));
+    await deps.write.moveItemToStage(positionId, readyStage);
   }
-  const verified = await readItem(app, binding.positionsListId, positionId);
+  const verified = await deps.read.readItem(binding.positionsListId, positionId);
   if (verified.name !== name || verified.stageId !== (input.status === 'ready' ? readyStage : draftStage) ||
     !expectedRegistryFields.every(({ fieldId, value }) => fieldValue(verified, fieldId) === value)) throw new OnboardingError('SCHEMA_DRIFT');
   return positionId;
+}
+
+export function createTemplateService(deps: TemplateDeps): TemplateService {
+  return { save: (input) => saveTemplateWithPorts(deps, input) };
 }

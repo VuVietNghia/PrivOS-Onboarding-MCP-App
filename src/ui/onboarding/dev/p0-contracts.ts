@@ -1,6 +1,5 @@
 import { queryFields } from './probe-results';
-import type { McpApp } from '@privos_ai/app-react';
-import { createList, listRoomLists } from '../data/onboarding-lists';
+import type { ProbeTransport } from './probe-port';
 import { idOf, unwrapToolResult } from '../data/tool-result';
 import { registryListInput } from '../domain/v2-registry-schema';
 
@@ -8,13 +7,13 @@ function data(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : undefined;
 }
 
-export async function createRegistryIfVacant(app: McpApp, roomId: string, kind: 'positions' | 'hires'):
+export async function createRegistryIfVacant(app: ProbeTransport, roomId: string, kind: 'positions' | 'hires'):
   Promise<{ status: 'collision' } | { status: 'created'; listId: string }> {
   if (!roomId.trim()) throw new Error('REGISTRY_ROOM_REQUIRED');
   const input = registryListInput(roomId, kind);
-  const lists = await listRoomLists(app, roomId);
+  const lists = await app.listRoomLists(roomId);
   if (lists.some((list) => list.key === input.key || list.name === input.name)) return { status: 'collision' };
-  const created = await createList(app, input);
+  const created = await app.createList(input);
   return { status: 'created', listId: created._id };
 }
 
@@ -45,7 +44,7 @@ export function updateMatches(writeStatus: number, writeBody: unknown, readStatu
   return Array.isArray(fields) && fields.some((field) => data(field)?.fieldId === fieldId && data(field)?.value === value);
 }
 
-export function ordinaryField(definitions: readonly { _id: string; type: string }[], fieldId: string): boolean {
+export function ordinaryField(definitions: readonly { _id: string; name?: string; type: string }[], fieldId: string): boolean {
   return definitions.some((field) => field._id === fieldId && (field.type === 'TEXT' || field.type === 'TEXTAREA'));
 }
 
@@ -110,7 +109,7 @@ export function uploadResultId(result: unknown): string | undefined {
   return idOf(envelope?.file ?? data(envelope?.message)?.file ?? envelope);
 }
 
-async function folderListing(app: McpApp, roomId: string, parentId?: string): Promise<unknown[]> {
+async function folderListing(app: ProbeTransport, roomId: string, parentId?: string): Promise<unknown[]> {
   const payload = unwrapToolResult(await app.callServerTool({ name: 'mcpapp.folders.getByChannel',
     arguments: { channelId: roomId, limit: 100, ...(parentId ? { parentId } : {}) } }));
   const folders = Array.isArray(payload) ? payload : data(payload)?.folders;
@@ -119,7 +118,7 @@ async function folderListing(app: McpApp, roomId: string, parentId?: string): Pr
 }
 
 export async function createVerifiedFolder(
-  app: McpApp, roomId: string, name: string, fatherId?: string,
+  app: ProbeTransport, roomId: string, name: string, fatherId?: string,
 ): Promise<{ ok: true; folderId: string } | { ok: false; reason: 'invalid-room' | 'invalid-parent' | 'create-failed' | 'readback-mismatch' }> {
   if (!roomId.trim() || !name.trim()) return { ok: false, reason: 'invalid-room' };
   if (fatherId) {

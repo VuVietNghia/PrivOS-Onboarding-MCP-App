@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { createManifest } from '../src/manifest';
-import { handleMcpMessage } from '../src/mcp-message-handlers';
+import { createAppMcpHandler } from '../src/mcp-message-handlers';
+
+const handleMcpMessage = createAppMcpHandler().handle;
 
 // The Hub's readiness check for local and publisher-hosted execution: it lifts a served
 // tool's `_meta.ui` to `ui` (dropping undefined members) and requires the result to equal the
@@ -22,7 +24,7 @@ function hubMapping(tool: any) {
 	return mapped;
 }
 const canonical = (value: unknown) => JSON.stringify(value, (_k, v) => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, v[k]])) : v));
-const byName = (a: { name: string }, b: { name: string }) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+const byName = (a: { name?: unknown }, b: { name?: unknown }) => (String(a.name) < String(b.name) ? -1 : String(a.name) > String(b.name) ? 1 : 0);
 
 describe('readiness tool affinity', () => {
 	it('tools/list, after the Hub mapping, equals the reviewed manifest tools', async () => {

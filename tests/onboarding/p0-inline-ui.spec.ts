@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildP0InlineHtml } from '../../src/p0-inline-ui';
-import { handleMcpMessage, setDevUiHtml } from '../../src/mcp-message-handlers';
+import { createAppMcpHandler } from '../../src/mcp-message-handlers';
 import manifest from '../../privos-app.json';
 
 const resourceUri = (manifest.tools as { ui?: { resourceUri?: string } }[])
@@ -20,8 +20,9 @@ describe('paired Relay P0 UI delivery', () => {
     expect(html).not.toMatch(/<link[^>]+href=/);
     expect(html).not.toContain('localhost:5179');
 
-    setDevUiHtml(html);
-    const result = await handleMcpMessage('resources/read', 1, { uri: resourceUri });
+    const handler = createAppMcpHandler();
+    handler.ui.set({ kind: 'inline', html });
+    const result = await handler.handle('resources/read', 1, { uri: resourceUri }) as { contents: { text: string }[] };
     expect(result.contents[0].text).toBe(html);
   }, 20_000);
 });

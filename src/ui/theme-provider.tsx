@@ -6,6 +6,8 @@
  */
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import type { Preferences } from '../shared/ports/effects';
+import type { ThemeTarget } from './ports/presentation';
 
 type ThemeMode = 'auto' | 'light' | 'dark';
 type ResolvedTheme = 'light' | 'dark';
@@ -30,18 +32,30 @@ interface ThemeProviderProps {
   children: ReactNode;
   /** Host theme from Privos (via usePrivosContext().theme) */
   hostTheme: string;
+  preferences: Preferences;
+  target: ThemeTarget;
 }
 
-export function ThemeProvider({ children, hostTheme }: ThemeProviderProps) {
-  const [mode, setModeState] = useState<ThemeMode>(() => {
-    try { return (localStorage.getItem('theme-mode') as ThemeMode) || 'auto'; }
-    catch { return 'auto'; }
-  });
+function isThemeMode(value: unknown): value is ThemeMode {
+  return value === 'auto' || value === 'light' || value === 'dark';
+}
+
+export function ThemeProvider({ children, hostTheme, preferences, target }: ThemeProviderProps) {
+  const [mode, setModeState] = useState<ThemeMode>('auto');
+
+  useEffect(() => {
+    let active = true;
+    void preferences.get('theme-mode').then((value) => {
+      if (active) setModeState(isThemeMode(value) ? value : 'auto');
+    }).catch(() => { if (active) setModeState('auto'); });
+    return () => { active = false; };
+  }, [preferences]);
 
   const setMode = useCallback((m: ThemeMode) => {
+    if (!isThemeMode(m)) return;
     setModeState(m);
-    try { localStorage.setItem('theme-mode', m); } catch {}
-  }, []);
+    void preferences.set('theme-mode', m).catch(() => {});
+  }, [preferences]);
 
   const hostIsDark = hostTheme === 'dark' || hostTheme === 'high-contrast';
   const resolved: ResolvedTheme = mode === 'auto'
@@ -49,8 +63,8 @@ export function ThemeProvider({ children, hostTheme }: ThemeProviderProps) {
     : mode;
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', resolved);
-  }, [resolved]);
+    target.apply(resolved);
+  }, [resolved, target]);
 
   return (
     <ThemeContext.Provider value={{ mode, resolved, setMode }}>

@@ -2,6 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PrivosRestError } from '../../src/ui/privos-rest';
 import { createRequestBudget } from '../../src/ui/onboarding/data/request-budget';
 
+const effects = {
+  clock: { now: () => new Date() },
+  scheduler: { after(ms: number, task: () => void) { const timer = setTimeout(task, ms); return () => clearTimeout(timer); } },
+  isRetryableReadError: (error: unknown) => error instanceof PrivosRestError && error.statusCode === 429,
+};
+
 afterEach(() => vi.useRealTimers());
 
 function deferred<T>() {
@@ -12,7 +18,7 @@ function deferred<T>() {
 
 describe('request budget', () => {
   it('runs at most four requests concurrently', async () => {
-    const budget = createRequestBudget();
+    const budget = createRequestBudget(effects);
     const slots = Array.from({ length: 5 }, () => deferred<number>());
     const invoked: number[] = [];
     const results = slots.map((slot, index) => budget.run(() => {
@@ -29,7 +35,7 @@ describe('request budget', () => {
 
   it('sends no more than the configured window allowance', async () => {
     vi.useFakeTimers();
-    const budget = createRequestBudget({ maxPerWindow: 2, windowMs: 1_000 });
+    const budget = createRequestBudget(effects, { maxPerWindow: 2, windowMs: 1_000 });
     const sent: number[] = [];
     const calls = [0, 1, 2].map((index) => budget.run(async () => { sent.push(index); return index; }));
     await vi.advanceTimersByTimeAsync(999);
@@ -41,7 +47,7 @@ describe('request budget', () => {
 
   it('retries a read after 429 with bounded backoff', async () => {
     vi.useFakeTimers();
-    const budget = createRequestBudget({ baseBackoffMs: 100, maxBackoffMs: 200 });
+    const budget = createRequestBudget(effects, { baseBackoffMs: 100, maxBackoffMs: 200 });
     let attempts = 0;
     const result = budget.run(async () => {
       attempts += 1;
@@ -61,7 +67,7 @@ describe('request budget', () => {
 
   it('stops retrying after the configured cap and never retries other errors', async () => {
     vi.useFakeTimers();
-    const budget = createRequestBudget({ maxRetries: 1, baseBackoffMs: 20 });
+    const budget = createRequestBudget(effects, { maxRetries: 1, baseBackoffMs: 20 });
     let rateAttempts = 0;
     const rate = budget.run(async () => {
       rateAttempts += 1;

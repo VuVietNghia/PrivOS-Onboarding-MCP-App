@@ -5,7 +5,12 @@ import userEvent from '@testing-library/user-event';
 import type { FilesGateway } from '../../src/ui/onboarding/data/files';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { AttachmentList } from '../../src/ui/onboarding/components/AttachmentList';
-import { TemplateBuilder } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
+import { TemplateBuilder as PureTemplateBuilder, type TemplateBuilderProps } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
+
+type TestBuilderProps<T> = T extends unknown ? Omit<T, 'ids' | 'focus'> : never;
+function TemplateBuilder(props: TestBuilderProps<TemplateBuilderProps>) {
+  return <PureTemplateBuilder {...props} ids={{ next: () => crypto.randomUUID() }} focus={{ focus: (id) => document.getElementById(id)?.focus() }} />;
+}
 
 afterEach(cleanup);
 
@@ -26,11 +31,96 @@ function gateway() {
 }
 
 describe('lesson attachments', () => {
-  it('hides upload until the first draft has a position id', () => {
+  it('offers upload while creating a template before the first draft is saved', () => {
     const { api } = gateway();
     render(<TemplateBuilder initial={initial} initialName="Kỹ sư" onSave={async () => {}} filesGateway={api} />);
-    expect(screen.queryByLabelText('Đính kèm file')).toBeNull();
-    expect(screen.getByText('Lưu nháp vị trí trước khi đính kèm file.')).toBeTruthy();
+    expect(screen.getByLabelText('Đính kèm file')).toBeTruthy();
+  });
+
+  it('creates a draft and persists the attachment when a file is selected', async () => {
+    const user = userEvent.setup();
+    const { api, upload } = gateway();
+    const saves: { tree: TemplateTree; name: string; status: string; positionId?: string }[] = [];
+    render(<TemplateBuilder initial={initial} initialName="Kỹ sư" filesGateway={api}
+      onSave={async (tree, name, status, positionId) => {
+        saves.push({ tree, name, status, positionId });
+        return 'position-1';
+      }} />);
+
+    await user.upload(screen.getByLabelText('Đính kèm file'), new File(['data'], 'guide.pdf', { type: 'application/pdf' }));
+    await waitFor(() => expect(screen.getByText('guide.pdf')).toBeTruthy());
+    await waitFor(() => expect(saves).toHaveLength(2));
+    expect(saves[0]).toMatchObject({ name: 'Kỹ sư', status: 'draft', positionId: undefined });
+    expect(saves[1]).toMatchObject({ name: 'Kỹ sư', status: 'draft', positionId: 'position-1' });
+    expect(saves[1].tree.items.find((item) => item.kind === 'lesson')).toMatchObject({ attachments: [ref] });
+    expect(upload).toHaveBeenCalledWith('position-1', expect.objectContaining({ name: 'guide.pdf' }));
+  });
+
+  it('holds a selected file until a position name is entered, then uploads without a save click', async () => {
+    const user = userEvent.setup();
+    const { api, upload } = gateway();
+    const saves: TemplateTree[] = [];
+    render(<TemplateBuilder initial={initial} initialName="" filesGateway={api}
+      onSave={async (tree) => { saves.push(tree); return 'position-1'; }} />);
+
+    await user.upload(screen.getByLabelText('Đính kèm file'), new File(['data'], 'guide.pdf', { type: 'application/pdf' }));
+    expect(screen.getByText(/guide.pdf.*tên vị trí/)).toBeTruthy();
+    expect(saves).toHaveLength(0);
+    expect(upload).not.toHaveBeenCalled();
+
+    await user.type(screen.getByRole('textbox', { name: 'Tên vị trí' }), 'Kỹ sư');
+    await waitFor(() => expect(screen.getByText('guide.pdf')).toBeTruthy());
+    await waitFor(() => expect(saves).toHaveLength(2));
+    expect(upload).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries a failed upload without creating another draft', async () => {
+    const user = userEvent.setup();
+    const { api, upload } = gateway();
+    upload.mockRejectedValueOnce(new Error('UPLOAD_FAILED'));
+    const saves: TemplateTree[] = [];
+    render(<TemplateBuilder initial={initial} initialName="Kỹ sư" filesGateway={api}
+      onSave={async (tree) => { saves.push(tree); return 'position-1'; }} />);
+
+    await user.upload(screen.getByLabelText('Đính kèm file'), new File(['data'], 'guide.pdf', { type: 'application/pdf' }));
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('guide.pdf'));
+    expect(saves).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Thử lại tải file' }));
+    await waitFor(() => expect(screen.getByText('guide.pdf')).toBeTruthy());
+    await waitFor(() => expect(saves).toHaveLength(2));
+    expect(upload).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a published template ready when another file is added in the creation editor', async () => {
+    const user = userEvent.setup();
+    const { api } = gateway();
+    const statuses: string[] = [];
+    render(<TemplateBuilder initial={initial} initialName="Kỹ sư" filesGateway={api}
+      onSave={async (_tree, _name, status) => { statuses.push(status); return 'position-1'; }} />);
+
+    await user.upload(screen.getByLabelText('Đính kèm file'), new File(['first'], 'first.pdf'));
+    await waitFor(() => expect(statuses).toHaveLength(2));
+    await user.click(screen.getByRole('button', { name: 'Sẵn sàng' }));
+    await waitFor(() => expect(statuses).toHaveLength(3));
+    await user.upload(screen.getByLabelText('Đính kèm file'), new File(['second'], 'second.pdf'));
+    await waitFor(() => expect(statuses).toHaveLength(4));
+    expect(statuses[3]).toBe('ready');
+  });
+
+  it('drops a pending file when its lesson is removed before naming the template', async () => {
+    const user = userEvent.setup();
+    const { api, upload } = gateway();
+    const save = vi.fn(async () => 'position-1');
+    render(<TemplateBuilder initial={initial} initialName="" filesGateway={api} onSave={save} />);
+
+    await user.upload(screen.getByLabelText('Đính kèm file'), new File(['data'], 'guide.pdf'));
+    await user.click(screen.getByRole('button', { name: 'Xóa bài học' }));
+    await user.type(screen.getByRole('textbox', { name: 'Tên vị trí' }), 'K');
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Lưu nháp' }) as HTMLButtonElement).disabled).toBe(false));
+    expect(screen.queryByText(/guide.pdf.*tên vị trí/)).toBeNull();
+    expect(screen.getByRole('status').textContent).toContain('Chưa lưu');
+    expect(save).not.toHaveBeenCalled();
+    expect(upload).not.toHaveBeenCalled();
   });
 
   it('never offers Hub upload in preview mode', () => {

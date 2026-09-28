@@ -3,9 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApplicationMcpRequest, ToolCallContext, VerifiedActor } from '@privos_ai/app-server';
 
 const handleMcpMessage = vi.fn(async () => ({ ok: true }));
-vi.mock('../src/mcp-message-handlers', () => ({ handleMcpMessage }));
-
-const { relayMcpHandler } = await import('../src/relay-transport');
+const { createRelayMcpHandler } = await import('../src/relay-transport');
+const relayMcpHandler = createRelayMcpHandler(handleMcpMessage);
 
 /**
  * `relayMcpHandler` is the adapter between the SDK's `AppMcpHandler` contract (invoked by

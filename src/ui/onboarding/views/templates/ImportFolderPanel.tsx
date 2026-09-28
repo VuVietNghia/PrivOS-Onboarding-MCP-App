@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import type { McpApp } from '@privos_ai/app-react';
 import type { RoomBinding } from '../../domain/models';
 import { isRoomAdmin } from '../../domain/roles';
-import { importBrowserFilesV4, importBrowserFolderV4, type BrowserImportFile } from '../../flows/browser-import-v4';
+import { createBrowserPositionSource, type BrowserImportFile } from '../../flows/browser-import-v4';
+import { dryRunSource, importSource } from '../../flows/import-v4';
+import type { OnboardingServices } from '../../ports/ui-services';
 import './ImportFolderPanel.css';
 
 export interface ImportFolderPanelProps {
-  app: McpApp;
   binding: RoomBinding;
   roomId: string;
   userRoles: readonly string[];
+  services: Pick<OnboardingServices, 'imports' | 'hasher'>;
   onDone: () => void;
 }
 
@@ -46,7 +47,7 @@ function errorMessage(error: unknown): string {
   return 'Không nhập được tài liệu. Kiểm tra nguồn và thử lại.';
 }
 
-export function ImportFolderPanel({ app, binding, roomId, userRoles, onDone }: ImportFolderPanelProps) {
+export function ImportFolderPanel({ binding, roomId, userRoles, services, onDone }: ImportFolderPanelProps) {
   const [files, setFiles] = useState<BrowserImportFile[]>([]);
   const [phase, setPhase] = useState<Phase>('idle');
   const [positions, setPositions] = useState<PositionSummary[]>([]);
@@ -63,9 +64,9 @@ export function ImportFolderPanel({ app, binding, roomId, userRoles, onDone }: I
     setError('');
     try {
       const summaries: PositionSummary[] = [];
-      for await (const result of importBrowserFilesV4(files, { dryRun: true })) {
-        if (result.state !== 'dry-run') continue;
-        const { position, counts, missingAnswers } = result.preflight;
+      const source = createBrowserPositionSource(files, services.hasher);
+      for await (const preflight of dryRunSource(source)) {
+        const { position, counts, missingAnswers } = preflight;
         summaries.push({ sourceKey: position.sourceKey, name: position.name,
           weeks: counts.weeks, days: counts.days, lessons: counts.lessons,
           questions: counts.questions, missingAnswers: missingAnswers.length, result: 'pending' });
@@ -86,8 +87,8 @@ export function ImportFolderPanel({ app, binding, roomId, userRoles, onDone }: I
     setError('');
     let completed = 0;
     try {
-      for await (const result of importBrowserFolderV4(app, binding, roomId, userRoles, files)) {
-        if (result.state === 'dry-run') continue;
+      const source = createBrowserPositionSource(files, services.hasher);
+      for await (const result of importSource(source, services.imports)) {
         completed += 1;
         setProcessed(completed);
         setPositions((current) => current.map((position) => position.sourceKey === result.preflight.position.sourceKey

@@ -3,10 +3,13 @@ import { z } from 'zod';
 import { OnboardingError } from '../domain/errors';
 import type { FieldDef, HubItem } from '../domain/fields';
 import type { StageRef } from '../domain/roadmap-plan';
+import type { ItemQueryFilter } from '../ports/lists';
+export type { ItemQueryFilter } from '../ports/lists';
 import { normalizeHubItem } from '../domain/v2-schemas';
 import { getIsolatedListViaTool } from './isolated-lists';
 import { idOf, unwrapToolResult } from './tool-result';
 import { PrivosRestError } from '../../privos-rest';
+import type { RequestBudget } from './request-budget';
 
 const querySchema = z.object({ items: z.array(z.unknown()), nextCursor: z.string().nullable().optional() });
 
@@ -19,13 +22,6 @@ export async function readListInfo(app: McpApp, listId: string): Promise<{ list:
   const detail = await getIsolatedListViaTool(app, listId);
   if (!detail.isolatedList) throw new OnboardingError('SCHEMA_DRIFT');
   return { list: { _id: detail._id, name: detail.name, roomId: detail.roomId, fieldDefinitions: detail.fieldDefinitions }, stages: detail.stages };
-}
-
-export interface ItemQueryFilter {
-  stageId?: string;
-  parentId?: string | null;
-  archived?: boolean;
-  customFields?: readonly { fieldId: string; op: 'contains' | 'is'; value: string }[];
 }
 
 export async function queryItems(
@@ -49,12 +45,14 @@ export async function queryItems(
   return { items: parsed.data.items.map((item): HubItem => normalizeHubItem(item)), nextCursor: parsed.data.nextCursor ?? null };
 }
 
-export async function readAllItems(app: McpApp, listId: string): Promise<HubItem[]> {
+export async function readAllItems(app: McpApp, listId: string, budget?: Pick<RequestBudget, 'run'>): Promise<HubItem[]> {
   const items = new Map<string, HubItem>();
   const seen = new Set<string>();
   let cursor: string | undefined;
   do {
-    const page = await queryItems(app, listId, {}, 200, cursor);
+    const page = budget
+      ? await budget.run(() => queryItems(app, listId, {}, 200, cursor))
+      : await queryItems(app, listId, {}, 200, cursor);
     for (const item of page.items) {
       if (items.has(item._id)) throw new OnboardingError('SCHEMA_DRIFT');
       items.set(item._id, item);

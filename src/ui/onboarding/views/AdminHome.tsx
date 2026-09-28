@@ -1,10 +1,8 @@
 // src/ui/onboarding/views/AdminHome.tsx
 import { useState } from 'react';
-import { usePrivosApp, usePrivosContext } from '@privos_ai/app-react';
-import { ensureHiresList } from '../data/find-lists';
+import { useOnboardingServices, useOnboardingSession } from '../../composition/PrivosOnboardingRoot';
 import { hireLabel } from '../domain/hire-label';
 import type { Hire } from '../domain/schemas';
-import { cancelProvision, resumeProvision } from '../flows/provision-roadmap';
 import { ErrorBanner } from './ErrorBanner';
 import { HiresTable } from './HiresTable';
 import { ProvisionForm } from './ProvisionForm';
@@ -13,10 +11,12 @@ import { useHires } from './use-hires';
 import { useRoomMembers } from './use-room-members';
 
 export function AdminHome({ onOpenTemplates }: { onOpenTemplates: () => void }) {
-  const app = usePrivosApp();
-  const { roomId, userRoles } = usePrivosContext();
-  const hires = useHires(roomId);
-  const roomMembers = useRoomMembers(roomId);
+  const services = useOnboardingServices();
+  const session = useOnboardingSession();
+  if (!session) throw new Error('ONBOARDING_SESSION_UNAVAILABLE');
+  const { roomId, roles: userRoles } = session.actor;
+  const hires = useHires(roomId, services.legacyData);
+  const roomMembers = useRoomMembers(roomId, services.members);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [error, setError] = useState<unknown | null>(null);
   const [busy, setBusy] = useState(false);
@@ -28,9 +28,9 @@ export function AdminHome({ onOpenTemplates }: { onOpenTemplates: () => void }) 
     try { await fn(); } catch (err) { setError(err); } finally { setBusy(false); hires.reload(); }
   }
 
-  const onResume = (h: Hire) => run(() => resumeProvision(app, { roomId, hireItemId: h.id, userRoles: userRoles ?? [] }));
-  const onCancel = (h: Hire) => { void run(() => cancelProvision(app, { roomId, hireItemId: h.id, userRoles: userRoles ?? [] })); };
-  const onBootstrap = () => run(() => ensureHiresList(app, roomId));
+  const onResume = (h: Hire) => run(() => services.legacy.resumeProvision({ roomId, hireItemId: h.id, userRoles }));
+  const onCancel = (h: Hire) => { void run(() => services.legacy.cancelProvision({ roomId, hireItemId: h.id, userRoles })); };
+  const onBootstrap = () => run(() => services.legacyData.discovery.ensureHiresList(roomId));
 
   return (
     <div>

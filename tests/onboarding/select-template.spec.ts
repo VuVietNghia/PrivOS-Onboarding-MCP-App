@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { selectTemplate } from '../../src/ui/onboarding/domain/select-template';
 
+function ids() { let sequence = 0; return { next: () => `copy-${++sequence}` }; }
+
 const raw = { _id: 'file-1', name: 'guide.pdf', channel_id: 'room-1', folder_id: 'folder-1' };
 const source: TemplateTree = { weeks: [
   { id: 'week-1', name: 'Tuần 1', order: 0 }, { id: 'week-2', name: 'Tuần 2', order: 1 },
@@ -16,7 +18,7 @@ const source: TemplateTree = { weeks: [
 
 describe('selectTemplate', () => {
   it('copies a day with its week and direct children, keeping full file objects', () => {
-    const copied = selectTemplate(source, { kind: 'days', dayIds: ['day-1'] });
+    const copied = selectTemplate(source, { kind: 'days', dayIds: ['day-1'] }, ids());
     expect(copied.weeks.map((week) => week.name)).toEqual(['Tuần 1']);
     expect(copied.items.map((item) => item.name)).toEqual(['Ngày 1', 'Bài', 'Câu']);
     expect(copied.weeks[0].id).toMatch(/^draft:/);
@@ -34,7 +36,7 @@ describe('selectTemplate', () => {
   });
 
   it('copies two weeks without unrelated days and does not share nested refs', () => {
-    const copied = selectTemplate(source, { kind: 'weeks', weekIds: ['week-2', 'week-1'] });
+    const copied = selectTemplate(source, { kind: 'weeks', weekIds: ['week-2', 'week-1'] }, ids());
     expect(copied.weeks.map((week) => week.name)).toEqual(['Tuần 1', 'Tuần 2']);
     expect(copied.items.filter((item) => item.kind === 'day').map((item) => item.name)).toEqual(['Ngày 1', 'Ngày 2']);
     const copiedLesson = copied.items.find((item) => item.kind === 'lesson');
@@ -44,7 +46,7 @@ describe('selectTemplate', () => {
   });
 
   it('rejects unknown and empty selections', () => {
-    expect(() => selectTemplate(source, { kind: 'days', dayIds: [] })).toThrow('COPY_SELECTION_INVALID');
-    expect(() => selectTemplate(source, { kind: 'weeks', weekIds: ['missing'] })).toThrow('COPY_SELECTION_INVALID');
+    expect(() => selectTemplate(source, { kind: 'days', dayIds: [] }, ids())).toThrow('COPY_SELECTION_INVALID');
+    expect(() => selectTemplate(source, { kind: 'weeks', weekIds: ['missing'] }, ids())).toThrow('COPY_SELECTION_INVALID');
   });
 });

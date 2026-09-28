@@ -5,6 +5,7 @@ import { F, HIRES_FIELDS, RUN_FIELDS, TEMPLATE_FIELDS } from '../../src/ui/onboa
 import { runKey } from '../../src/ui/onboarding/domain/keys';
 import { parseRoadmapTask } from '../../src/ui/onboarding/domain/schemas';
 import { cancelProvision, provisionRoadmap, resumeProvision } from '../../src/ui/onboarding/flows/provision-roadmap';
+import { legacyDepsForApp } from '../di/support/legacy-adapter';
 import { fakeRestApp, forbidden, ok, type FakeRoute } from './fake-app';
 
 describe('mapWithConcurrency', () => {
@@ -122,7 +123,7 @@ describe('provisionRoadmap', () => {
   it('tạo hồ sơ, list lộ trình, item gốc, 3 task, gán ASSIGNEE cuối cùng', async () => {
     const hub = hubFixture();
     const steps: string[] = [];
-    const result = await provisionRoadmap(hub.app, input, (p) => steps.push(p.step));
+    const result = await provisionRoadmap(legacyDepsForApp(hub.app), input, (p) => steps.push(p.step));
     const hire = hub.items.H[0];
     expect(result.taskCount).toBe(3);
     expect(hire.stageId).toBe('HS1');
@@ -145,28 +146,28 @@ describe('provisionRoadmap', () => {
 
   it('từ chối khi không phải admin', async () => {
     const hub = hubFixture();
-    await expect(provisionRoadmap(hub.app, { ...input, userRoles: ['user'] })).rejects.toThrow('NOT_ADMIN');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), { ...input, userRoles: ['user'] })).rejects.toThrow('NOT_ADMIN');
   });
 
   it('từ chối khi ngày bắt đầu là cuối tuần', async () => {
     const hub = hubFixture();
-    await expect(provisionRoadmap(hub.app, { ...input, startDate: '2026-09-26' })).rejects.toThrow('START_NOT_WORKING_DAY');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), { ...input, startDate: '2026-09-26' })).rejects.toThrow('START_NOT_WORKING_DAY');
   });
 
   it('từ chối khi nhân sự đã có hồ sơ đang chạy', async () => {
     const hub = hubFixture();
-    await provisionRoadmap(hub.app, input);
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('HIRE_EXISTS');
+    await provisionRoadmap(legacyDepsForApp(hub.app), input);
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('HIRE_EXISTS');
   });
 
   it('lỗi giữa B4 thì hồ sơ sang Khởi tạo lỗi, resume tạo đúng phần thiếu, không trùng', async () => {
     const hub = hubFixture({ failItemAt: 3 }); // items.create lần 3 lỗi: hồ sơ=1, item gốc=2, task đầu tiên=3
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('PROVISION_FAILED');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('PROVISION_FAILED');
     const hire = hub.items.H[0];
     expect(hire.stageId).toBe('HS3');
     expect(hub.hireField(hire, F.assignee)).toBeUndefined();
     hub.allowFailures();
-    const result = await resumeProvision(hub.app, { roomId: 'R', hireItemId: String(hire._id), userRoles: ['owner'] });
+    const result = await resumeProvision(legacyDepsForApp(hub.app), { roomId: 'R', hireItemId: String(hire._id), userRoles: ['owner'] });
     const run = hub.items[result.roadmapListId];
     const children = run.filter((i) => i.parentId !== null);
     expect(children).toHaveLength(3);
@@ -176,26 +177,26 @@ describe('provisionRoadmap', () => {
 
   it('cancelProvision xóa list và hồ sơ', async () => {
     const hub = hubFixture({ failItemAt: 2 });
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('PROVISION_FAILED');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('PROVISION_FAILED');
     const hireId = String(hub.items.H[0]._id);
     const runId = String(hub.hireField(hub.items.H[0], F.roadmapListId));
-    await cancelProvision(hub.app, { roomId: 'R', hireItemId: hireId, userRoles: ['owner'] });
+    await cancelProvision(legacyDepsForApp(hub.app), { roomId: 'R', hireItemId: hireId, userRoles: ['owner'] });
     expect(hub.items.H).toHaveLength(0);
     expect(hub.items[runId]).toBeUndefined();
   });
 
   it('cancelProvision từ chối khi không phải admin', async () => {
     const hub = hubFixture({ failItemAt: 2 });
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('PROVISION_FAILED');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('PROVISION_FAILED');
     const hireId = String(hub.items.H[0]._id);
-    await expect(cancelProvision(hub.app, { roomId: 'R', hireItemId: hireId, userRoles: ['user'] })).rejects.toThrow('NOT_ADMIN');
+    await expect(cancelProvision(legacyDepsForApp(hub.app), { roomId: 'R', hireItemId: hireId, userRoles: ['user'] })).rejects.toThrow('NOT_ADMIN');
     // Không admin thì không được xóa gì cả.
     expect(hub.items.H).toHaveLength(1);
   });
 
   it('item gốc sau khi provision parse được bằng parseRoadmapTask (đủ field bắt buộc)', async () => {
     const hub = hubFixture();
-    const result = await provisionRoadmap(hub.app, input);
+    const result = await provisionRoadmap(legacyDepsForApp(hub.app), input);
     const run = hub.items[result.roadmapListId];
     const root = run.find((i) => i.parentId === null);
     expect(root).toBeDefined();
@@ -205,27 +206,27 @@ describe('provisionRoadmap', () => {
 
   it('hồ sơ "Khởi tạo lỗi" (ASSIGNEE chưa được gán) vẫn chặn khởi tạo lại cho cùng nhân sự', async () => {
     const hub = hubFixture({ failItemAt: 2 }); // item gốc lỗi ngay sau khi tạo hồ sơ, trước khi ASSIGNEE được gán
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('PROVISION_FAILED');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('PROVISION_FAILED');
     const hire = hub.items.H[0];
     expect(hire.stageId).toBe('HS3');
     expect(hub.hireField(hire, F.assignee)).toBeUndefined();
     // Bấm "Khởi tạo" lại cho cùng nhân sự: employeeIds rỗng (ASSIGNEE chưa
     // gán) nên phải nhận diện qua tên hồ sơ (= employeeId), không được để
     // lọt qua và tạo hồ sơ + list lộ trình song song.
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('HIRE_EXISTS');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('HIRE_EXISTS');
     expect(hub.items.H).toHaveLength(1);
   });
 
   it('item gốc bị đổi tên ngoài app vẫn được resume nhận diện qua parentId, không tạo item gốc thứ hai', async () => {
     const hub = hubFixture({ failItemAt: 3 }); // hồ sơ=1, item gốc=2 (thành công), task đầu tiên=3 (lỗi) → 0 task con
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('PROVISION_FAILED');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('PROVISION_FAILED');
     const hire = hub.items.H[0];
     const runId = String(hub.hireField(hire, F.roadmapListId));
     const root = hub.items[runId].find((i) => i.parentId === null);
     expect(root).toBeDefined();
     (root as Record<string, unknown>).name = 'Tong quan (da doi ten)';
     hub.allowFailures();
-    await resumeProvision(hub.app, { roomId: 'R', hireItemId: String(hire._id), userRoles: ['owner'] });
+    await resumeProvision(legacyDepsForApp(hub.app), { roomId: 'R', hireItemId: String(hire._id), userRoles: ['owner'] });
     const roots = hub.items[runId].filter((i) => i.parentId === null);
     expect(roots).toHaveLength(1);
   });
@@ -234,14 +235,14 @@ describe('provisionRoadmap', () => {
     // items.update lần đầu (gắn roadmapListId lên hồ sơ) phải qua được, chỉ
     // lệnh update thứ 2 trở đi (markFailed ghi stage "Khởi tạo lỗi") mới lỗi.
     const hub = hubFixture({ failItemAt: 3, failUpdateFrom: 2 });
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('PROVISION_FAILED');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('PROVISION_FAILED');
   });
 
   it('items.create ghi thành công nhưng response bị mất: resume không tạo task trùng', async () => {
     const hub = hubFixture({ persistThenFailItemAt: 3 }); // task đầu tiên: Hub ghi xong nhưng client nhận lỗi
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('PROVISION_FAILED');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('PROVISION_FAILED');
     const hire = hub.items.H[0];
-    const result = await resumeProvision(hub.app, { roomId: 'R', hireItemId: String(hire._id), userRoles: ['owner'] });
+    const result = await resumeProvision(legacyDepsForApp(hub.app), { roomId: 'R', hireItemId: String(hire._id), userRoles: ['owner'] });
     const run = hub.items[result.roadmapListId];
     const children = run.filter((i) => i.parentId !== null);
     expect(children).toHaveLength(3);
@@ -251,21 +252,21 @@ describe('provisionRoadmap', () => {
   it('template không có task nào: từ chối, không tạo list lộ trình nào, hồ sơ sang Khởi tạo lỗi', async () => {
     const hub = hubFixture();
     const listsBefore = Object.keys(hub.items).length;
-    await expect(provisionRoadmap(hub.app, { ...input, templateListId: 'TE' })).rejects.toThrow('TEMPLATE_INVALID');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), { ...input, templateListId: 'TE' })).rejects.toThrow('TEMPLATE_INVALID');
     expect(Object.keys(hub.items).length).toBe(listsBefore);
     expect(hub.items.H[0]?.stageId).toBe('HS3');
   });
 
   it('danh sách hồ sơ bị giới hạn 500 (capped): từ chối khởi tạo thay vì tạo trùng âm thầm', async () => {
     const hub = hubFixture({ cappedListId: 'H' });
-    await expect(provisionRoadmap(hub.app, input)).rejects.toThrow('SCHEMA_DRIFT');
+    await expect(provisionRoadmap(legacyDepsForApp(hub.app), input)).rejects.toThrow('SCHEMA_DRIFT');
     expect(hub.items.H).toHaveLength(0);
   });
 
   it('key list lộ trình dự kiến đã tồn tại (cancelProvision chỉ đổi tên list cũ, không xóa được): tạo với key khác', async () => {
     const wantedKey = runKey(input.employeeId, input.startDate);
     const hub = hubFixture({ extraLists: [{ _id: 'OLD-RUN', name: '(Đã hủy) OLD-RUN', key: wantedKey }] });
-    const result = await provisionRoadmap(hub.app, input);
+    const result = await provisionRoadmap(legacyDepsForApp(hub.app), input);
     const createdList = hub.items[result.roadmapListId];
     expect(createdList).toBeDefined();
     expect(result.taskCount).toBe(3);

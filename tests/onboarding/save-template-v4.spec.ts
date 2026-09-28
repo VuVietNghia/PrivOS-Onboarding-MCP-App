@@ -1,6 +1,6 @@
 import type { McpApp } from '@privos_ai/app-react';
 import { describe, expect, it } from 'vitest';
-import { saveTemplateV4 } from '../../src/ui/onboarding/flows/save-template-v4';
+import { saveTemplateV4 } from '../../src/ui/onboarding/data/privos/compat-flows';
 import { V2, V2_POSITION_FIELDS } from '../../src/ui/onboarding/domain/v2-fields';
 
 interface Field { _id: string; name: string; type: string; options?: { _id: string; value: string }[] }
@@ -8,7 +8,7 @@ interface Row { _id: string; listId: string; name: string; description?: string;
 interface List { _id: string; name: string; roomId: string; isolatedList: boolean; fieldDefinitions: Field[]; stages: { _id: string; name: string; order: number }[] }
 
 function fakeHub(options: { loseDayResponse?: boolean; dropTemplateCustomFieldUpdates?: boolean; omitEmptyTemplateFields?: boolean;
-  dropAttachmentUpdates?: boolean; dropRegistryCountUpdates?: boolean } = {}): { app: McpApp; calls: string[]; lists: Map<string, List>; rows: Map<string, Row> } {
+  dropAttachmentUpdates?: boolean; dropRegistryCountUpdates?: boolean; dropStageMoves?: boolean } = {}): { app: McpApp; calls: string[]; lists: Map<string, List>; rows: Map<string, Row> } {
   const calls: string[] = [];
   const lists = new Map<string, List>();
   const rows = new Map<string, Row>();
@@ -64,7 +64,7 @@ function fakeHub(options: { loseDayResponse?: boolean; dropTemplateCustomFieldUp
       }
       case 'mcpapp.lists.moveItemToStage': {
         const row = rows.get(String(args.itemId))!;
-        row.stageId = String(args.stageId);
+        if (!options.dropStageMoves) row.stageId = String(args.stageId);
         return { item: row };
       }
       default: throw new Error(`Unexpected tool ${name}`);
@@ -74,6 +74,20 @@ function fakeHub(options: { loseDayResponse?: boolean; dropTemplateCustomFieldUp
 }
 
 describe('saveTemplateV4', () => {
+  it('rejects a reported ready move when the registry readback remains draft', async () => {
+    const options = { dropStageMoves: true };
+    const hub = fakeHub(options);
+    const tree = { weeks: [{ id: 'draft:week', name: 'Tuần 1', order: 0 }], items: [] };
+    const positionId = await saveTemplateV4(hub.app, { roomId: 'room', positionsListId: 'positions', hiresListId: 'hires' },
+      { name: 'Engineer', status: 'draft', tree });
+    const readyTree = { weeks: tree.weeks, items: [
+      { id: 'draft:day', kind: 'day' as const, name: 'Ngày 1', stageId: 'draft:week', parentId: null, order: 1, content: 'Mục tiêu' },
+      { id: 'draft:lesson', kind: 'lesson' as const, name: 'Bài 1', stageId: 'draft:week', parentId: 'draft:day', order: 0,
+        content: 'Nội dung', attachments: [], videos: [], read: false },
+    ] };
+    await expect(saveTemplateV4(hub.app, { roomId: 'room', positionsListId: 'positions', hiresListId: 'hires' },
+      { positionId, name: 'Engineer', status: 'ready', tree: readyTree })).rejects.toMatchObject({ code: 'SCHEMA_DRIFT' });
+  });
   it('persists an incomplete draft as Week item in a fixed content Stage and verifies registry link', async () => {
     const hub = fakeHub();
     const positionId = await saveTemplateV4(hub.app, { roomId: 'room', positionsListId: 'positions', hiresListId: 'hires' }, {

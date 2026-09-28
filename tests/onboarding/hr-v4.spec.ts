@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Hire, Page, Position } from '../../src/ui/onboarding/domain/models';
-import { createHrV4Actions, createMcpHrV4Gateway, type HrV4Gateway, type HrHireRecord, type HrRun } from '../../src/ui/onboarding/flows/hr-v4';
+import { createHrV4Actions, type HrV4Gateway, type HrHireRecord, type HrRun } from '../../src/ui/onboarding/flows/hr-v4';
+import { createMcpHrV4Gateway } from '../../src/ui/onboarding/data/privos/compat-flows';
 import { fakeRestApp, ok } from './fake-app';
 
 const baseHire: Hire = { id: 'h1', employeeId: 'u1', name: 'An', positionId: 'p1', positionName: 'Kỹ sư', totalDays: 4,

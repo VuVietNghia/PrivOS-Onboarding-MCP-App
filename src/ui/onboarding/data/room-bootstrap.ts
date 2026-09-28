@@ -1,23 +1,25 @@
-import type { McpApp } from '@privos_ai/app-react';
-import type { RoomBinding } from '../domain/models';
+import type { RoomBootstrap } from '../ports/bootstrap';
+export type { RoomBootstrap } from '../ports/bootstrap';
 import { OnboardingError } from '../domain/errors';
 import { registryListInput } from '../domain/v2-registry-schema';
-import { createIsolatedListViaTool, getIsolatedListViaTool, listRoomListsViaTool, type IsolatedListInfo } from './isolated-lists';
+import { isRoomAdmin } from '../domain/roles';
+import type { ActorSession } from '../ports/session';
+import type { ListReadPort, ListLifecyclePort, IsolatedListInfo } from '../ports/lists';
 
-export type RoomBootstrap =
-  | { state: 'ready'; binding: RoomBinding }
-  | { state: 'needs-admin' }
-  | { state: 'blocked'; code: 'SCHEMA_DRIFT' | 'BOOTSTRAP_STAGE_UNAVAILABLE' | 'ROOM_LIST_DISCOVERY_UNAVAILABLE' | 'DUPLICATE_REGISTRY' };
+export interface RoomBootstrapDeps {
+  read: Pick<ListReadPort, 'registryLists' | 'isolatedInfo'>;
+  lifecycle: Pick<ListLifecyclePort, 'createIsolatedList'>;
+}
 
-export async function resolveRoomBinding(
-  app: McpApp, roomId: string, actor: { userId: string; canManage: boolean },
-): Promise<RoomBootstrap> {
+export async function resolveRoomBinding(deps: RoomBootstrapDeps, session: ActorSession): Promise<RoomBootstrap> {
+  const roomId = session.roomId;
+  const actor = { userId: session.userId, canManage: isRoomAdmin(session.roles) };
   if (!roomId || !actor.userId) return { state: 'blocked', code: 'SCHEMA_DRIFT' };
   // Members only need the hire registry and their assigned run. Reading the position registry
   // here would make an isolated HR List a prerequisite for every employee session.
   const kinds = actor.canManage ? ['positions', 'hires'] as const : ['hires'] as const;
   const foundIds: string[] = [];
-  let lists = await listRoomListsViaTool(app, roomId);
+  let lists = await deps.read.registryLists(roomId);
   for (const kind of kinds) {
     const input = registryListInput(roomId, kind);
     let matches = lists.filter((list) => list.name === input.name);
@@ -25,9 +27,9 @@ export async function resolveRoomBinding(
     if (matches.length === 0) {
       if (!actor.canManage) return { state: 'needs-admin' };
       let createdId: string | null = null;
-      try { createdId = (await createIsolatedListViaTool(app, input))._id; }
+      try { createdId = (await deps.lifecycle.createIsolatedList(input))._id; }
       catch (error: unknown) {
-        lists = await listRoomListsViaTool(app, roomId);
+        lists = await deps.read.registryLists(roomId);
         matches = lists.filter((list) => list.name === input.name);
         if (matches.length !== 1) {
           if (matches.length > 1) return { state: 'blocked', code: 'DUPLICATE_REGISTRY' };
@@ -35,7 +37,7 @@ export async function resolveRoomBinding(
         }
       }
       if (createdId) {
-        lists = await listRoomListsViaTool(app, roomId);
+        lists = await deps.read.registryLists(roomId);
         matches = lists.filter((list) => list.name === input.name);
         if (matches.length !== 1 || matches[0]._id !== createdId) return { state: 'blocked', code: matches.length > 1 ? 'DUPLICATE_REGISTRY' : 'SCHEMA_DRIFT' };
       }
@@ -43,7 +45,7 @@ export async function resolveRoomBinding(
     const summary = matches[0];
     if (!summary.isolatedList) return { state: 'blocked', code: 'SCHEMA_DRIFT' };
     let detail: IsolatedListInfo;
-    try { detail = await getIsolatedListViaTool(app, summary._id); }
+    try { detail = await deps.read.isolatedInfo(summary._id); }
     catch (error: unknown) {
       if (error instanceof OnboardingError && error.code === 'SCHEMA_DRIFT') return { state: 'blocked', code: 'SCHEMA_DRIFT' };
       throw error;

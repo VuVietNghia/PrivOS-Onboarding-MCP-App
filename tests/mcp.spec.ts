@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import manifest from '../privos-app.json';
-import { handleMcpMessage, TOOL_NAME } from '../src/mcp-message-handlers';
+import { createAppMcpHandler, TOOL_NAME } from '../src/mcp-message-handlers';
+
+const handleMcpMessage = createAppMcpHandler().handle;
 
 describe('JSON-RPC handlers', () => {
   it('initialize báo đúng tên app và danh sách quyền của manifest', async () => {
-    const init = await handleMcpMessage('initialize', 1, {});
+    const init = await handleMcpMessage('initialize', 1, {}) as { serverInfo: { name: string; permissions: { scope: string }[] } };
     expect(init.serverInfo.name).toBe(manifest.name);
     expect(init.serverInfo.permissions.map((p: { scope: string }) => p.scope)).toEqual(manifest.permissions.map((p) => p.scope));
   });
 
   it('tools/list chỉ có đúng tool mở giao diện Onboarding, ui nằm dưới _meta', async () => {
-    const listed = await handleMcpMessage('tools/list', 2, {});
+    const listed = await handleMcpMessage('tools/list', 2, {}) as { tools: { name: string; ui?: unknown; _meta: { ui: { resourceUri: string } } }[] };
     expect(listed.tools.map((tool: { name: string }) => tool.name)).toEqual([TOOL_NAME]);
     const tool = listed.tools[0];
     expect(tool.ui).toBeUndefined();

@@ -23,11 +23,12 @@
 import 'dotenv/config';
 
 import express from 'express';
-import { serveApp, RuntimeModeError } from '@privos_ai/app-server';
+import { RuntimeModeError } from '@privos_ai/app-server';
 
-import { createManifest, buildRelayAppDescriptor } from './manifest';
-import { relayMcpHandler } from './relay-transport';
-import { shouldStartDevUi } from './dev-ui-mode';
+import { createManifest } from './manifest';
+import { createAppMcpHandler } from './mcp-message-handlers';
+import { createSdkRuntime } from './server-adapters/sdk-runtime';
+import { startServer } from './server-core/start-server';
 
 /**
  * Manifest-only degraded surface for `PRODUCTION_WITHOUT_IDENTITY`.
@@ -56,42 +57,34 @@ function startManifestOnlySurface(reason: string): void {
 
 async function start(): Promise<void> {
 	const transportOverride = process.env.PRIVOS_TRANSPORT === 'relay' ? ('relay' as const) : undefined;
-
-	const handle = await serveApp({
-		descriptor: buildRelayAppDescriptor(),
-		createHandler: () => relayMcpHandler,
-		port: Number(process.env.PORT || 3000),
-		...(transportOverride ? { transportOverride } : {}),
-		resolveManifest: () => createManifest(),
-		configure: (app) => {
-			// Serve the authoritative reviewed manifest verbatim, before the MCP
-			// router's own manifest route, so the digest-pinned bytes are exact.
-			app.get('/.well-known/mcp/manifest.json', (_req, res) => res.json(createManifest()));
+	const mcp = createAppMcpHandler();
+	await startServer({
+		runtime: createSdkRuntime({ port: Number(process.env.PORT || 3000), transportOverride }),
+		handler: mcp.handle,
+		ui: mcp.ui,
+		config: {
+			production: process.env.NODE_ENV === 'production',
+			devUi: process.env.PRIVOS_DEV_UI === '1',
+			transport: transportOverride === 'relay' ? 'relay' : 'default',
 		},
-	});
-
-	// The paired standalone session keeps its identity and Relay. Hub srcdoc
-	// rewrites external scripts to a blocked standalone-relay: scheme, so its
-	// explicit P0 test UI is delivered as one inline HTML resource.
-	if (shouldStartDevUi(handle.mode, transportOverride, process.env)) {
-		if (handle.mode === 'standalone-production') {
-			const { buildP0InlineHtml } = await import('./p0-inline-ui');
-			const { setDevUiHtml } = await import('./mcp-message-handlers');
-			setDevUiHtml(await buildP0InlineHtml());
-			console.log('[Dev] Onboarding v4 inline UI ready for paired Relay');
-		} else {
+		async startDevUi(mode) {
+			if (mode === 'standalone-production') {
+				const { buildP0InlineHtml } = await import('./p0-inline-ui');
+				const html = await buildP0InlineHtml();
+				console.log('[Dev] Onboarding v4 inline UI ready for paired Relay');
+				return { mode: { kind: 'inline' as const, html }, stop: async () => {} };
+			}
 			const { startDevUiServer } = await import('./dev-server');
-			const { setDevPublicUrl } = await import('./mcp-message-handlers');
 			const dev = await startDevUiServer();
-			setDevPublicUrl(dev.publicUrl);
-		}
-	}
-
-	// The interactive pairing loop belongs only to the development Relay mode.
-	if (handle.mode === 'development' && transportOverride === 'relay') {
-		const { startDevelopmentRelay } = await import('./relay-transport');
-		await startDevelopmentRelay();
-	}
+			return { mode: { kind: 'dev-url' as const, publicUrl: dev.publicUrl }, stop: dev.close };
+		},
+		async startDevelopmentRelay() {
+			const { createRelayMcpHandler, startDevelopmentRelay } = await import('./relay-transport');
+			const relay = await startDevelopmentRelay(createRelayMcpHandler(mcp.handle));
+			return { stop: () => relay.stop() };
+		},
+		logger: { event: (name, fields) => console.error(name, fields) },
+	});
 }
 
 start().catch((err) => {

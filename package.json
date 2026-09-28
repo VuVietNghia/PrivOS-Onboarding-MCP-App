@@ -38,6 +38,8 @@
     "start:relay": "PRIVOS_TRANSPORT=relay npm start",
     "start:standalone": "NODE_ENV=production npm start",
     "typecheck": "tsc --noEmit",
+    "typecheck:all": "tsc --noEmit && tsc -p tsconfig.scripts.json && tsc -p tsconfig.tests.json",
+    "architecture:check": "tsx scripts/architecture/run-check.ts",
     "typecheck:strict-unused": "tsc --noEmit --noUnusedLocals --noUnusedParameters",
     "test": "vitest run",
     "verify:fast-pr": "npm run typecheck:strict-unused && npm run test && npm run build && npm run preflight",

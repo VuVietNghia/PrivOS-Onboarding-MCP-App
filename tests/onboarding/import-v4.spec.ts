@@ -1,12 +1,15 @@
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import type { ImportedPosition } from '../../scripts/onboarding-import/models';
-import { createMcpImportV4Gateway, importDraftTree, importPositionV4, type ImportV4Gateway } from '../../src/ui/onboarding/flows/import-v4';
+import { importDraftTree, importPositionV4, type ImportV4Gateway } from '../../src/ui/onboarding/flows/import-v4';
+import { createMcpImportV4Gateway } from '../../src/ui/onboarding/data/privos/compat-flows';
+import { createBrowserEffects } from '../../src/ui/adapters/browser-effects';
 import { dryRunSourceV4 } from '../../scripts/onboarding-import/import-source-v4';
 import { V2_POSITION_FIELDS, V2 } from '../../src/ui/onboarding/domain/v2-fields';
 import { fakeRestApp, ok } from './fake-app';
 
 const demo = fileURLToPath(new URL('../../../AgentFiles onboarding/', import.meta.url));
+const hasher = createBrowserEffects().hasher;
 const source: ImportedPosition = {
   sourceKey: 'Kỹ_Sư', sourceFingerprint: 'a'.repeat(64), name: 'Kỹ Sư',
   tree: { weeks: [{ id: 'Kỹ_Sư/Week_01', name: 'Tuần 1', order: 0 }], items: [
@@ -45,32 +48,41 @@ describe('import v4', () => {
 
   it('saves once and skips a matching source on retry without touching HR edits', async () => {
     const fake = fakeGateway();
-    expect((await importPositionV4(fake.gateway, source)).state).toBe('created');
-    expect((await importPositionV4(fake.gateway, source)).state).toBe('existing');
+    expect((await importPositionV4(fake.gateway, source, hasher)).state).toBe('created');
+    expect((await importPositionV4(fake.gateway, source, hasher)).state).toBe('existing');
     expect(fake.calls.filter((call) => call === 'save')).toHaveLength(1);
   });
 
   it('rejects a changed source fingerprint and duplicate source registry identity', async () => {
     const fake = fakeGateway();
     fake.setMatches([{ id: 'p1', sourceMarker: `${source.sourceKey}:${'b'.repeat(64)}` }]);
-    await expect(importPositionV4(fake.gateway, source)).rejects.toThrow('IMPORT_SOURCE_CHANGED');
+    await expect(importPositionV4(fake.gateway, source, hasher)).rejects.toThrow('IMPORT_SOURCE_CHANGED');
     fake.setMatches([{ id: 'p1', sourceMarker: `${source.sourceKey}:${source.sourceFingerprint}` },
       { id: 'p2', sourceMarker: `${source.sourceKey}:${source.sourceFingerprint}` }]);
-    await expect(importPositionV4(fake.gateway, source)).rejects.toThrow('IMPORT_SOURCE_CONFLICT');
+    await expect(importPositionV4(fake.gateway, source, hasher)).rejects.toThrow('IMPORT_SOURCE_CONFLICT');
+  });
+
+  it('recognizes the exact legacy CLI path fingerprint without rewriting an existing position', async () => {
+    const fake = fakeGateway();
+    const legacy = 'c'.repeat(64);
+    fake.setMatches([{ id: 'legacy-position', sourceMarker: `${source.sourceKey}:${legacy}` }]);
+    const result = await importPositionV4(fake.gateway, { ...source, legacySourceFingerprint: legacy }, hasher);
+    expect(result).toMatchObject({ state: 'existing', positionId: 'legacy-position' });
+    expect(fake.calls).not.toContain('save');
   });
 
   it('reconciles a lost save response through exact source marker', async () => {
     const fake = fakeGateway();
     const original = fake.gateway.saveDraft;
-    fake.gateway.saveDraft = async (position, marker) => { await original(position, marker); throw new Error('response lost'); };
-    expect((await importPositionV4(fake.gateway, source)).state).toBe('created');
+    fake.gateway.saveDraft = async (position, marker, key) => { await original(position, marker, key); throw new Error('response lost'); };
+    expect((await importPositionV4(fake.gateway, source, hasher)).state).toBe('created');
     expect(fake.calls.filter((call) => call === 'save')).toHaveLength(1);
   });
 
   it('fails closed on a conflicting template key instead of creating a duplicate', async () => {
     const fake = fakeGateway();
     fake.gateway.checkTemplateKey = async () => 'conflict';
-    await expect(importPositionV4(fake.gateway, source)).rejects.toThrow('IMPORT_ORPHAN_CONFLICT');
+    await expect(importPositionV4(fake.gateway, source, hasher)).rejects.toThrow('IMPORT_ORPHAN_CONFLICT');
     expect(fake.calls).not.toContain('save');
   });
 
@@ -84,8 +96,8 @@ describe('import v4', () => {
       if (first) { first = false; throw new Error('item 3 failed'); }
       return original(position, marker, key);
     };
-    await expect(importPositionV4(fake.gateway, source)).rejects.toThrow('item 3 failed');
-    expect((await importPositionV4(fake.gateway, source)).state).toBe('created');
+    await expect(importPositionV4(fake.gateway, source, hasher)).rejects.toThrow('item 3 failed');
+    expect((await importPositionV4(fake.gateway, source, hasher)).state).toBe('created');
     expect(keys).toHaveLength(2);
     expect(keys[0]).toBe(keys[1]);
   });

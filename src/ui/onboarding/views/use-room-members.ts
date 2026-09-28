@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { usePrivosApp, usePrivosContext } from '@privos_ai/app-react';
-import { listRoomMembers } from '../data/room-members';
+import type { MembersGateway } from '../ports/members';
 import type { RoomMember } from '../domain/pick-employee';
 
 export interface RoomMembersState {
@@ -10,22 +9,18 @@ export interface RoomMembersState {
   names: ReadonlyMap<string, string>;
 }
 
-export function useRoomMembers(roomId: string): RoomMembersState {
-  const app = usePrivosApp();
-  const context = usePrivosContext();
-  // The SDK omits this runtime field from its published TypeScript interface.
-  const roomType: unknown = (context as typeof context & { roomType?: unknown }).roomType;
+export function useRoomMembers(roomId: string, gateway: MembersGateway): RoomMembersState {
   const [members, setMembers] = useState<RoomMember[] | null | undefined>(undefined);
 
   useEffect(() => {
     if (!roomId) { setMembers(null); return; }
     let cancelled = false;
     setMembers(undefined);
-    listRoomMembers(app, roomId, roomType)
+    gateway.list()
       .then((list) => { if (!cancelled) setMembers(list); })
       .catch(() => { if (!cancelled) setMembers(null); });
     return () => { cancelled = true; };
-  }, [app, roomId, roomType]);
+  }, [gateway, roomId]);
 
   const names = useMemo(() => new Map((members ?? []).map((m) => [m.id, m.name] as const)), [members]);
   return { members, names };

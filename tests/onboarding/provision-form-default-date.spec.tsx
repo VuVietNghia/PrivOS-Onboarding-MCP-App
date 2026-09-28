@@ -3,11 +3,15 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { ProvisionForm } from '../../src/ui/onboarding/views/ProvisionForm';
 
-vi.mock('@privos_ai/app-react', () => ({
-  usePrivosApp: () => ({}),
-  usePrivosContext: () => ({ userRoles: [] }),
+const { services } = vi.hoisted(() => ({ services: {
+  clock: { now: () => new Date() },
+  legacyData: { discovery: { listTemplateLists: async () => [] } },
+  members: { lookup: async () => ({ kind: 'unavailable' }) },
+} }));
+vi.mock('../../src/ui/composition/PrivosOnboardingRoot', () => ({
+  useOnboardingServices: () => services,
+  useOnboardingSession: () => ({ actor: { roles: [] } }),
 }));
-vi.mock('../../src/ui/onboarding/data/find-lists', () => ({ listTemplateLists: async () => [] }));
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 it('shows local today and permits another working date', () => {

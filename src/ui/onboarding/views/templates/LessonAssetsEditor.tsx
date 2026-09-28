@@ -7,15 +7,19 @@ interface LessonAssetsEditorProps {
   lesson: Lesson;
   gateway?: FilesGateway;
   positionId?: string;
+  onSelectFile?: (lessonId: string, file: File) => void;
+  uploadDisabled?: boolean;
   onAttach: (lessonId: string, file: FileMetadata) => void;
   onUnlink: (lessonId: string, fileId: string) => void;
 }
 
-export function LessonAssetsEditor({ lesson, gateway, positionId, onAttach, onUnlink }: LessonAssetsEditorProps) {
+export function LessonAssetsEditor({ lesson, gateway, positionId, onSelectFile, uploadDisabled, onAttach, onUnlink }: LessonAssetsEditorProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
   async function upload(file: File) {
-    if (!gateway || !positionId || busy) return;
+    if (!gateway || busy || uploadDisabled) return;
+    if (onSelectFile) { onSelectFile(lesson.id, file); return; }
+    if (!positionId) return;
     setBusy(true);
     setError(false);
     try { onAttach(lesson.id, await gateway.upload(positionId, file)); }
@@ -25,13 +29,13 @@ export function LessonAssetsEditor({ lesson, gateway, positionId, onAttach, onUn
   if (!gateway) return null;
   return <section aria-label={`Tài liệu ${lesson.name || 'bài học'}`}>
     <h3>Tài liệu đính kèm</h3>
-    {positionId
-      ? <label>Đính kèm file<input type="file" disabled={busy} onChange={(event) => {
+    {(positionId || onSelectFile)
+      ? <label>Đính kèm file<input type="file" disabled={busy || uploadDisabled} onChange={(event) => {
         const file = event.currentTarget.files?.[0];
         event.currentTarget.value = '';
         if (file) void upload(file);
       }} /></label>
-      : <p>Lưu nháp vị trí trước khi đính kèm file.</p>}
+      : null}
     {busy && <span role="status">Đang tải lên</span>}
     {error && <span role="alert">Không tải được file. Thử lại.</span>}
     <AttachmentList files={lesson.attachments} gateway={gateway} onUnlink={(fileId) => onUnlink(lesson.id, fileId)} />

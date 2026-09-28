@@ -52,10 +52,55 @@ write matrix has not been verified on Hub; UI role checks alone are not acceptan
 
 ## Code layout
 
-`src/ui/onboarding/` has `domain/` models and validation, `data/` Hub adapters, `flows/`
-multi-call operations and `views/` React screens. Lists/Items use mediated `mcpapp.*` tools through
-the Hub bridge; Files use the documented tool, REST and upload channels. The server (`src/*.ts`)
-serves the UI and MCP entrypoint; it holds no onboarding data store.
+`src/ui/onboarding/` has `domain/` models and validation, `ports/` typed capabilities, `flows/`
+multi-call operations, `data/` Hub adapters and `views/` React screens. Lists/Items use mediated
+`mcpapp.*` tools through the Hub bridge; Files use the documented tool, REST and upload channels.
+The server serves the UI and MCP entrypoint; it holds no onboarding data store.
+
+### Dependency injection
+
+The browser composition root is `src/ui/composition/PrivosOnboardingRoot.tsx`; it creates one
+actor/room session scope, browser effects and PrivOS adapters, then passes typed services to views.
+`src/server.ts` composes the MCP handler, assets and runtime lifecycle. Script entries in `scripts/`
+compose Node filesystem, process, prompt and pairing adapters with `scripts/core/`. Pure modules do
+not construct default adapters. The compatibility functions in `data/privos/` support integration
+fixtures; production views use the session services.
+
+| Capability | Port | Concrete adapter |
+|---|---|---|
+| Clock, IDs, hash, scheduler, links | `src/shared/ports/effects.ts` | `src/ui/adapters/browser-effects.ts` |
+| Lists and catalog reads | `src/ui/onboarding/ports/lists.ts`, `catalogs.ts` | `src/ui/onboarding/data/privos/lists-adapter.ts` |
+| Files and room members | `src/ui/onboarding/ports/files.ts`, `members.ts` | `src/ui/onboarding/data/privos/files-adapter.ts`, `members-adapter.ts` |
+| MCP UI resources and runtime | `src/server-core/ports.ts` | `src/server-adapters/` |
+| Filesystem, commands and prompt | `scripts/core/ports.ts` | `scripts/adapters/node-script-effects.ts` |
+
+For a fixed-time test, inject the same port shape used in production:
+
+```ts
+import { createRequestBudget } from './src/ui/onboarding/data/request-budget';
+
+const budget = createRequestBudget({
+  clock: { now: () => new Date('2026-09-25T09:00:00Z') },
+  scheduler: { after: () => () => {} },
+  isRetryableReadError: () => false,
+});
+```
+
+To add another backend, implement the existing port in a new adapter and select it in the relevant
+composition root. Do not change a flow to import that adapter. Run the local gates from this app
+directory:
+
+```powershell
+npm run typecheck:all
+npm run architecture:check
+npx vitest run --exclude tests/packaging.spec.ts --exclude tests/di/bundle-boundaries.spec.ts
+npm run build
+npx vitest run tests/di/bundle-boundaries.spec.ts
+```
+
+The migration changes source wiring only. It does not change Hub schema, manifest scopes, tool name
+or UI resource identity. Local gates and live Hub/P8 outcomes are recorded separately in the
+[DI acceptance ledger](../docs/superpowers/specs/2026-09-25-project-di-acceptance.md).
 
 The v1/v2 plans remain in the parent workspace as historical records. Follow the v4 design and
 acceptance links above for current behavior and test status.

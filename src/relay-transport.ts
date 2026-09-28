@@ -19,10 +19,11 @@ import {
 	type PairingResult,
 	type RelayHandle,
 	type ToolCallContext,
+	type AppMcpHandler,
 } from '@privos_ai/app-server';
 
 import { buildRelayAppDescriptor } from './manifest';
-import { handleMcpMessage } from './mcp-message-handlers';
+import type { McpHandler } from './server-core/ports';
 
 /**
  * Adapts this app's own `(method, id, params, actor)` handler to the SDK's
@@ -46,9 +47,11 @@ import { handleMcpMessage } from './mcp-message-handlers';
  * `context.actor` is forwarded as-is; `handleMcpMessage` fails closed on
  * `undefined` and never reads any other, unverified field.
  */
-export async function relayMcpHandler(request: ApplicationMcpRequest, context: ToolCallContext): Promise<unknown> {
-	const id = typeof request.id === 'number' ? request.id : 0;
-	return handleMcpMessage(request.method, id, request.params, context.actor);
+export function createRelayMcpHandler(handle: McpHandler): AppMcpHandler {
+	return async (request: ApplicationMcpRequest, context: ToolCallContext): Promise<unknown> => {
+		const id = typeof request.id === 'number' ? request.id : 0;
+		return handle(request.method, id, request.params, context.actor);
+	};
 }
 
 function relayLogger(prefix: string): (event: string, fields: Record<string, unknown>) => void {
@@ -95,7 +98,7 @@ function saveDevCredentialsToEnv(vars: Record<string, string>): void {
  * `connectRelay`, so dispatch stays unverified — matching the pre-adoption
  * "development compatibility" behavior exactly.
  */
-export async function startDevelopmentRelay(): Promise<RelayHandle> {
+export async function startDevelopmentRelay(handler: AppMcpHandler): Promise<RelayHandle> {
 	let privosUrl = process.env.PRIVOS_URL;
 	let clientId = process.env.CLIENT_ID;
 	let clientSecret = process.env.CLIENT_SECRET;
@@ -131,7 +134,7 @@ export async function startDevelopmentRelay(): Promise<RelayHandle> {
 		clientId,
 		clientSecret,
 		descriptor: buildRelayAppDescriptor(),
-		handler: relayMcpHandler,
+		handler,
 		logger: relayLogger('[Relay]'),
 	});
 	await handle.whenConnected();

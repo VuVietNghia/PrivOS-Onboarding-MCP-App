@@ -1,14 +1,9 @@
 import { PrivosRestError } from '../../privos-rest';
+export { idOf } from './ids';
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown> : undefined;
-}
-
-export function idOf(value: unknown): string | undefined {
-  const object = record(value);
-  const id = object?._id ?? object?.id;
-  return typeof id === 'string' && id.length > 0 ? id : undefined;
 }
 
 export function unwrapToolResult(response: unknown): unknown {

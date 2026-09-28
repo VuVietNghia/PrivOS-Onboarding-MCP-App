@@ -4,7 +4,7 @@ import { idOf, unwrapToolResult } from './tool-result';
 interface Folder { id: string; name: string; roomId: string; parentId: string | null }
 const PAGE_SIZE = 100;
 const MAX_PAGES = 100;
-const inFlight = new WeakMap<McpApp, Map<string, Promise<{ rootFolderId: string; positionFolderId: string }>>>();
+export type FolderCache = Map<string, Promise<{ rootFolderId: string; positionFolderId: string }>>;
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -62,10 +62,9 @@ async function ensureChild(app: McpApp, roomId: string, name: string, parentId: 
   return readback[0].id;
 }
 
-export function ensurePositionFolder(app: McpApp, roomId: string, positionItemId: string): Promise<{ rootFolderId: string; positionFolderId: string }> {
+export function ensurePositionFolder(app: McpApp, roomId: string, positionItemId: string,
+  appCache: FolderCache = new Map()): Promise<{ rootFolderId: string; positionFolderId: string }> {
   if (!roomId.trim() || !positionItemId.trim()) return Promise.reject(new Error('FILE_LOCATION_INVALID'));
-  let appCache = inFlight.get(app);
-  if (!appCache) { appCache = new Map(); inFlight.set(app, appCache); }
   const key = `${roomId}\u0000${positionItemId}`;
   const existing = appCache.get(key);
   if (existing) return existing;
@@ -75,7 +74,7 @@ export function ensurePositionFolder(app: McpApp, roomId: string, positionItemId
     return { rootFolderId, positionFolderId };
   })();
   appCache.set(key, promise);
-  void promise.catch(() => appCache?.delete(key));
+  void promise.catch(() => appCache.delete(key));
   return promise;
 }
 

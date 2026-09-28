@@ -1,6 +1,6 @@
 import type { FileRef } from '../domain/models';
 import type { FileMetadata } from './files';
-import { idOf } from './tool-result';
+import { idOf } from './ids';
 
 function record(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
