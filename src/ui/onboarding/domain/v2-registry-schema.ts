@@ -31,7 +31,7 @@ const schemas: Record<RegistryKind, { name: string; key: string; stages: readonl
 
 export function registryListInput(roomId: string, kind: RegistryKind): CreateListInput {
   const schema = schemas[kind];
-  return { roomId, name: schema.name, key: schema.key, isolated: true,
+  return { roomId, name: schema.name, key: `${schema.key}-${roomId}`, isolated: true,
     stages: schema.stages.map((name, order) => ({ name, order, color: ['#64748b', '#2563eb', '#16a34a', '#dc2626', '#94a3b8'][order] })),
     fields: schema.fields.map((field) => ({ ...field })),
   };

@@ -10,7 +10,7 @@ import { fakeRestApp, ok } from './fake-app';
 describe('v2 registry bootstrap', () => {
   it('uses exact keys, ordered stages and fields for both isolated registries', () => {
     const positions = registryListInput('room-1', 'positions');
-    expect(positions.key).toBe('onb-positions');
+    expect(positions.key).toBe('onb-positions-room-1');
     expect(positions.isolated).toBe(true);
     expect(positions.stages.map(({ name, order }) => ({ name, order }))).toEqual(['Đang soạn', 'Sẵn sàng', 'Ngừng dùng'].map((name, order) => ({ name, order })));
     expect(positions.stages.every((stage) => /^#[0-9a-f]{6}$/i.test(stage.color ?? ''))).toBe(true);
@@ -19,7 +19,7 @@ describe('v2 registry bootstrap', () => {
       ['Số câu hỏi', 'NUMBER'], ['Thiếu đáp án', 'NUMBER'], ['Đang dùng', 'NUMBER'], ['Nguồn nhập', 'TEXT'],
     ].map(([name, type]) => ({ name, type })));
     const hires = registryListInput('room-1', 'hires');
-    expect(hires.key).toBe('onb-hires');
+    expect(hires.key).toBe('onb-hires-room-1');
     expect(hires.isolated).toBe(true);
     expect(hires.stages.map(({ name, order }) => ({ name, order }))).toEqual(['Đang khởi tạo', 'Đang học', 'Hoàn tất', 'Khởi tạo lỗi', 'Đã huỷ'].map((name, order) => ({ name, order })));
     expect(hires.fields).toEqual([
@@ -31,10 +31,10 @@ describe('v2 registry bootstrap', () => {
   });
 
   it('sends the v2 spec through the MCP List tool', async () => {
-    const { app, toolCalls } = fakeRestApp([{ method: 'POST', path: 'lists.create', reply: () => ok({ list: { _id: 'positions-1', name: 'Onboarding positions', key: 'onb-positions' } }) }]);
+    const { app, toolCalls } = fakeRestApp([{ method: 'POST', path: 'lists.create', reply: () => ok({ list: { _id: 'positions-1', name: 'Onboarding positions', key: 'onb-positions-room-1' } }) }]);
     await createList(app, registryListInput('room-1', 'positions'));
     expect(toolCalls[0]).toEqual({ name: 'mcpapp.lists.create', arguments: {
-      roomId: 'room-1', name: 'Onboarding positions', key: 'onb-positions', isolatedList: true, crossTeamWorkflow: false,
+      roomId: 'room-1', name: 'Onboarding positions', key: 'onb-positions-room-1', isolatedList: true, crossTeamWorkflow: false,
       fieldDefinitions: [
         ['Template', 'TEXT'], ['Số tuần', 'NUMBER'], ['Số ngày', 'NUMBER'], ['Số bài học', 'NUMBER'],
         ['Số câu hỏi', 'NUMBER'], ['Thiếu đáp án', 'NUMBER'], ['Đang dùng', 'NUMBER'], ['Nguồn nhập', 'TEXT'],
@@ -43,8 +43,8 @@ describe('v2 registry bootstrap', () => {
     } });
   });
 
-  it('stops before POST when the room already has the v1 hires key', async () => {
-    const { app, calls } = fakeRestApp([{ method: 'GET', path: 'lists.listByRoomId', reply: () => ok({ lists: [{ _id: 'old-hire-list', key: 'onb-hires', name: 'v1 hires' }] }) }]);
+  it('stops before POST when the room already has the scoped hires key', async () => {
+    const { app, calls } = fakeRestApp([{ method: 'GET', path: 'lists.listByRoomId', reply: () => ok({ lists: [{ _id: 'old-hire-list', key: 'onb-hires-room-1', name: 'v1 hires' }] }) }]);
     expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'hires')).toEqual({ status: 'collision' });
     expect(calls).toHaveLength(1);
     expect(calls[0]).toMatchObject({ method: 'GET', path: 'lists.listByRoomId', query: { roomId: 'room-1' } });
@@ -52,7 +52,7 @@ describe('v2 registry bootstrap', () => {
 
   it('accepts the Hub list envelope when success is omitted', async () => {
     const { app, calls } = fakeRestApp([{ method: 'GET', path: 'lists.listByRoomId', reply: () => ({
-      statusCode: 200, body: { lists: [{ _id: 'existing', key: 'onb-hires', name: 'v1 hires' }] },
+      statusCode: 200, body: { lists: [{ _id: 'existing', key: 'onb-hires-room-1', name: 'v1 hires' }] },
     }) }]);
     expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'hires')).toEqual({ status: 'collision' });
     expect(calls).toHaveLength(1);
@@ -60,7 +60,7 @@ describe('v2 registry bootstrap', () => {
 
   it('accepts an MCP List array without a success envelope', async () => {
     const calls: string[] = [];
-    const app = { callServerTool: async (call: { name: string }) => { calls.push(call.name); return [{ id: 'existing', key: 'onb-hires', name: 'v1 hires' }]; } } as unknown as McpApp;
+    const app = { callServerTool: async (call: { name: string }) => { calls.push(call.name); return [{ id: 'existing', key: 'onb-hires-room-1', name: 'v1 hires' }]; } } as unknown as McpApp;
     expect(await createRegistryIfVacant(createPrivosProbeTransport(app), 'room-1', 'hires')).toEqual({ status: 'collision' });
     expect(calls).toEqual(['mcpapp.lists.getAll']);
   });

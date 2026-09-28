@@ -7,6 +7,7 @@ interface FakeList {
   _id: string;
   roomId: string;
   name: string;
+  key?: string;
   isolatedList: boolean;
   fieldDefinitions: { _id: string; name: string; type: string; options?: { value: string }[] }[];
   stages: { _id: string; name: string; order: number }[];
@@ -37,6 +38,7 @@ function fakeTools(initial: FakeList[] = [], options: { loseFirstCreateResponse?
       }
       if (input.name === 'mcpapp.lists.create') {
         const args = input.arguments;
+        if (lists.some((list) => list.key === args.key)) throw new Error(`List key "${String(args.key)}" already exists`);
         const fields = (args.fieldDefinitions as unknown[]).map((field, index) => {
           const spec = object(field);
           return { _id: `field-${lists.length}-${index}`, name: spec.name as string, type: spec.type as string,
@@ -47,7 +49,8 @@ function fakeTools(initial: FakeList[] = [], options: { loseFirstCreateResponse?
           return { _id: `stage-${lists.length}-${index}`, name: spec.name as string, order: index };
         });
         const list: FakeList = { _id: `list-${lists.length + 1}`, roomId: args.roomId as string,
-          name: args.name as string, isolatedList: args.isolatedList === true, fieldDefinitions: fields, stages };
+          name: args.name as string, key: args.key as string,
+          isolatedList: args.isolatedList === true, fieldDefinitions: fields, stages };
         lists.push(list);
         createCount += 1;
         if (options.loseFirstCreateResponse && createCount === 1) throw new Error('response lost');
@@ -60,6 +63,19 @@ function fakeTools(initial: FakeList[] = [], options: { loseFirstCreateResponse?
 }
 
 describe('room bootstrap', () => {
+  it('creates registries in a second room when Hub enforces globally unique List keys', async () => {
+    const fake = fakeTools();
+    const actor = { userId: 'admin-a', canManage: true };
+
+    expect(await resolveRoomBinding(fake.app, 'room-a', actor)).toMatchObject({ state: 'ready' });
+    fake.lists[0].key = 'onb-positions';
+    fake.lists[1].key = 'onb-hires';
+    expect(await resolveRoomBinding(fake.app, 'room-b', actor)).toMatchObject({ state: 'ready' });
+    expect(await resolveRoomBinding(fake.app, 'room-a', actor)).toMatchObject({ state: 'ready' });
+    expect(fake.lists).toHaveLength(4);
+    expect(new Set(fake.lists.map((list) => list.key)).size).toBe(4);
+  });
+
   it('creates two isolated registries on the first owner opening and reuses them on reload', async () => {
     const fake = fakeTools();
     const actor = { userId: 'admin-a', canManage: true };
