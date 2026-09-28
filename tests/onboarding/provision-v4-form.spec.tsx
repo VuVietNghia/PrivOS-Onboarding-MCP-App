@@ -11,7 +11,7 @@ import { createBrowserEffects } from '../../src/ui/adapters/browser-effects';
 import { provisionV4, resumeV4, recountPositionV4 } from '../../src/ui/onboarding/data/privos/compat-flows';
 import type { RoomBinding } from '../../src/ui/onboarding/domain/models';
 import type { OnboardingServices } from '../../src/ui/onboarding/ports/ui-services';
-import { fakeRestApp, forbidden, ok } from './fake-app';
+import { fakeRestApp, forbidden, ok, type FakeRoute } from './fake-app';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
@@ -39,7 +39,85 @@ function ProvisionV4Form(props: { app: McpApp; roomType: unknown; binding: RoomB
   return <PureProvisionV4Form binding={props.binding} catalogs={props.catalogs} services={props.services ?? fallback} onDone={props.onDone} />;
 }
 
+function renderOwnerLookup(routes: FakeRoute[]) {
+  const { app } = fakeRestApp([{ method: 'GET', path: 'groups.members', reply: () => forbidden() }, ...routes]);
+  const position = { id: 'P1', name: 'Engineer', templateListId: 'T1', status: 'ready' as const,
+    weeks: 1, days: 1, lessons: 0, questions: 0, missingAnswers: 0, inUse: 0 };
+  const tree = { weeks: [{ id: 'w1', name: 'Tuần 1', order: 0 }], items: [] };
+  const readyCatalogs: Catalogs = { ...catalogs,
+    positions: async () => ({ items: [position], nextCursor: null }),
+    position: async () => position,
+    template: async () => tree,
+  };
+  const start = vi.fn(async () => ({ state: 'active' as const, hireId: 'H1', roadmapListId: 'RUN1' }));
+  const onDone = vi.fn();
+  const services: Pick<OnboardingServices, 'provision' | 'members' | 'clock' | 'ids'> = {
+    members: { list: () => listRoomMembers(app, 'R1', 'p'), lookup: (value) => lookupUser(app, value) },
+    provision: { start, resume: async () => { throw new Error('UNEXPECTED_RESUME'); },
+      recount: async () => 0, fingerprint: async () => 'hash', operationId: async () => 'operation-1' },
+    clock: { now: () => new Date(2026, 8, 28, 9) }, ids: { next: () => 'operation-1' },
+  };
+  render(<PureProvisionV4Form binding={{ roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' }}
+    catalogs={readyCatalogs} services={services} onDone={onDone} />);
+  return { start, onDone };
+}
+
+async function submitOwnerLookup(value: string) {
+  fireEvent.change(await screen.findByLabelText('Username hoặc user ID'), { target: { value } });
+  fireEvent.change(await screen.findByLabelText('Vị trí'), { target: { value: 'P1' } });
+  await waitFor(() => expect((screen.getByRole('button', { name: 'Tạo onboarding' }) as HTMLButtonElement).disabled).toBe(false));
+  fireEvent.click(screen.getByRole('button', { name: 'Tạo onboarding' }));
+}
+
 describe('ProvisionV4Form', () => {
+  it('owner nhập username thành viên khi rooms:read bị từ chối và tạo onboarding đúng user ID', async () => {
+    const { start, onDone } = renderOwnerLookup([{ method: 'GET', path: 'users.info', reply: () => ok({
+      user: { _id: 'u9', username: 'mai', name: 'Mai' },
+    }) }]);
+    await submitOwnerLookup('mai');
+    await waitFor(() => expect(start).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({ employeeId: 'u9', employeeName: 'Mai', positionId: 'P1' }),
+    }), expect.any(Function)));
+    expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it('owner nhập user ID và users.info trả thông tin thành viên cấp ngoài', async () => {
+    const { start } = renderOwnerLookup([{ method: 'GET', path: 'users.info', reply: () => ok({
+      user: { _id: 'user-123', username: 'mai', name: 'Mai' },
+    }) }]);
+    await submitOwnerLookup('user-123');
+    await waitFor(() => expect(start).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({ employeeId: 'user-123', employeeName: 'Mai' }),
+    }), expect.any(Function)));
+  });
+
+  it('không tạo onboarding khi username không tồn tại', async () => {
+    const { start } = renderOwnerLookup([{ method: 'GET', path: 'users.info', reply: () => ({
+      statusCode: 400, body: { success: false, error: 'User not found.' },
+    }) }]);
+    await submitOwnerLookup('ghost');
+    expect((await screen.findByRole('alert')).textContent).toContain('Không tìm thấy người dùng');
+    expect(start).not.toHaveBeenCalled();
+  });
+
+  it('không tạo onboarding khi users.info trả ID khác ID đã nhập', async () => {
+    const { start } = renderOwnerLookup([{ method: 'GET', path: 'users.info', reply: () => ok({
+      user: { _id: 'different-id', username: 'mai', name: 'Mai' },
+    }) }]);
+    await submitOwnerLookup('user-123');
+    expect((await screen.findByRole('alert')).textContent).toContain('Có lỗi không xác định');
+    expect(start).not.toHaveBeenCalled();
+  });
+
+  it('không tạo onboarding khi Hub lỗi trong lúc tra cứu', async () => {
+    const { start } = renderOwnerLookup([{ method: 'GET', path: 'users.info', reply: () => ({
+      statusCode: 500, body: { success: false, error: 'internal failure' },
+    }) }]);
+    await submitOwnerLookup('mai');
+    expect((await screen.findByRole('alert')).textContent).toContain('Hub từ chối thao tác');
+    expect(start).not.toHaveBeenCalled();
+  });
+
   it('uses the injected local clock once and keeps an edited date after rerender', () => {
     const { app } = fakeRestApp([]);
     let today = new Date(2026, 8, 25, 23, 30);
@@ -127,10 +205,21 @@ describe('ProvisionV4Form', () => {
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
+  it('chặn tạo onboarding khi Hub trả 200 nhưng dữ liệu thành viên sai', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'groups.members', reply: () => ok({
+      members: [], total: 0,
+    }) }]);
+    render(<ProvisionV4Form app={app} roomType="p" binding={{ roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' }}
+      catalogs={catalogs} actorRoles={[]} onDone={() => {}} />);
+    expect((await screen.findByRole('alert')).textContent).toContain('Có lỗi không xác định');
+    expect(screen.queryByLabelText('Username hoặc user ID')).toBeNull();
+    expect((screen.getByRole('button', { name: 'Tạo onboarding' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('chấp nhận user ID nhập tay khi không có quyền tra cứu người dùng', async () => {
     const { app } = fakeRestApp([
       { method: 'GET', path: 'channels.members', reply: () => forbidden() },
-      { method: 'GET', path: 'users.list', reply: () => forbidden() },
+      { method: 'GET', path: 'users.info', reply: () => forbidden() },
     ]);
     const position = { id: 'P1', name: 'Engineer', templateListId: 'T1', status: 'ready' as const,
       weeks: 1, days: 1, lessons: 1, questions: 0, missingAnswers: 0, inUse: 0 };

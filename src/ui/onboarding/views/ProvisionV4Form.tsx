@@ -97,7 +97,7 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
       if (members === null) {
         const found = await services.members.lookup(username.trim());
         const picked = pickEmployee(username, found);
-        if (!picked.ok) throw new Error('EMPLOYEE_NOT_FOUND');
+        if (!picked.ok) { setError(picked.message); return; }
         targetId = picked.employeeId;
         targetName = found.kind === 'found' ? found.member.name : username.trim();
       }

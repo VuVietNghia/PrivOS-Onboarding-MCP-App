@@ -13,7 +13,7 @@ logged-in user through `app.callServerTool`, `app.uploadFile` or documented `app
 | `files:read` | Required | Room; user | `src/ui/onboarding/data/privos/files-adapter.ts` re-reads linked file metadata through `mcpapp.files.get` before opening or downloading. | Installation is cancelled if rejected. |
 | `files:write` | Required | Room; user | `src/ui/onboarding/data/files.ts` uploads lesson files through `app.uploadFile` and verifies `Onboarding/<position>` room folders through `mcpapp.folders.*`; the P0 probe exercises the same transport. | Installation is cancelled if rejected. |
 | `rooms:read` | Optional | Room; user | Lists only current-room members: `GET channels.members` for room type `c`, `GET groups.members` for `p`. The Hub installation must actually grant this scope; the manifest request is insufficient. Verify the private-group route against the live bridge allowlist. | HR types the hire's username or user ID. |
-| `users:read` | Optional | Room; user | Resolves a typed username or user id when the member list is unavailable (`lookupUser` in `src/ui/onboarding/data/room-members.ts`, `GET users.list` and `GET users.info`). | HR must type the hire's user id. |
+| `users:read` | Optional | Room; user | Resolves a typed username or user ID when the member list is unavailable (`lookupUser` in `src/ui/onboarding/data/room-members.ts`, `GET users.info` with the typed value as `userId`). The live public `users.list` route did not apply its username filter, so the app verifies the returned ID or username exactly. | HR must type the hire's user ID. |
 
 ## What enforces access
 

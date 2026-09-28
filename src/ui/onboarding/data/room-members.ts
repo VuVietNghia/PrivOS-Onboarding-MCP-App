@@ -5,13 +5,23 @@ import type { LookupResult, RoomMember } from '../domain/pick-employee';
 
 const MEMBER_PAGE = 500;
 
-interface RawUser { _id?: unknown; username?: unknown; name?: unknown }
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown> : null;
+}
 
-function toMember(raw: RawUser): RoomMember | null {
-  if (typeof raw._id !== 'string' || !raw._id) return null;
-  const username = typeof raw.username === 'string' ? raw.username : raw._id;
-  const name = typeof raw.name === 'string' && raw.name.trim() ? raw.name : username;
-  return { id: raw._id, username, name };
+function endpointPayload(body: unknown): Record<string, unknown> | null {
+  const response = asRecord(body);
+  if (!response) return null;
+  return response.data === undefined ? response : asRecord(response.data);
+}
+
+function toMember(raw: unknown): RoomMember | null {
+  const user = asRecord(raw);
+  if (typeof user?._id !== 'string' || !user._id) return null;
+  const username = typeof user.username === 'string' ? user.username : user._id;
+  const name = typeof user.name === 'string' && user.name.trim() ? user.name : username;
+  return { id: user._id, username, name };
 }
 
 /**
@@ -25,10 +35,10 @@ export async function listRoomMembers(app: McpApp, roomId: string, roomType: unk
     const members: RoomMember[] = [];
     let offset = 0;
     for (let page = 0; page < 1000; page += 1) {
-      const body = await restCall<{ data?: { members?: RawUser[]; offset?: number; total?: number } }>(
+      const body = await restCall<unknown>(
         app, 'GET', path, { query: { roomId, offset, count: MEMBER_PAGE } },
       );
-      const result = body.data;
+      const result = endpointPayload(body);
       const pageMembers = result?.members;
       const total = result?.total;
       if (!Array.isArray(pageMembers) || result?.offset !== offset ||
@@ -50,29 +60,19 @@ export async function listRoomMembers(app: McpApp, roomId: string, roomType: unk
 export async function lookupUser(app: McpApp, username: string): Promise<LookupResult> {
   try {
     const value = username.trim();
-    // Keep query keys and operators fixed; only the username value comes from user input.
-    const body = await restCall<{ data?: { users?: RawUser[] } }>(app, 'GET', 'users.list', {
-      query: { query: JSON.stringify({ username: value }), fields: JSON.stringify({ username: 1, name: 1 }), offset: 0, count: 2 },
-    });
-    if (!Array.isArray(body.data?.users)) throw new Error('USER_LOOKUP_RESPONSE_INVALID');
-    const match = body.data.users.find((user) => user.username === value);
-    if (match) {
-      const member = toMember(match);
-      if (!member) throw new Error('USER_LOOKUP_RESPONSE_INVALID');
-      return { kind: 'found', member };
-    }
-    try {
-      const info = await restCall<{ data?: { user?: RawUser } }>(app, 'GET', 'users.info', { query: { userId: value } });
-      const member = info.data?.user ? toMember(info.data.user) : null;
-      if (!member || member.id !== value) throw new Error('USER_LOOKUP_RESPONSE_INVALID');
-      return { kind: 'found', member };
-    } catch (error) {
-      if (error instanceof PrivosRestError && (error.statusCode === 400 || error.statusCode === 404)) return { kind: 'not-found' };
-      throw error;
-    }
+    if (!value) return { kind: 'not-found' };
+    // The live public users.list route ignores its username filter. users.info resolves either value.
+    const info = await restCall<unknown>(app, 'GET', 'users.info', { query: { userId: value } });
+    const member = toMember(endpointPayload(info)?.user);
+    if (!member || (member.id !== value && member.username !== value)) throw new Error('USER_LOOKUP_RESPONSE_INVALID');
+    return { kind: 'found', member };
   } catch (err) {
     if (err instanceof OptionalFeatureUnavailableError) return { kind: 'unavailable' };
-    if (err instanceof PrivosRestError && (err.statusCode === 404 || err.statusCode === 405)) return { kind: 'unavailable' };
+    if (err instanceof PrivosRestError && (err.statusCode === 400 || err.statusCode === 404)) return { kind: 'not-found' };
+    if (err instanceof PrivosRestError && err.statusCode === 405) return { kind: 'unavailable' };
+    // The host SDK rejects the observed users.info HTTP 400 as a plain Error,
+    // discarding statusCode and the response body before restCall can inspect either.
+    if (err instanceof Error && err.message === 'User not found.') return { kind: 'not-found' };
     throw err;
   }
 }

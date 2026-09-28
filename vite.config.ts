@@ -18,8 +18,19 @@ export default defineConfig({
     assetsInlineLimit: 0,
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', '@privos_ai/app-react'],
+        // Bound each Relay-served asset; the live Hub loaded this split build after
+        // the previous single index bundle received a cached 404.
+        manualChunks(id) {
+          const moduleId = id.replaceAll('\\', '/');
+          if (moduleId.includes('/node_modules/')) {
+            if (/\/(?:react|react-dom|scheduler|@privos_ai\/app-react)\//.test(moduleId)) return 'vendor';
+            return 'dependencies';
+          }
+          if (moduleId.includes('/src/ui/onboarding/views/templates/')) return 'template-views';
+          if (moduleId.includes('/src/ui/onboarding/views/learning/')) return 'learning-views';
+          if (moduleId.includes('/src/ui/onboarding/views/')) return 'onboarding-views';
+          if (moduleId.includes('/src/ui/onboarding/data/')) return 'onboarding-data';
+          return undefined;
         },
       },
     },
