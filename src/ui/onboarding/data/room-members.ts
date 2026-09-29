@@ -2,6 +2,7 @@
 import type { McpApp } from '@privos_ai/app-react';
 import { OptionalFeatureUnavailableError, PrivosRestError, restCall } from '../../privos-rest';
 import type { LookupResult, RoomMember } from '../domain/pick-employee';
+import { unwrapToolResult } from './tool-result';
 
 const MEMBER_PAGE = 500;
 
@@ -24,16 +25,65 @@ function toMember(raw: unknown): RoomMember | null {
   return { id: user._id, username, name };
 }
 
+export interface RoomMemberIds {
+  roomId: string;
+  memberIds: string[];
+}
+
+export type RoomMemberIdsErrorCode = 'ROOM_CONTEXT_INVALID' | 'ROOM_TYPE_UNSUPPORTED' |
+  'ROOM_CONTEXT_CHANGED' | 'ROOM_MEMBERS_UNAVAILABLE';
+
+export class RoomMemberIdsError extends Error {
+  constructor(readonly code: RoomMemberIdsErrorCode) {
+    super(code);
+    this.name = 'RoomMemberIdsError';
+  }
+}
+
+async function readCurrentRoomIdentity(app: McpApp): Promise<{ roomId: string; roomType: unknown }> {
+  const context = asRecord(unwrapToolResult(await app.callServerTool({
+    name: 'mcpapp.context.get', arguments: {},
+  })));
+  if (typeof context?.roomId !== 'string' || !context.roomId.trim()) {
+    throw new RoomMemberIdsError('ROOM_CONTEXT_INVALID');
+  }
+  return { roomId: context.roomId, roomType: context.roomType };
+}
+
+async function resolveRoomType(app: McpApp, roomId: string, hintedType: unknown): Promise<'c' | 'p' | null> {
+  if (hintedType === 'c' || hintedType === 'p') return hintedType;
+  const context = await readCurrentRoomIdentity(app);
+  if (context.roomId !== roomId) throw new Error('ROOM_CONTEXT_MISMATCH');
+  return context.roomType === 'c' || context.roomType === 'p' ? context.roomType : null;
+}
+
+/** Read the connected room and every member ID. Access failures throw instead of returning []. */
+export async function getCurrentRoomMemberIds(app: McpApp): Promise<RoomMemberIds> {
+  const start = await readCurrentRoomIdentity(app);
+  if (start.roomType !== 'c' && start.roomType !== 'p') {
+    throw new RoomMemberIdsError('ROOM_TYPE_UNSUPPORTED');
+  }
+  const members = await listRoomMembers(app, start.roomId, start.roomType);
+  if (members === null) throw new RoomMemberIdsError('ROOM_MEMBERS_UNAVAILABLE');
+  const end = await readCurrentRoomIdentity(app);
+  if (end.roomId !== start.roomId || end.roomType !== start.roomType) {
+    throw new RoomMemberIdsError('ROOM_CONTEXT_CHANGED');
+  }
+  return { roomId: start.roomId, memberIds: members.map(({ id }) => id) };
+}
+
 /**
  * Members of the current room (`rooms:read`). Returns `null` only when access to the route is
  * unavailable, so the form can fall back to typed input. Hub and malformed-response failures throw.
  */
 export async function listRoomMembers(app: McpApp, roomId: string, roomType: unknown): Promise<RoomMember[] | null> {
-  const path = roomType === 'c' ? 'channels.members' : roomType === 'p' ? 'groups.members' : null;
+  const resolvedType = await resolveRoomType(app, roomId, roomType);
+  const path = resolvedType === 'c' ? 'channels.members' : resolvedType === 'p' ? 'groups.members' : null;
   if (!path) return null;
   try {
-    const members: RoomMember[] = [];
+    const members = new Map<string, RoomMember>();
     let offset = 0;
+    let expectedTotal: number | undefined;
     for (let page = 0; page < 1000; page += 1) {
       const body = await restCall<unknown>(
         app, 'GET', path, { query: { roomId, offset, count: MEMBER_PAGE } },
@@ -43,9 +93,19 @@ export async function listRoomMembers(app: McpApp, roomId: string, roomType: unk
       const total = result?.total;
       if (!Array.isArray(pageMembers) || result?.offset !== offset ||
         typeof total !== 'number' || !Number.isInteger(total) || total < 0) throw new Error('ROOM_MEMBERS_RESPONSE_INVALID');
-      members.push(...pageMembers.map(toMember).filter((member): member is RoomMember => member !== null));
+      if (expectedTotal !== undefined && total !== expectedTotal) throw new Error('ROOM_MEMBERS_CHANGED');
+      expectedTotal = total;
+      if (offset + pageMembers.length > total) throw new Error('ROOM_MEMBERS_RESPONSE_INVALID');
+      for (const raw of pageMembers) {
+        const member = toMember(raw);
+        if (!member || !member.id.trim()) throw new Error('ROOM_MEMBERS_RESPONSE_INVALID');
+        if (!members.has(member.id)) members.set(member.id, member);
+      }
       offset += pageMembers.length;
-      if (offset >= total) return members;
+      if (offset === total) {
+        if (members.size !== total) throw new Error('ROOM_MEMBERS_INCOMPLETE');
+        return [...members.values()];
+      }
       if (!pageMembers.length) throw new Error('ROOM_MEMBERS_RESPONSE_INVALID');
     }
     throw new Error('ROOM_MEMBERS_PAGINATION_LIMIT');

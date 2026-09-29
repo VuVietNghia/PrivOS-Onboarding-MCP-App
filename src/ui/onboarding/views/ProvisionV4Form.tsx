@@ -84,6 +84,7 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
   const lessons = tree?.items.filter((item) => item.kind === 'lesson').length ?? 0;
   const questions = tree?.items.filter((item) => item.kind === 'question').length ?? 0;
   const canSubmit = !pending && !!position && !!tree && isWorkingDay(startDate) && members !== undefined && !memberError;
+  const selectedMember = members?.find((member) => member.id === employeeId);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError(null);
@@ -120,8 +121,9 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
     <div className="v4-page-head"><div><p className="v4-eyebrow">Onboarding</p><h1 id="v4-provision-title">Tạo onboarding</h1><p>Chọn nhân sự, vị trí và ngày bắt đầu.</p></div></div>
     <div className="v4-builder-grid"><form className="v4-builder-workspace v4-builder-intro" onSubmit={(event) => void submit(event)}>
       {members === undefined && !memberError && <p role="status">Đang tải thành viên room</p>}
-      {members && <label>Nhân sự<select value={employeeId} onChange={(event) => { setEmployeeId(event.target.value); operationId.current = null; }}>
-        <option value="">Chọn nhân sự</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name}</option>)}</select></label>}
+      {members && <><label>Nhân sự<select value={employeeId} onChange={(event) => { setEmployeeId(event.target.value); operationId.current = null; }}>
+        <option value="">Chọn nhân sự</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name} (@{member.username})</option>)}</select></label>
+        {selectedMember && <p>User ID: {selectedMember.id}</p>}</>}
       {members === null && <label>Username hoặc user ID<input value={username} onChange={(event) => { setUsername(event.target.value); operationId.current = null; }} placeholder="username hoặc user ID trong PrivOS" /></label>}
       <label>Vị trí<select value={positionId} onChange={(event) => { setPositionId(event.target.value); operationId.current = null; }}>
         <option value="">Chọn vị trí sẵn sàng</option>{positions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>

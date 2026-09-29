@@ -206,6 +206,34 @@
 .v4-drawer-content { display: grid; gap: 12px; padding: 24px; }
 .v4-drawer-content p { margin: 0; }
 .v4-drawer-content ul { margin: 0; padding-left: 24px; }
+.v4-learning-screen { min-width: 0; }
+.v4-learning-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.v4-learning-controls label { display: grid; gap: 6px; min-width: min(100%,320px); color: var(--v4-text-2); font-size: 12px; font-weight: 600; }
+.v4-learning-controls select { min-height: 42px; width: 100%; padding: 0 12px; border: 1px solid var(--v4-border-2); border-radius: 10px; background: var(--v4-surface); color: var(--v4-text); }
+.v4-learning-controls select:focus-visible { outline: 3px solid var(--v4-primary); outline-offset: 2px; }
+.v4-learning-hero { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 12px 24px; padding: clamp(20px,4vw,36px); border: 1px solid var(--v4-border); border-radius: 20px; background: linear-gradient(135deg,var(--v4-surface),var(--v4-surface-2)); }
+.v4-learning-hero h1 { margin: 0 0 8px; font-size: clamp(26px,4vw,42px); }
+.v4-learning-hero p { margin: 0; color: var(--v4-text-3); }
+.v4-learning-hero > strong { align-self: center; font-size: clamp(28px,4vw,44px); color: var(--v4-primary); }
+.v4-learning-progress { grid-column: 1 / -1; height: 8px; overflow: hidden; border-radius: 999px; background: var(--v4-bg); }
+.v4-learning-progress span { display: block; height: 100%; border-radius: inherit; background: var(--v4-primary); }
+.v4-learning-week { margin-top: 14px; overflow: hidden; border: 1px solid var(--v4-border); border-radius: 16px; background: var(--v4-surface); }
+.v4-learning-week-toggle { width: 100%; padding: 16px 18px; border: 0; background: transparent; text-align: left; font-weight: 700; cursor: pointer; }
+.v4-learning-week-toggle::after { content: "▾"; float: right; color: var(--v4-primary); }
+.v4-learning-week-toggle[aria-expanded="false"]::after { transform: rotate(-90deg); }
+.v4-learning-week ul { display: grid; gap: 1px; margin: 0; padding: 0; list-style: none; background: var(--v4-border); }
+.v4-learning-week li { min-width: 0; background: var(--v4-bg); }
+.v4-learning-week li > button { display: flex; justify-content: space-between; gap: 12px; width: 100%; padding: 14px 18px; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.v4-learning-week li > button:hover, .v4-learning-week li > button[aria-current="step"] { background: var(--v4-surface-2); }
+.v4-learning-week li small { color: var(--v4-primary); white-space: nowrap; }
+.v4-learning-day, .v4-learning-quiz, .v4-quiz-result { min-width: 0; max-width: 880px; margin: 0 auto; }
+.onboarding-v4 h1, .v4-learning-day h2, .v4-learning-quiz legend { color: var(--v4-text); }
+.v4-learning-day article, .v4-learning-quiz fieldset, .v4-quiz-result li { margin: 16px 0; padding: 18px; border: 1px solid var(--v4-border); border-radius: 14px; background: var(--v4-surface); }
+.v4-learning-quiz label { display: flex; align-items: flex-start; gap: 10px; margin-top: 10px; color: var(--v4-text-2); }
+.v4-learning-quiz input[type="radio"], .v4-learning-quiz input[type="checkbox"] { flex: 0 0 auto; width: auto; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--v4-text); accent-color: var(--v4-primary); }
+.v4-quiz-actionbar { position: sticky; bottom: 12px; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; padding: 12px 16px; border: 1px solid var(--v4-border); border-radius: 14px; background: var(--v4-glass); backdrop-filter: blur(18px); }
+.v4-quiz-actionbar p { margin: 0; }
+.v4-quiz-result > strong { display: block; font-size: 36px; color: var(--v4-primary); }
 @media (max-width: 1050px) {
   .v4-app { grid-template-columns: 72px minmax(0,1fr); }
   .v4-sidebar { align-items: center; padding-inline: 10px; }
@@ -241,4 +269,8 @@
   .v4-builder-savebar { flex-wrap: wrap; }
   .v4-builder-savebar > div { width: 100%; }
   .v4-builder-savebar button { flex: 1; }
+  .v4-learning-hero { grid-template-columns: minmax(0,1fr) auto; }
+  .v4-learning-week li > button { flex-direction: column; }
+  .v4-quiz-actionbar { bottom: 8px; flex-wrap: wrap; }
+  .v4-quiz-actionbar button { width: 100%; }
 }

@@ -1,4 +1,5 @@
 import { OnboardingError } from '../domain/errors';
+import type { HubItem } from '../domain/fields';
 import type { ContentItem, TemplateTree, Week } from '../domain/models';
 import { isRoomAdmin } from '../domain/roles';
 import { validateReady } from '../domain/template-readiness';
@@ -68,6 +69,7 @@ function checkpoint(raw: unknown): Checkpoint {
 }
 
 function encodedNode(node: Week | ContentItem, sourceId: string, ids: Record<string, string>, definitions: readonly { _id: string; name: string; type: string; options?: { _id?: string; value: string }[] }[]): { fieldId: string; value: unknown }[] {
+  if (sourceId === OVERVIEW_SOURCE) throw new OnboardingError('SCHEMA_DRIFT');
   const label = 'kind' in node ? { day: 'Ngày', lesson: 'Bài học', question: 'Câu hỏi' }[node.kind] : 'Tuần';
   const kind = definitions.find((definition) => definition._id === ids[V2.kind])?.options?.find((option) => option.value === label)?._id;
   if (!kind) throw new OnboardingError('SCHEMA_DRIFT');
@@ -93,6 +95,13 @@ function encodedNode(node: Week | ContentItem, sourceId: string, ids: Record<str
     values.push({ fieldId: ids[V2.selected], value: '' });
   }
   return values;
+}
+
+function encodedOverview(ids: Record<string, string>): { fieldId: string; value: unknown }[] {
+  return [
+    { fieldId: ids[V2.order], value: 0 },
+    { fieldId: ids[V2.source], value: OVERVIEW_SOURCE },
+  ];
 }
 
 async function checkPrepared(deps: ProvisionDeps, prepared: PreparedProvisionV4): Promise<string | null> {
@@ -174,6 +183,31 @@ async function finishRecount(deps: ProvisionDeps, positionId: string, hireId: st
   }
 }
 
+async function grantAndVerifyRunAccess(
+  deps: ProvisionDeps,
+  runId: string,
+  rows: readonly HubItem[],
+  assigneeFieldId: string,
+  employeeId: string,
+  onProgress?: (progress: ProvisionProgress) => void,
+): Promise<void> {
+  let completed = 0;
+  for (const row of rows) {
+    if (field(row, assigneeFieldId) !== employeeId) {
+      await deps.write.patchFields(runId, row._id, { [assigneeFieldId]: employeeId });
+    }
+    completed += 1;
+    onProgress?.({ phase: 'grant', completed, total: rows.length });
+  }
+
+  const expectedIds = new Set(rows.map((row) => row._id));
+  const readback = await deps.read.readAllItems(runId);
+  if (readback.length !== expectedIds.size ||
+    readback.some((row) => !expectedIds.has(row._id) || field(row, assigneeFieldId) !== employeeId)) {
+    throw new OnboardingError('SCHEMA_DRIFT');
+  }
+}
+
 async function continueProvision(deps: ProvisionDeps, prepared: PreparedProvisionV4,
   hireId: string, state: Checkpoint, onProgress?: (progress: ProvisionProgress) => void): Promise<ProvisionOutcome> {
   const { binding } = deps;
@@ -215,7 +249,9 @@ async function continueProvision(deps: ProvisionDeps, prepared: PreparedProvisio
   for (const entry of planned) {
     const parentId = entry.parentSourceId ? mapped.get(entry.parentSourceId) : undefined;
     if (entry.parentSourceId && !parentId) throw new OnboardingError('SCHEMA_DRIFT');
-    const expectedFields = encodedNode(entry.node, entry.sourceId, runIds, run.fieldDefinitions);
+    const expectedFields = entry.sourceId === OVERVIEW_SOURCE
+      ? encodedOverview(runIds)
+      : encodedNode(entry.node, entry.sourceId, runIds, run.fieldDefinitions);
     expectedFields.push({ fieldId: runIds[V2.parent], value: parentId ?? '' });
     if (entry.sourceId === OVERVIEW_SOURCE) {
       expectedFields.push({ fieldId: runIds[V2.startDate], value: state.startDate },
@@ -250,16 +286,7 @@ async function continueProvision(deps: ProvisionDeps, prepared: PreparedProvisio
     if (!row || field(row, runIds[V2.source]) !== entry.sourceId ||
       field(row, runIds[V2.parent]) !== (parentId ?? '')) throw new OnboardingError('SCHEMA_DRIFT');
   }
-  let granted = 0;
-  for (const row of rows.filter((candidate) => field(candidate, runIds[V2.source]) !== OVERVIEW_SOURCE)) {
-    await deps.write.patchFields(runId, row._id, { [runIds[V2.assignee]]: state.employeeId });
-    granted += 1;
-    onProgress?.({ phase: 'grant', completed: granted, total: rows.length });
-  }
-  const overviewId = mapped.get(OVERVIEW_SOURCE);
-  if (!overviewId) throw new OnboardingError('SCHEMA_DRIFT');
-  await deps.write.patchFields(runId, overviewId, { [runIds[V2.assignee]]: state.employeeId });
-  onProgress?.({ phase: 'grant', completed: rows.length, total: rows.length });
+  await grantAndVerifyRunAccess(deps, runId, rows, runIds[V2.assignee], state.employeeId, onProgress);
   await deps.write.patchFields(binding.hiresListId, hireId, { [hireIds[V2.employee]]: state.employeeId });
   await deps.write.moveItemToStage(hireId, learningStage);
   hire = await deps.read.readItem(binding.hiresListId, hireId);

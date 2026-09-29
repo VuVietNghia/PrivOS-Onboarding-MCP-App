@@ -44,6 +44,12 @@ describe('FilesGateway', () => {
     expect(count).toBe(2);
   });
 
+  it('rejects metadata whose returned ID differs from the requested file', async () => {
+    const app = { callServerTool: async () => ({ file: { _id: 'file-other', name: 'guide.pdf',
+      channel_id: 'room-1', folder_id: 'child', downloadUrl: 'https://files.example/current' } }) } as unknown as McpApp;
+    await expect(createFilesGateway(app, 'room-1', scheduler).metadata('file-1')).rejects.toThrow('FILE_LOCATION_INVALID');
+  });
+
   it('does not move a file without public item ownership proof', async () => {
     const calls: Call[] = [];
     const app = { callServerTool: async (call: Call) => {

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { Answers } from '../../domain/quiz';
 import type { Question } from '../../domain/models';
+import type { OnboardingLocale } from '../OnboardingShell';
+import { learningCopy } from './learning-copy';
 
 export interface QuizViewProps {
   questions: readonly Question[];
@@ -8,6 +10,7 @@ export interface QuizViewProps {
   pending?: boolean;
   error?: string;
   onBack?: () => void;
+  locale: OnboardingLocale;
 }
 
 function valid(questions: readonly Question[]): boolean {
@@ -17,11 +20,12 @@ function valid(questions: readonly Question[]): boolean {
         /^[a-j]$/.test(label) && label.charCodeAt(0) - 97 < question.options.length));
 }
 
-export function QuizView({ questions, onSubmit, pending = false, error, onBack }: QuizViewProps) {
+export function QuizView({ questions, onSubmit, pending = false, error, onBack, locale }: QuizViewProps) {
+  const t = learningCopy(locale);
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState(false);
-  if (!valid(questions)) return <p role="alert">Dữ liệu quiz không hợp lệ. Liên hệ HR.</p>;
+  if (!valid(questions)) return <p role="alert">{t.invalidQuiz}</p>;
   const answered = questions.filter((question) => (answers[question.id]?.length ?? 0) > 0).length;
   const busy = pending || submitting;
   const select = (question: Question, label: string) => {
@@ -41,11 +45,11 @@ export function QuizView({ questions, onSubmit, pending = false, error, onBack }
     catch { setLocalError(true); }
     finally { setSubmitting(false); }
   };
-  return <section aria-label="Làm quiz">
-    {onBack && <button type="button" onClick={onBack}>Về ngày học</button>}
-    <h1>Quiz</h1><p role="status">Đã trả lời {answered}/{questions.length}</p>
+  return <section className="v4-learning-quiz" aria-label={t.quizRegion}>
+    {onBack && <button type="button" className="v4-secondary-button" onClick={onBack}>{t.backDay}</button>}
+    <h1>{t.quizTitle}</h1>
     {questions.map((question, index) => <fieldset key={question.id} disabled={busy}>
-      <legend>Câu {index + 1}: {question.content}</legend>
+      <legend>{t.question} {index + 1}: {question.content}</legend>
       {question.options.map((option, optionIndex) => {
         const label = String.fromCharCode(97 + optionIndex);
         const multi = question.correctLabels.length > 1;
@@ -53,7 +57,9 @@ export function QuizView({ questions, onSubmit, pending = false, error, onBack }
           checked={(answers[question.id] ?? []).includes(label)} onChange={() => select(question, label)} />{option}</label>;
       })}
     </fieldset>)}
-    {(error || localError) && <p role="alert">{error ?? 'Không lưu được bài làm. Thử lại.'}</p>}
-    <button type="button" disabled={busy || answered !== questions.length} onClick={() => void submit()}>{busy ? 'Đang lưu…' : 'Nộp bài'}</button>
+    {(error || localError) && <p role="alert">{error ?? t.saveFailed}</p>}
+    <div className="v4-quiz-actionbar"><p role="status">{t.answered} {answered}/{questions.length}</p>
+      <button type="button" className="v4-primary-button" disabled={busy || answered !== questions.length}
+        onClick={() => void submit()}>{busy ? t.saving : t.submit}</button></div>
   </section>;
 }

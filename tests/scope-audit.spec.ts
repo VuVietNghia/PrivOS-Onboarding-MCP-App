@@ -15,6 +15,12 @@ function collectUiSourceFiles(dir: string): string[] {
 }
 
 describe('scope audit', () => {
+  it('requires rooms:read because selecting a room member is mandatory', () => {
+    const permission = manifest.permissions.find(({ scope }) => scope === 'rooms:read');
+    expect(permission?.requirement).toBe('required');
+    expect(permission).not.toHaveProperty('degradedBehavior');
+  });
+
   it('documents and exercises every declared scope', () => {
     const docs = fs.readFileSync(path.resolve('SCOPES.md'), 'utf8');
     const sources = collectUiSourceFiles(path.resolve('src/ui'))

@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import type { FilesGateway } from '../../src/ui/onboarding/data/files';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { AttachmentList } from '../../src/ui/onboarding/components/AttachmentList';
+import { PrivosRestError } from '../../src/ui/privos-rest';
 import { TemplateBuilder as PureTemplateBuilder, type TemplateBuilderProps } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
 
 type TestBuilderProps<T> = T extends unknown ? Omit<T, 'ids' | 'focus'> : never;
@@ -159,5 +160,23 @@ describe('lesson attachments', () => {
     await user.click(screen.getByRole('button', { name: 'Mở guide.pdf' }));
     await user.click(screen.getByRole('button', { name: 'Tải xuống guide.pdf' }));
     expect(open.mock.calls).toEqual([['file-1', 'view'], ['file-1', 'download']]);
+  });
+
+  it('localizes employee attachment controls in English', () => {
+    const { api } = gateway();
+    render(<AttachmentList files={[ref]} gateway={api} locale="en" />);
+    expect(screen.getByRole('button', { name: 'Open guide.pdf' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Download guide.pdf' })).toBeTruthy();
+    expect(screen.queryByText('Mở')).toBeNull();
+  });
+
+  it('shows a safe permission message when another member receives 403', async () => {
+    const user = userEvent.setup();
+    const { api } = gateway();
+    vi.mocked(api.open).mockRejectedValueOnce(new PrivosRestError('raw private response', 403, 'error-not-allowed'));
+    render(<AttachmentList files={[ref]} gateway={api} locale="en" />);
+    await user.click(screen.getByRole('button', { name: 'Open guide.pdf' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('You do not have permission to open this file.');
+    expect(screen.queryByText(/raw private response/)).toBeNull();
   });
 });

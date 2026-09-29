@@ -12,6 +12,8 @@ describe('v4 production source contract', () => {
     expect(panel).toContain('V4Onboarding');
     expect(panel).not.toMatch(/(?:RoadmapView|toggleTask|role-switch|demoPositions)/);
     expect(surface).not.toMatch(/(?:roleSwitch|role-switch|RoadmapView|toggleTask|demoPositions)/);
+    expect(panel).not.toContain('ENABLE_EMPLOYEE_PREVIEW');
+    expect(panel).toMatch(/import\.meta\.env\.DEV\s*&&\s*admin/);
   });
 
   it('keeps v4 List and File access on public mediated tools', () => {

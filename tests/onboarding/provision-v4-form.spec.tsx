@@ -201,7 +201,7 @@ describe('ProvisionV4Form', () => {
     expect(screen.queryByLabelText('Username hoặc user ID')).toBeNull();
     expect((screen.getByRole('button', { name: 'Tạo onboarding' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Tải lại thành viên' }));
-    expect(await screen.findByRole('option', { name: 'An' })).not.toBeNull();
+    expect(await screen.findByRole('option', { name: 'An (@an)' })).not.toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
@@ -246,8 +246,40 @@ describe('ProvisionV4Form', () => {
     render(<ProvisionV4Form app={app} roomType="p"
       binding={{ roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' }}
       catalogs={catalogs} actorRoles={[]} onDone={() => {}} />);
-    expect(await screen.findByRole('option', { name: 'An' })).not.toBeNull();
+    const option = await screen.findByRole('option', { name: 'An (@an)' });
+    expect((option as HTMLOptionElement).value).toBe('u1');
+    expect(screen.queryByText('User ID: u1')).toBeNull();
+    fireEvent.change(screen.getByRole('combobox', { name: 'Nhân sự' }), { target: { value: 'u1' } });
+    expect(screen.getByText('User ID: u1')).not.toBeNull();
     expect(screen.queryByLabelText('Username hoặc user ID')).toBeNull();
+  });
+
+  it('passes the selected member ID and name to provisioning', async () => {
+    const { app } = fakeRestApp([]);
+    const position = { id: 'P1', name: 'Engineer', templateListId: 'T1', status: 'ready' as const,
+      weeks: 1, days: 1, lessons: 0, questions: 0, missingAnswers: 0, inUse: 0 };
+    const tree = { weeks: [{ id: 'w1', name: 'Week 1', order: 0 }], items: [] };
+    const readyCatalogs: Catalogs = { ...catalogs,
+      positions: async () => ({ items: [position], nextCursor: null }),
+      position: async () => position, template: async () => tree,
+    };
+    const start = vi.fn(async () => ({ state: 'active' as const, hireId: 'H1', roadmapListId: 'RUN1' }));
+    const services: Pick<OnboardingServices, 'provision' | 'members' | 'clock' | 'ids'> = {
+      members: { list: async () => [{ id: 'u1', username: 'an', name: 'An' }],
+        lookup: async () => { throw new Error('UNEXPECTED_LOOKUP'); } },
+      provision: { start, resume: async () => { throw new Error('UNEXPECTED_RESUME'); },
+        recount: async () => 0, fingerprint: async () => 'hash', operationId: async () => 'operation-1' },
+      clock: { now: () => new Date(2026, 8, 28, 9) }, ids: { next: () => 'operation-1' },
+    };
+    render(<ProvisionV4Form app={app} roomType="p" binding={{ roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' }}
+      catalogs={readyCatalogs} services={services} actorRoles={[]} onDone={() => {}} />);
+    fireEvent.change(await screen.findByRole('combobox', { name: 'Nhân sự' }), { target: { value: 'u1' } });
+    fireEvent.change(screen.getByRole('combobox', { name: 'Vị trí' }), { target: { value: 'P1' } });
+    await waitFor(() => expect((screen.getByRole('button', { name: 'Tạo onboarding' }) as HTMLButtonElement).disabled).toBe(false));
+    fireEvent.click(screen.getByRole('button', { name: 'Tạo onboarding' }));
+    await waitFor(() => expect(start).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({ employeeId: 'u1', employeeName: 'An' }),
+    }), expect.any(Function)));
   });
 
   it('uses manual input when the group route is denied', async () => {
@@ -282,11 +314,11 @@ describe('ProvisionV4Form', () => {
       binding={{ roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' }} />);
     view.rerender(<ProvisionV4Form {...props}
       binding={{ roomId: 'R2', positionsListId: 'P2', hiresListId: 'H2' }} />);
-    expect(await screen.findByRole('option', { name: 'New' })).not.toBeNull();
+    expect(await screen.findByRole('option', { name: 'New (@new)' })).not.toBeNull();
     await act(async () => { finishOld(ok({
       data: { members: [{ _id: 'old', name: 'Old' }], offset: 0, total: 1 },
     })); });
-    expect(screen.queryByRole('option', { name: 'Old' })).toBeNull();
+    expect(screen.queryByRole('option', { name: 'Old (@old)' })).toBeNull();
   });
 
   it('does not preflight a previous-room employee with a retained manual username', async () => {
@@ -295,6 +327,9 @@ describe('ProvisionV4Form', () => {
         ? [{ _id: 'old', username: 'old', name: 'Old' }]
         : [{ _id: 'new', username: 'new', name: 'New' }], offset: 0, total: 1 },
     }) }]);
+    vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ roomId: 'R1', roomType: 'd' }) }],
+    });
     const position = { id: 'P1', name: 'Engineer', templateListId: 'T1', status: 'ready' as const,
       weeks: 1, days: 1, lessons: 0, questions: 0, missingAnswers: 0, inUse: 0 };
     const readPosition = vi.fn(async () => { throw new Error('STALE_EMPLOYEE_REACHED_PREFLIGHT'); });
@@ -308,10 +343,13 @@ describe('ProvisionV4Form', () => {
     const view = render(<ProvisionV4Form {...props} roomType={undefined} binding={binding('R1')} />);
     fireEvent.change(await screen.findByLabelText('Username hoặc user ID'), { target: { value: 'stale-manual-name' } });
     view.rerender(<ProvisionV4Form {...props} roomType="c" binding={binding('R1')} />);
-    expect(await screen.findByRole('option', { name: 'Old' })).not.toBeNull();
+    expect(await screen.findByRole('option', { name: 'Old (@old)' })).not.toBeNull();
     fireEvent.change(screen.getByRole('combobox', { name: 'Nhân sự' }), { target: { value: 'old' } });
+    expect(screen.getByText('User ID: old')).not.toBeNull();
     view.rerender(<ProvisionV4Form {...props} roomType="c" binding={binding('R2')} />);
-    expect(await screen.findByRole('option', { name: 'New' })).not.toBeNull();
+    expect(await screen.findByRole('option', { name: 'New (@new)' })).not.toBeNull();
+    expect(screen.queryByText('User ID: old')).toBeNull();
+    expect((screen.getByRole('combobox', { name: 'Nhân sự' }) as HTMLSelectElement).value).toBe('');
     fireEvent.change(screen.getByLabelText('Vị trí'), { target: { value: 'P1' } });
     fireEvent.change(screen.getByLabelText('Ngày bắt đầu'), { target: { value: '2026-09-28' } });
     await waitFor(() => expect(screen.getByRole('combobox', { name: 'Nhân sự' })).not.toBeNull());

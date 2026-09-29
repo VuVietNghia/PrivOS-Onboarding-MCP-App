@@ -1,6 +1,6 @@
 // src/ui/onboarding/domain/errors.ts
 
-export type OnboardingErrorCode = 'NOT_ADMIN' | 'TEMPLATE_INVALID' | 'HIRE_EXISTS' | 'SCHEMA_DRIFT' | 'SCHEMA_MIGRATION_REQUIRED' | 'SCORES_INVALID' | 'ROOM_NOT_CONFIGURED' | 'PAGINATION_INVALID' | 'FILTER_INVALID' | 'START_NOT_WORKING_DAY' | 'PROVISION_FAILED';
+export type OnboardingErrorCode = 'NOT_ADMIN' | 'TEMPLATE_INVALID' | 'HIRE_EXISTS' | 'SCHEMA_DRIFT' | 'SCHEMA_MIGRATION_REQUIRED' | 'SCORES_INVALID' | 'ROOM_NOT_CONFIGURED' | 'PAGINATION_INVALID' | 'FILTER_INVALID' | 'START_NOT_WORKING_DAY' | 'PROVISION_FAILED' | 'HIRE_NOT_ACTIVE' | 'HIRE_NOT_OWNED' | 'HIRE_CANCELLING' | 'RUN_INVALID' | 'DAY_NOT_FOUND' | 'LESSON_NOT_FOUND' | 'QUIZ_INVALID' | 'QUIZ_INCOMPLETE' | 'WRITE_CONFLICT' | 'SCORE_HISTORY_LIMIT';
 
 const ONBOARDING_MESSAGES: Record<OnboardingErrorCode, string> = {
   NOT_ADMIN: 'Chỉ owner/admin của room mới làm được việc này.',
@@ -14,6 +14,16 @@ const ONBOARDING_MESSAGES: Record<OnboardingErrorCode, string> = {
   FILTER_INVALID: 'Bộ lọc không hợp lệ. Tải lại danh sách.',
   START_NOT_WORKING_DAY: 'Ngày bắt đầu phải là ngày làm việc (thứ 2 đến thứ 6).',
   PROVISION_FAILED: 'Khởi tạo lộ trình bị lỗi giữa chừng. Bạn có thể tiếp tục hoặc hủy.',
+  HIRE_NOT_ACTIVE: 'Lộ trình này không còn ở trạng thái học.',
+  HIRE_NOT_OWNED: 'Bạn không có quyền truy cập lộ trình này.',
+  HIRE_CANCELLING: 'Lộ trình đang được hủy. Không thể cập nhật.',
+  RUN_INVALID: 'Nội dung lộ trình không hợp lệ. Hãy tải lại.',
+  DAY_NOT_FOUND: 'Không tìm thấy ngày onboarding đã chọn.',
+  LESSON_NOT_FOUND: 'Không tìm thấy bài học đã chọn.',
+  QUIZ_INVALID: 'Bài kiểm tra hoặc câu trả lời không hợp lệ.',
+  QUIZ_INCOMPLETE: 'Hãy trả lời đủ câu hỏi trước khi nộp.',
+  WRITE_CONFLICT: 'Dữ liệu vừa được cập nhật ở nơi khác. Hãy tải lại.',
+  SCORE_HISTORY_LIMIT: 'Lịch sử điểm đã đạt giới hạn lưu trữ.',
 };
 
 export class OnboardingError extends Error {

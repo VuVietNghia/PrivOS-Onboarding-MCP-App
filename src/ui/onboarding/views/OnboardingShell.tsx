@@ -5,8 +5,8 @@ export type OnboardingLocale = 'vi' | 'en';
 export type OnboardingTheme = 'light' | 'dark' | 'brand';
 
 const labels = {
-  vi: { navigation: 'Điều hướng chính', administration: 'Quản trị', hires: 'Nhân sự', provision: 'Onboarding mới', templates: 'Template', roadmap: 'Lộ trình của tôi', language: 'Ngôn ngữ', appearance: 'Giao diện', light: 'Giao diện sáng', dark: 'Giao diện tối', brand: 'Giao diện thương hiệu', workspace: 'Không gian học tập', room: 'Room', onboarding: 'Onboarding', previewEmployee: 'Xem giao diện nhân sự', returnAdmin: 'Quay lại quản trị' },
-  en: { navigation: 'Main navigation', administration: 'Administration', hires: 'People', provision: 'New onboarding', templates: 'Templates', roadmap: 'My roadmap', language: 'Language', appearance: 'Appearance', light: 'Light theme', dark: 'Dark theme', brand: 'Brand theme', workspace: 'Learning workspace', room: 'Room', onboarding: 'Onboarding', previewEmployee: 'Preview employee view', returnAdmin: 'Return to administration' },
+  vi: { navigation: 'Điều hướng chính', administration: 'Quản trị', hires: 'Nhân sự', provision: 'Onboarding mới', templates: 'Template', roadmap: 'Lộ trình của tôi', language: 'Ngôn ngữ', appearance: 'Giao diện', light: 'Giao diện sáng', dark: 'Giao diện tối', brand: 'Giao diện thương hiệu', workspace: 'Không gian học tập', room: 'Room', onboarding: 'Onboarding' },
+  en: { navigation: 'Main navigation', administration: 'Administration', hires: 'People', provision: 'New onboarding', templates: 'Templates', roadmap: 'My roadmap', language: 'Language', appearance: 'Appearance', light: 'Light theme', dark: 'Dark theme', brand: 'Brand theme', workspace: 'Learning workspace', room: 'Room', onboarding: 'Onboarding' },
 } satisfies Record<OnboardingLocale, Record<string, string>>;
 
 export interface OnboardingShellProps {
@@ -19,7 +19,8 @@ export interface OnboardingShellProps {
   onLocaleChange?: (locale: OnboardingLocale) => void;
   theme?: OnboardingTheme;
   onThemeChange?: (theme: OnboardingTheme) => void;
-  employeePreviewControl?: { active: boolean; onToggle: () => void };
+  employeePreviewControl?: { active: boolean; onToggle: () => void;
+    labels: Record<OnboardingLocale, { inactive: string; active: string }> };
 }
 
 function NavIcon({ screen }: { screen: OnboardingScreen }) {
@@ -50,7 +51,8 @@ export function OnboardingShell({ role, roomId, screen, onNavigate, children, lo
       <div className="v4-shell">
         <header className="v4-topbar"><div className="v4-context"><strong>{currentTitle}</strong><span>{roomId} / {t.onboarding}</span></div>
           <div className="v4-top-actions">
-            {employeePreviewControl && <button type="button" className="v4-employee-preview-button" onClick={employeePreviewControl.onToggle}>{employeePreviewControl.active ? t.returnAdmin : t.previewEmployee}</button>}
+            {employeePreviewControl && <button type="button" className="v4-employee-preview-button" onClick={employeePreviewControl.onToggle}>
+              {employeePreviewControl.active ? employeePreviewControl.labels[locale].active : employeePreviewControl.labels[locale].inactive}</button>}
             <div className="v4-language" role="group" aria-label={t.language}>{(['vi', 'en'] as const).map((value) => <button key={value} type="button" className={locale === value ? 'active' : ''} aria-pressed={locale === value} onClick={() => onLocaleChange?.(value)}>{value.toUpperCase()}</button>)}</div>
             <div className="v4-themes" role="group" aria-label={t.appearance}>{(['light', 'dark', 'brand'] as const).map((value) => <button key={value} type="button" className={`v4-theme-dot${theme === value ? ' active' : ''}`} data-theme={value} aria-label={t[value]} aria-pressed={theme === value} onClick={() => onThemeChange?.(value)} />)}</div>
           </div>

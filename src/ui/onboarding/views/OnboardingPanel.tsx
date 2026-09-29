@@ -10,9 +10,6 @@ const HubContractProbe = import.meta.env.DEV ? lazy(() => import('../dev/HubCont
 const P02ContractProbe = import.meta.env.DEV ? lazy(() => import('../dev/P02ContractProbe')) : null;
 const P03LimitsProbe = import.meta.env.DEV ? lazy(() => import('../dev/P03LimitsProbe')) : null;
 
-// Set to false to hide the temporary employee preview button after testing.
-const ENABLE_EMPLOYEE_PREVIEW = true;
-
 export function probeIdentityKey(roomId: string, userId?: string): string {
   return JSON.stringify([roomId, userId ?? null]);
 }
@@ -48,7 +45,7 @@ export default function OnboardingPanel() {
   const [employeePreview, setEmployeePreview] = useState({ key: session.key, active: false });
   if (!roomId) return <div className="container"><p className="loading-text">Mở app bên trong một room.</p></div>;
   const admin = isRoomAdmin(userRoles ?? []);
-  const previewActive = admin && employeePreview.key === session.key && employeePreview.active;
+  const previewActive = import.meta.env.DEV && admin && employeePreview.key === session.key && employeePreview.active;
   if (import.meta.env.DEV && showDiagnostics) return <>
     <button type="button" onClick={() => setShowDiagnostics(false)}>Trở lại giao diện v4</button>
     {PrivosProbeProvider && <Suspense fallback={<p>Đang mở kiểm tra P0…</p>}><PrivosProbeProvider>{(probe) =>
@@ -58,9 +55,13 @@ export default function OnboardingPanel() {
   return (
     <>
       <V4Onboarding key={session.key} admin={admin && !previewActive}
-        employeePreviewControl={ENABLE_EMPLOYEE_PREVIEW && admin ? {
+        employeePreviewControl={import.meta.env.DEV && admin ? {
           active: previewActive,
           onToggle: () => setEmployeePreview({ key: session.key, active: !previewActive }),
+          labels: {
+            vi: { inactive: 'Xem giao diện nhân sự', active: 'Quay lại quản trị' },
+            en: { inactive: 'Preview employee view', active: 'Return to administration' },
+          },
         } : undefined} />
       {import.meta.env.DEV && <button className="v4-diagnostics-entry" type="button" onClick={() => setShowDiagnostics(true)}>Kiểm tra kỹ thuật P0</button>}
     </>

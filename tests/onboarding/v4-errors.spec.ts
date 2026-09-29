@@ -20,4 +20,16 @@ describe('v4 catalog errors', () => {
       code: 'RATE_LIMITED', message: 'Đang có quá nhiều yêu cầu. Thử lại sau.',
     });
   });
+
+  it('maps member learning failures to safe copy', () => {
+    expect(describeError(new OnboardingError('HIRE_NOT_OWNED', 'hire-secret-123'))).toEqual({
+      code: 'HIRE_NOT_OWNED', message: 'Bạn không có quyền truy cập lộ trình này.',
+    });
+    expect(describeError(new OnboardingError('WRITE_CONFLICT', 'raw Hub payload'))).toEqual({
+      code: 'WRITE_CONFLICT', message: 'Dữ liệu vừa được cập nhật ở nơi khác. Hãy tải lại.',
+    });
+    expect(describeError(new OnboardingError('QUIZ_INCOMPLETE', 'q-secret'))).toEqual({
+      code: 'QUIZ_INCOMPLETE', message: 'Hãy trả lời đủ câu hỏi trước khi nộp.',
+    });
+  });
 });

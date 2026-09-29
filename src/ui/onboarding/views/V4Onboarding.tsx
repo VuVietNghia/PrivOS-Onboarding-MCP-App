@@ -101,7 +101,8 @@ function UnconfiguredScreen({ screen, message, locale }: { screen: OnboardingScr
   return <section className="v4-screen"><h1>{screen === 'roadmap' ? t.roadmapTitle : t.createOnboarding}</h1><p role="status">{message}</p></section>;
 }
 
-export function V4Onboarding({ admin, employeePreviewControl }: { admin: boolean; employeePreviewControl?: { active: boolean; onToggle: () => void } }) {
+export function V4Onboarding({ admin, employeePreviewControl }: { admin: boolean; employeePreviewControl?: {
+  active: boolean; onToggle: () => void; labels: Record<OnboardingLocale, { inactive: string; active: string }> } }) {
   const session = useOnboardingSession();
   if (!session) throw new Error('ONBOARDING_SESSION_MISSING');
   const services = session.services;
@@ -208,7 +209,7 @@ export function V4Onboarding({ admin, employeePreviewControl }: { admin: boolean
     {admin && screen === 'templates' && copySource && <CopyTemplateDialog sources={[copySource]} onCopy={copyTemplate} onClose={() => setCopySource(null)} />}
     {admin && disableTarget && <div className="v4-builder-dialog" role="alertdialog" aria-modal="true" aria-label="Xác nhận ngừng dùng vị trí"><h2>Ngừng dùng {disableTarget.name}?</h2><p>Vị trí sẽ không xuất hiện trong form tạo onboarding mới.</p>{disableError && <p role="alert">{disableError}</p>}<button type="button" disabled={disableBusy} onClick={() => setDisableTarget(null)}>Giữ lại</button><button type="button" disabled={disableBusy} onClick={() => void disablePosition()}>{disableBusy ? 'Đang cập nhật' : 'Xác nhận'}</button></div>}
     {admin && !catalogs && !(screen === 'templates' && templateEditor) && <UnconfiguredScreen key={identityKey} screen={screen} locale={locale} message={bootstrapMessage} />}
-    {!admin && binding && userId && services && <EmployeeRoadmapScreen key={identityKey} services={services} filesGateway={filesGateway ?? undefined} />}
+    {!admin && binding && userId && services && <EmployeeRoadmapScreen key={identityKey} services={services} filesGateway={filesGateway ?? undefined} locale={locale} />}
     {!admin && (!binding || !userId) && <UnconfiguredScreen key={identityKey} screen="roadmap" locale={locale} message={bootstrapMessage} />}
   </OnboardingShell>;
 }

@@ -6,6 +6,20 @@ import { hireLabel } from '../../src/ui/onboarding/domain/hire-label';
 import { fakeRestApp, forbidden, ok } from './fake-app';
 
 describe('listRoomMembers', () => {
+  it('recovers a private room type from the bound raw context', async () => {
+    const { app, calls } = fakeRestApp([{ method: 'GET', path: 'groups.members', reply: () => ok({
+      members: [{ _id: 'u1', username: 'an', name: 'An' }], offset: 0, total: 1,
+    }) }]);
+    const contextCall = vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ roomId: 'R1', roomType: 'p' }) }],
+    });
+    expect(await listRoomMembers(app, 'R1', 'unsupported')).toEqual([{ id: 'u1', username: 'an', name: 'An' }]);
+    expect(contextCall).toHaveBeenCalledTimes(1);
+    expect(contextCall).toHaveBeenCalledWith({ name: 'mcpapp.context.get', arguments: {} });
+    expect(calls.map(({ path }) => path)).toEqual(['groups.members']);
+    expect(calls[0].query?.roomId).toBe('R1');
+  });
+
   it('uses groups.members for a private room', async () => {
     const { app, calls } = fakeRestApp([{ method: 'GET', path: 'groups.members', reply: () => ok({
       members: [{ _id: 'u1', username: 'an', name: 'An' }], count: 1, offset: 0, total: 1,
@@ -14,8 +28,60 @@ describe('listRoomMembers', () => {
     expect(calls.map(({ path }) => path)).toEqual(['groups.members']);
   });
 
+  it.each([
+    [{ roomId: 'R2', roomType: 'p' }, 'ROOM_CONTEXT_MISMATCH'],
+    [{ roomType: 'p' }, 'ROOM_CONTEXT_INVALID'],
+  ])('rejects an unbound raw context before REST', async (context, error) => {
+    const { app, calls } = fakeRestApp([]);
+    vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify(context) }],
+    });
+    await expect(listRoomMembers(app, 'R1', 'unsupported')).rejects.toThrow(error);
+    expect(calls).toHaveLength(0);
+  });
+
+  it.each(['d', undefined])('falls back when raw room type is %s', async (roomType) => {
+    const { app, calls } = fakeRestApp([]);
+    vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ roomId: 'R1', roomType }) }],
+    });
+    expect(await listRoomMembers(app, 'R1', 'unsupported')).toBeNull();
+    expect(calls).toHaveLength(0);
+  });
+
+  it.each([403, 404])('keeps manual fallback after raw context when groups.members returns %i', async (statusCode) => {
+    const { app, calls } = fakeRestApp([{ method: 'GET', path: 'groups.members',
+      reply: () => ({ statusCode, body: { success: false } }) }]);
+    vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ roomId: 'R1', roomType: 'p' }) }],
+    });
+    expect(await listRoomMembers(app, 'R1', 'unsupported')).toBeNull();
+    expect(calls.map(({ path }) => path)).toEqual(['groups.members']);
+  });
+
+  it('keeps a server error visible after raw-context recovery', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'groups.members',
+      reply: () => ({ statusCode: 500, body: { success: false } }) }]);
+    vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ roomId: 'R1', roomType: 'p' }) }],
+    });
+    await expect(listRoomMembers(app, 'R1', 'unsupported')).rejects.toMatchObject({ statusCode: 500 });
+  });
+
+  it('rejects a malformed member page after raw-context recovery', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'groups.members',
+      reply: () => ok({ members: [], offset: 0 }) }]);
+    vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ roomId: 'R1', roomType: 'p' }) }],
+    });
+    await expect(listRoomMembers(app, 'R1', 'unsupported')).rejects.toThrow('ROOM_MEMBERS_RESPONSE_INVALID');
+  });
+
   it('does not guess an endpoint for an unknown room type', async () => {
     const { app, calls } = fakeRestApp([]);
+    vi.spyOn(app, 'callServerTool').mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ roomId: 'R1', roomType: 'd' }) }],
+    });
     expect(await listRoomMembers(app, 'R1', 'd')).toBeNull();
     expect(calls).toHaveLength(0);
   });
@@ -76,11 +142,62 @@ describe('listRoomMembers', () => {
     expect(await listRoomMembers(app, 'R1', 'p')).toEqual([{ id: 'u1', username: 'an', name: 'An' }]);
   });
 
-  it('bỏ qua phần tử thiếu _id', async () => {
+  it('rejects a member row without _id instead of returning a shortened list', async () => {
     const { app } = fakeRestApp([{ method: 'GET', path: 'channels.members', reply: () => ok({
       data: { members: [{ username: 'x' }, { _id: 'u1', username: 'hung', name: 'Hung' }], count: 2, offset: 0, total: 2 },
     }) }]);
-    expect((await listRoomMembers(app, 'R1', 'c'))?.map((m) => m.id)).toEqual(['u1']);
+    await expect(listRoomMembers(app, 'R1', 'c')).rejects.toThrow('ROOM_MEMBERS_RESPONSE_INVALID');
+  });
+
+  it.each([null, '', '  ', 12])('rejects an invalid member ID %s', async (_id) => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'channels.members', reply: () => ok({
+      members: [{ _id }], offset: 0, total: 1,
+    }) }]);
+    await expect(listRoomMembers(app, 'R1', 'c')).rejects.toThrow('ROOM_MEMBERS_RESPONSE_INVALID');
+  });
+
+  it('rejects a changed total between pages', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'channels.members', reply: (_request, index) => ok(
+      index === 0
+        ? { members: [{ _id: 'u1' }], offset: 0, total: 3 }
+        : { members: [{ _id: 'u2' }], offset: 1, total: 4 },
+    ) }]);
+    await expect(listRoomMembers(app, 'R1', 'c')).rejects.toThrow('ROOM_MEMBERS_CHANGED');
+  });
+
+  it('rejects pages that contain fewer unique IDs than total', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'channels.members', reply: (_request, index) => ok(
+      index === 0
+        ? { members: [{ _id: 'u1' }, { _id: 'u2' }], offset: 0, total: 3 }
+        : { members: [{ _id: 'u2' }], offset: 2, total: 3 },
+    ) }]);
+    await expect(listRoomMembers(app, 'R1', 'c')).rejects.toThrow('ROOM_MEMBERS_INCOMPLETE');
+  });
+
+  it('accepts a confirmed empty room', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'groups.members', reply: () => ok({
+      members: [], offset: 0, total: 0,
+    }) }]);
+    expect(await listRoomMembers(app, 'R1', 'p')).toEqual([]);
+  });
+
+  it('rejects a page that exceeds the stated total', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'groups.members', reply: () => ok({
+      members: [{ _id: 'u1' }, { _id: 'u2' }], offset: 0, total: 1,
+    }) }]);
+    await expect(listRoomMembers(app, 'R1', 'p')).rejects.toThrow('ROOM_MEMBERS_RESPONSE_INVALID');
+  });
+
+  it.each([1000, 1001])('enforces the 1000-page ceiling for %i members', async (total) => {
+    const { app, calls } = fakeRestApp([{ method: 'GET', path: 'groups.members', reply: (_request, index) => ok({
+      members: [{ _id: `u${index}` }], offset: index, total,
+    }) }]);
+    if (total === 1000) {
+      expect((await listRoomMembers(app, 'R1', 'p'))?.length).toBe(1000);
+    } else {
+      await expect(listRoomMembers(app, 'R1', 'p')).rejects.toThrow('ROOM_MEMBERS_PAGINATION_LIMIT');
+    }
+    expect(calls).toHaveLength(1000);
   });
 
   it('tải đủ các trang thành viên khi Hub giới hạn count', async () => {
@@ -91,6 +208,7 @@ describe('listRoomMembers', () => {
     }) }]);
     expect((await listRoomMembers(app, 'R1', 'c'))?.map((member) => member.id)).toEqual(['u1', 'u2', 'u3']);
     expect(calls.map((call) => call.query?.offset)).toEqual([0, 2]);
+    expect(calls.map((call) => call.query?.count)).toEqual([500, 500]);
   });
 
   it('trả null khi thiếu quyền rooms:read (403)', async () => {
@@ -105,6 +223,13 @@ describe('listRoomMembers', () => {
 
   it('trả null khi Hub không có endpoint (404)', async () => {
     const { app } = fakeRestApp([]);
+    expect(await listRoomMembers(app, 'R1', 'c')).toBeNull();
+  });
+
+  it('returns null when member route is not allowed (405)', async () => {
+    const { app } = fakeRestApp([{ method: 'GET', path: 'channels.members', reply: () => ({
+      statusCode: 405, body: { success: false },
+    }) }]);
     expect(await listRoomMembers(app, 'R1', 'c')).toBeNull();
   });
 

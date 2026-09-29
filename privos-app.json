@@ -64,12 +64,11 @@
     },
     {
       "scope": "rooms:read",
-      "requirement": "optional",
+      "requirement": "required",
       "context": "room",
       "executionContext": "user",
       "feature": "onboarding.members",
-      "reason": "List the members of the current room so HR can pick who to onboard from a dropdown.",
-      "degradedBehavior": "HR types the hire's username (or user id) instead of picking from a list."
+      "reason": "List the members of the current room so HR can pick who to onboard from a dropdown."
     },
     {
       "scope": "users:read",

@@ -1,81 +1,231 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FilesGateway } from '../../data/files';
-import { describeError } from '../../domain/errors';
 import type { Day, Lesson, Question } from '../../domain/models';
 import type { Answers, GradeResult } from '../../domain/quiz';
-import type { LoadedLearning } from '../../ports/learning';
+import type { LoadedLearning, MemberRoadmapOption } from '../../ports/learning';
 import type { OnboardingServices } from '../../ports/ui-services';
+import type { OnboardingLocale } from '../OnboardingShell';
 import { DayLearningView } from './DayLearningView';
 import { QuizResult } from './QuizResult';
 import { QuizView } from './QuizView';
 import { WeekRoadmap } from './WeekRoadmap';
+import { learningCopy } from './learning-copy';
 
 export interface EmployeeRoadmapScreenProps {
   services: Pick<OnboardingServices, 'learning' | 'ids'>;
   filesGateway?: FilesGateway;
+  locale: OnboardingLocale;
 }
 
-export function EmployeeRoadmapScreen({ services, filesGateway }: EmployeeRoadmapScreenProps) {
-  const [loaded, setLoaded] = useState<LoadedLearning | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
-  const [view, setView] = useState<'roadmap' | 'day' | 'quiz' | 'result'>('roadmap');
-  const [result, setResult] = useState<{ grade: GradeResult; attempt: number; firstScore: string } | null>(null);
+interface ReadyState {
+  loaded: LoadedLearning;
+  roadmaps: readonly MemberRoadmapOption[];
+  selectedHireId: string;
+}
+
+interface ResultState {
+  grade: GradeResult;
+  firstScore: string;
+  attempts: readonly string[];
+}
+
+type EmployeeScreenState =
+  | { kind: 'loading' }
+  | { kind: 'empty' }
+  | { kind: 'error' }
+  | ({ kind: 'roadmap'; selectedDayId?: string } & ReadyState)
+  | ({ kind: 'day'; dayId: string } & ReadyState)
+  | ({ kind: 'quiz'; dayId: string } & ReadyState)
+  | ({ kind: 'result'; dayId: string; result: ResultState } & ReadyState);
+
+type ActionError = 'load' | 'save';
+
+function dayContent(loaded: LoadedLearning, dayId: string): { day: Day; children: readonly (Lesson | Question)[] } | null {
+  const day = loaded.roadmap.tree.items.find((item): item is Day => item.kind === 'day' && item.id === dayId);
+  if (!day) return null;
+  const children = loaded.roadmap.tree.items.filter((item): item is Lesson | Question =>
+    item.kind !== 'day' && item.parentId === dayId);
+  return { day, children };
+}
+
+function refreshRoadmaps(roadmaps: readonly MemberRoadmapOption[], loaded: LoadedLearning): readonly MemberRoadmapOption[] {
+  return roadmaps.map((option) => option.hireId === loaded.hire.id ? {
+    ...option,
+    positionName: loaded.hire.positionName,
+    startDate: loaded.hire.startDate,
+    status: loaded.hire.status === 'done' ? 'done' : 'learning',
+    doneDays: loaded.hire.doneDays,
+    totalDays: loaded.hire.totalDays,
+  } : option);
+}
+
+function applyLoaded(current: EmployeeScreenState, hireId: string, loaded: LoadedLearning): EmployeeScreenState {
+  switch (current.kind) {
+    case 'loading':
+    case 'empty':
+    case 'error':
+      return current;
+    case 'roadmap':
+    case 'day':
+    case 'quiz':
+    case 'result':
+      return current.selectedHireId === hireId
+        ? { ...current, loaded, roadmaps: refreshRoadmaps(current.roadmaps, loaded) }
+        : current;
+  }
+}
+
+export function EmployeeRoadmapScreen({ services, filesGateway, locale }: EmployeeRoadmapScreenProps) {
+  const t = learningCopy(locale);
+  const [state, setState] = useState<EmployeeScreenState>({ kind: 'loading' });
   const [quizRevision, setQuizRevision] = useState(0);
   const [pendingLessonId, setPendingLessonId] = useState<string | null>(null);
   const [pendingQuiz, setPendingQuiz] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<ActionError | null>(null);
   const operationId = useRef<string | null>(null);
+  const revision = useRef(0);
+  const lessonAction = useRef(0);
+  const quizAction = useRef(0);
+  const actionErrorMessage = actionError === 'load' ? t.loadFailed : actionError === 'save' ? t.saveFailed : undefined;
+
+  const loadCatalog = useCallback(async () => {
+    const request = ++revision.current;
+    lessonAction.current += 1; quizAction.current += 1;
+    setPendingLessonId(null); setPendingQuiz(false);
+    setState({ kind: 'loading' }); setActionError(null); operationId.current = null;
+    try {
+      const roadmaps = await services.learning.listMine();
+      if (request !== revision.current) return;
+      const selectedHireId = roadmaps[0]?.hireId;
+      if (!selectedHireId) { setState({ kind: 'empty' }); return; }
+      const loaded = await services.learning.load(selectedHireId);
+      if (request !== revision.current) return;
+      if (!loaded) { setState({ kind: 'error' }); return; }
+      setState({ kind: 'roadmap', loaded, roadmaps, selectedHireId });
+    } catch {
+      if (request === revision.current) setState({ kind: 'error' });
+    }
+  }, [services.learning]);
 
   useEffect(() => {
-    let active = true;
-    setLoading(true); setLoaded(null); setError(null);
-    void services.learning.load().then((value) => { if (active) setLoaded(value); })
-      .catch((cause: unknown) => { if (active) setError(describeError(cause).message); })
-      .finally(() => { if (active) setLoading(false); });
-    return () => { active = false; };
-  }, [services]);
-
-  const day = loaded?.roadmap.tree.items.find((item): item is Day => item.kind === 'day' && item.id === selectedDayId);
-  const children = useMemo(() => loaded?.roadmap.tree.items.filter((item): item is Lesson | Question =>
-    item.kind !== 'day' && item.parentId === selectedDayId) ?? [], [loaded, selectedDayId]);
-  const questions = children.filter((item): item is Question => item.kind === 'question');
+    void loadCatalog();
+    return () => { revision.current += 1; lessonAction.current += 1; quizAction.current += 1; };
+  }, [loadCatalog]);
 
   const read = async (lessonId: string) => {
-    if (!loaded || pendingLessonId) return;
-    setPendingLessonId(lessonId); setError(null);
-    try { setLoaded(await services.learning.markRead(loaded.hire.id, lessonId)); }
-    catch (cause) { setError(describeError(cause).message); }
-    finally { setPendingLessonId(null); }
-  };
-  const submit = async (answers: Answers) => {
-    if (!loaded || !day || pendingQuiz) return;
-    if (!operationId.current) operationId.current = services.ids.next();
-    setPendingQuiz(true); setError(null);
+    if (state.kind !== 'day' || pendingLessonId) return;
+    const action = ++lessonAction.current;
+    const request = revision.current;
+    const hireId = state.loaded.hire.id;
+    setPendingLessonId(lessonId); setActionError(null);
     try {
-      const saved = await services.learning.submit({ hireId: loaded.hire.id, dayId: day.id,
-        operationId: operationId.current, answers });
-      const firstScore = saved.hire.scores[String(day.order)]?.first ?? `${saved.grade.score}/${saved.grade.total}`;
-      setResult({ grade: saved.grade, attempt: saved.attempt, firstScore });
-      setLoaded(await services.learning.load());
-      setView('result');
-      operationId.current = null;
-    } catch (cause) { setError(describeError(cause).message); throw cause; }
-    finally { setPendingQuiz(false); }
+      const loaded = await services.learning.markRead(hireId, lessonId);
+      setState((current) => applyLoaded(current, hireId, loaded));
+    } catch { if (request === revision.current) setActionError('save'); }
+    finally { if (action === lessonAction.current) setPendingLessonId(null); }
   };
 
-  if (loading) return <section className="v4-screen"><p role="status">Đang tải lộ trình</p></section>;
-  if (!loaded) return <section className="v4-screen"><h1>Lộ trình của tôi</h1>{error ? <p role="alert">{error}</p> : <p>Bạn chưa có lộ trình onboarding trong room này.</p>}</section>;
-  return <section className="v4-screen v4-learning-screen">
-    {view === 'roadmap' && <WeekRoadmap roadmap={loaded.roadmap} hire={loaded.hire} selectedDayId={selectedDayId ?? undefined}
-      onDay={(id) => { setSelectedDayId(id); setResult(null); setError(null); setView('day'); }} error={error ?? undefined} />}
-    {view === 'day' && day && <DayLearningView day={day} children={children} filesGateway={filesGateway}
-      pendingLessonId={pendingLessonId ?? undefined} error={error ?? undefined} onRead={(id) => void read(id)}
-      onQuiz={() => { setError(null); setView('quiz'); }} onBack={() => setView('roadmap')} />}
-    {view === 'quiz' && day && <QuizView key={`${day.id}:${quizRevision}`} questions={questions} pending={pendingQuiz}
-      error={error ?? undefined} onSubmit={submit} onBack={() => setView('day')} />}
-    {view === 'result' && day && result && <QuizResult questions={questions} grade={result.grade} attempt={result.attempt}
-      firstScore={result.firstScore} onRetake={() => { setResult(null); setQuizRevision((value) => value + 1); setView('quiz'); }}
-      onBack={() => setView('day')} />}
-  </section>;
+  const submit = async (answers: Answers) => {
+    if (state.kind !== 'quiz' || pendingQuiz) return;
+    const content = dayContent(state.loaded, state.dayId);
+    if (!content) { setActionError('load'); return; }
+    if (!operationId.current) operationId.current = services.ids.next();
+    const action = ++quizAction.current;
+    const request = revision.current;
+    const hireId = state.loaded.hire.id;
+    setPendingQuiz(true); setActionError(null);
+    try {
+      const saved = await services.learning.submit({ hireId, dayId: content.day.id,
+        operationId: operationId.current, answers });
+      const score = `${saved.grade.score}/${saved.grade.total}`;
+      const result = { grade: saved.grade, firstScore: saved.hire.scores[String(content.day.order)]?.first ?? score,
+        attempts: saved.hire.scores[String(content.day.order)]?.attempts ?? [score] };
+      const loaded = await services.learning.load(hireId);
+      if (!loaded) return;
+      operationId.current = null;
+      if (request !== revision.current) { setState((current) => applyLoaded(current, hireId, loaded)); return; }
+      setState({ kind: 'result', loaded, roadmaps: refreshRoadmaps(state.roadmaps, loaded), selectedHireId: state.selectedHireId,
+        dayId: content.day.id, result });
+    } catch (cause) { if (request === revision.current) setActionError('save'); throw cause; }
+    finally { if (action === quizAction.current) setPendingQuiz(false); }
+  };
+
+  const selectRoadmap = async (hireId: string) => {
+    if (state.kind !== 'roadmap') return;
+    const roadmaps = state.roadmaps;
+    const request = ++revision.current;
+    setQuizRevision((value) => value + 1); setActionError(null); operationId.current = null; setState({ kind: 'loading' });
+    try {
+      const loaded = await services.learning.load(hireId);
+      if (request !== revision.current) return;
+      if (!loaded) { setState({ kind: 'error' }); return; }
+      setState({ kind: 'roadmap', loaded, roadmaps, selectedHireId: hireId });
+    } catch { if (request === revision.current) setState({ kind: 'error' }); }
+  };
+
+  const resume = async () => {
+    if (state.kind !== 'roadmap' || !state.loaded.pendingSubmission || pendingQuiz) return;
+    const pendingDay = dayContent(state.loaded, state.loaded.pendingSubmission.dayId)?.day;
+    if (!pendingDay) { setActionError('load'); return; }
+    const action = ++quizAction.current;
+    const request = revision.current;
+    const hireId = state.loaded.hire.id;
+    setPendingQuiz(true); setActionError(null);
+    try {
+      const saved = await services.learning.resume(hireId);
+      const score = `${saved.grade.score}/${saved.grade.total}`;
+      const result = { grade: saved.grade, firstScore: saved.hire.scores[String(pendingDay.order)]?.first ?? score,
+        attempts: saved.hire.scores[String(pendingDay.order)]?.attempts ?? [score] };
+      const loaded = await services.learning.load(hireId);
+      if (!loaded) return;
+      if (request !== revision.current) { setState((current) => applyLoaded(current, hireId, loaded)); return; }
+      setState({ kind: 'result', loaded, roadmaps: refreshRoadmaps(state.roadmaps, loaded), selectedHireId: state.selectedHireId,
+        dayId: pendingDay.id, result });
+    } catch { if (request === revision.current) setActionError('save'); }
+    finally { if (action === quizAction.current) setPendingQuiz(false); }
+  };
+
+  switch (state.kind) {
+    case 'loading': return <section className="v4-screen"><p role="status">{t.loadingRoadmap}</p></section>;
+    case 'empty': return <section className="v4-screen"><h1>{t.roadmapTitle}</h1><p>{t.noRoadmap}</p></section>;
+    case 'error': return <section className="v4-screen"><h1>{t.roadmapTitle}</h1><p role="alert">{t.loadFailed}</p>
+      <button type="button" className="v4-primary-button" onClick={() => void loadCatalog()}>{t.retry}</button></section>;
+    case 'roadmap': return <section className="v4-screen v4-learning-screen"><div className="v4-learning-controls">
+      {state.roadmaps.length > 1 && <label>{t.selectRoadmap}<select aria-label={t.selectRoadmap} value={state.selectedHireId}
+        onChange={(event) => void selectRoadmap(event.target.value)}>{state.roadmaps.map((option) => <option key={option.hireId} value={option.hireId}>
+          {option.positionName} · {option.startDate} · {option.status === 'done' ? t.doneStatus : t.learningStatus}
+        </option>)}</select></label>}
+      {state.loaded.pendingSubmission && <button type="button" className="v4-primary-button" disabled={pendingQuiz}
+        onClick={() => void resume()}>{pendingQuiz ? t.saving : t.continueSaving}</button>}
+      </div><WeekRoadmap roadmap={state.loaded.roadmap} hire={state.loaded.hire} selectedDayId={state.selectedDayId} locale={locale}
+        onDay={(dayId) => { revision.current += 1; setActionError(null); setState({ ...state, kind: 'day', dayId }); }}
+        error={actionErrorMessage} /></section>;
+    case 'day': {
+      const content = dayContent(state.loaded, state.dayId);
+      if (!content) return <section className="v4-screen"><p role="alert">{t.loadFailed}</p></section>;
+      return <section className="v4-screen v4-learning-screen"><DayLearningView day={content.day} children={content.children} filesGateway={filesGateway}
+        pendingLessonId={pendingLessonId ?? undefined} error={actionErrorMessage} onRead={(id) => void read(id)} locale={locale}
+        onQuiz={() => { revision.current += 1; setActionError(null); setState({ ...state, kind: 'quiz' }); }}
+        onBack={() => { revision.current += 1; setState({ kind: 'roadmap', loaded: state.loaded, roadmaps: state.roadmaps,
+          selectedHireId: state.selectedHireId, selectedDayId: state.dayId }); }} /></section>;
+    }
+    case 'quiz': {
+      const content = dayContent(state.loaded, state.dayId);
+      if (!content) return <section className="v4-screen"><p role="alert">{t.loadFailed}</p></section>;
+      const questions = content.children.filter((item): item is Question => item.kind === 'question');
+      return <section className="v4-screen v4-learning-screen"><QuizView key={`${content.day.id}:${quizRevision}`} questions={questions}
+        pending={pendingQuiz} error={actionErrorMessage} onSubmit={submit} locale={locale}
+        onBack={() => { revision.current += 1; setState({ ...state, kind: 'day' }); }} /></section>;
+    }
+    case 'result': {
+      const content = dayContent(state.loaded, state.dayId);
+      if (!content) return <section className="v4-screen"><p role="alert">{t.loadFailed}</p></section>;
+      const questions = content.children.filter((item): item is Question => item.kind === 'question');
+      return <section className="v4-screen v4-learning-screen"><QuizResult questions={questions} grade={state.result.grade}
+        attempts={state.result.attempts} firstScore={state.result.firstScore} locale={locale}
+        onRetake={() => { revision.current += 1; setQuizRevision((value) => value + 1); setState({ ...state, kind: 'quiz' }); }}
+        onBack={() => { revision.current += 1; setState({ kind: 'day', loaded: state.loaded, roadmaps: state.roadmaps,
+          selectedHireId: state.selectedHireId, dayId: state.dayId }); }} /></section>;
+    }
+  }
 }

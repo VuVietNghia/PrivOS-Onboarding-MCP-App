@@ -53,7 +53,7 @@ describe('P4 run planning', () => {
 });
 
 function hubFixture(options: { loseListResponse?: boolean; loseHireResponse?: boolean; ignoreParentField?: boolean;
-  corruptParentBeforeFinalRead?: boolean } = {}) {
+  corruptParentBeforeFinalRead?: boolean; dropAssigneeForSource?: string } = {}) {
   const hireFields = V2_HIRE_FIELDS.map((field, index) => ({ _id: `hire-field-${index}`, name: field.name, type: field.type }));
   const hireIds = Object.fromEntries(hireFields.map((field) => [field.name, field._id]));
   const positionFields = V2_POSITION_FIELDS.map((field, index) => ({ _id: `position-field-${index}`, name: field.name, type: field.type }));
@@ -100,6 +100,11 @@ function hubFixture(options: { loseListResponse?: boolean; loseHireResponse?: bo
         const parentField = lists.get('run-1')!.fieldDefinitions.find((definition) => definition.name === V2.parent)!._id;
         week.customFields.find((entry) => entry.fieldId === parentField)!.value = 'wrong-parent';
       }
+      if (args.listId === 'run-1' && runReads >= 3 && options.dropAssigneeForSource) {
+        const row = items.get('run-1')!.find((candidate) => runField(candidate, V2.source) === options.dropAssigneeForSource)!;
+        const assigneeId = lists.get('run-1')!.fieldDefinitions.find((definition) => definition.name === V2.assignee)!._id;
+        row.customFields = row.customFields.filter((entry) => entry.fieldId !== assigneeId);
+      }
       const filter = args.filter as { stageId?: string; customFields?: { fieldId: string; op: string; value: string }[] } | undefined;
       const selected = (items.get(String(args.listId)) ?? []).filter((row) =>
         (!filter?.stageId || row.stageId === filter.stageId) &&
@@ -130,7 +135,8 @@ function hubFixture(options: { loseListResponse?: boolean; loseHireResponse?: bo
     const definition = lists.get('run-1')!.fieldDefinitions.find((field) => field.name === name)!;
     return item.customFields.find((field) => field.fieldId === definition._id)?.value;
   };
-  return { app, lists, items, calls, hireIds, positionIds, runField };
+  return { app, lists, items, calls, hireIds, positionIds, runField,
+    setDropAssigneeForSource: (source: string | undefined) => { options.dropAssigneeForSource = source; } };
 }
 
 function catalogsFor(hub: ReturnType<typeof hubFixture>, input: PreparedProvisionV4): Pick<Catalogs, 'position' | 'template' | 'hires'> {
@@ -163,8 +169,12 @@ describe('provisionV4 writer', () => {
     const rows = hub.items.get('run-1')!;
     expect(rows).toHaveLength(8);
     const bySource = new Map(rows.map((row) => [hub.runField(row, V2.source), row]));
+    const kindDefinition = hub.lists.get('run-1')!.fieldDefinitions.find((definition) => definition.name === V2.kind)!;
+    const weekOptionId = kindDefinition.options!.find((option) => option.value === 'Tuần')!._id;
     expect(rows.every((row) => row.parentId === null)).toBe(true);
     expect(hub.runField(bySource.get('__overview__')!, V2.parent)).toBe('');
+    expect(hub.runField(bySource.get('__overview__')!, V2.kind)).toBeUndefined();
+    expect(hub.runField(bySource.get('week-1')!, V2.kind)).toBe(weekOptionId);
     expect(hub.runField(bySource.get('week-1')!, V2.parent)).toBe(bySource.get('__overview__')?._id);
     expect(hub.runField(bySource.get('day-1')!, V2.parent)).toBe(bySource.get('week-1')?._id);
     expect(hub.runField(bySource.get('q-1')!, V2.parent)).toBe(bySource.get('day-1')?._id);
@@ -182,7 +192,7 @@ describe('provisionV4 writer', () => {
       (call.arguments.customFields as { fieldId: string }[]).some((field) => field.fieldId === hub.lists.get('run-1')!.fieldDefinitions.find((definition) => definition.name === V2.assignee)!._id));
     const lastCreate = hub.calls.findLastIndex((call) => call.name === 'mcpapp.lists.createItem');
     expect(firstGrant).toBeGreaterThan(lastCreate);
-    expect(hub.calls.filter((call) => call.name === 'mcpapp.lists.queryItems' && call.arguments.listId === 'run-1')).toHaveLength(2);
+    expect(hub.calls.filter((call) => call.name === 'mcpapp.lists.queryItems' && call.arguments.listId === 'run-1')).toHaveLength(3);
   });
 
   it('resumes a run after list creation succeeded but its response was lost', async () => {
@@ -218,6 +228,44 @@ describe('provisionV4 writer', () => {
     expect(hub.items.get('hires-1')![0].stageId).not.toBe('learning');
     expect(hub.calls.some((call) => call.name === 'mcpapp.lists.updateItem' &&
       hub.items.get('run-1')!.some((row) => row._id === call.arguments.itemId))).toBe(false);
+  });
+
+  it('does not activate when a run item drops ASSIGNEE', async () => {
+    const hub = hubFixture({ dropAssigneeForSource: 'lesson-1' });
+    const input = prepared(await templateFingerprint(tree, hasher));
+    const binding = { roomId: 'room-1', positionsListId: 'positions-1', hiresListId: 'hires-1' };
+
+    await expect(provisionV4(hub.app, binding, input, ['owner'], undefined, catalogsFor(hub, input)))
+      .rejects.toThrow('SCHEMA_DRIFT');
+
+    const hire = hub.items.get('hires-1')![0];
+    expect(hire.stageId).not.toBe('learning');
+    expect(hub.calls.some((call) => call.name === 'mcpapp.lists.moveItemToStage' &&
+      call.arguments.itemId === hire._id && call.arguments.stageId === 'learning')).toBe(false);
+  });
+
+  it('resume rechecks every run grant before activation', async () => {
+    const hub = hubFixture({ dropAssigneeForSource: 'lesson-1' });
+    const input = prepared(await templateFingerprint(tree, hasher));
+    const binding = { roomId: 'room-1', positionsListId: 'positions-1', hiresListId: 'hires-1' };
+
+    await expect(provisionV4(hub.app, binding, input, ['owner'], undefined, catalogsFor(hub, input)))
+      .rejects.toThrow('SCHEMA_DRIFT');
+    const hire = hub.items.get('hires-1')![0];
+    const runUpdatesBeforeResume = hub.calls.filter((call) => call.name === 'mcpapp.lists.updateItem' &&
+      hub.items.get('run-1')!.some((row) => row._id === call.arguments.itemId)).length;
+    hub.setDropAssigneeForSource(undefined);
+
+    await expect(resumeV4(hub.app, binding, hire._id, input, ['owner'], undefined, catalogsFor(hub, input)))
+      .resolves.toMatchObject({ state: 'active', roadmapListId: 'run-1' });
+
+    const runUpdatesAfterResume = hub.calls.filter((call) => call.name === 'mcpapp.lists.updateItem' &&
+      hub.items.get('run-1')!.some((row) => row._id === call.arguments.itemId)).length;
+    expect(runUpdatesAfterResume - runUpdatesBeforeResume).toBe(1);
+    expect(hub.items.get('run-1')).toHaveLength(8);
+    expect(hub.items.get('run-1')!.every((row) => hub.runField(row, V2.assignee) === 'employee-1')).toBe(true);
+    expect(hub.calls.filter((call) => call.name === 'mcpapp.lists.moveItemToStage' &&
+      call.arguments.itemId === hire._id && call.arguments.stageId === 'learning')).toHaveLength(1);
   });
 
   it('reuses the B1 hire after create succeeds but its response is lost', async () => {

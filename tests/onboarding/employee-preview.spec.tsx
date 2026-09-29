@@ -47,5 +47,8 @@ describe('temporary employee preview', () => {
     expect(screen.getByRole('button', { name: 'Lộ trình của tôi' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Xem giao diện nhân sự' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Quay lại quản trị' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Nhân sự' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Onboarding mới' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Template' })).toBeNull();
   });
 });

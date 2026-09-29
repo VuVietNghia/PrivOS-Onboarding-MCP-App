@@ -1,0 +1,49 @@
+
+> ai.privos.onboarding-mcp-app@3.0.0 start
+> tsx src/server.ts
+
+[serveApp] · serveApp.mode_resolved
+[serveApp] · serveApp.listening
+[serveApp] · relay.connected
+[serveApp] · standalone.identity.trust_rotated
+[serveApp] · relay.standalone_control.applied
+[serveApp] · relay.disconnected
+[serveApp] · relay.reconnect.scheduled
+[serveApp] · relay.connected
+[serveApp] · standalone.identity.trust_rotated
+[serveApp] · relay.standalone_control.applied
+[serveApp] · relay.disconnected
+[serveApp] · relay.reconnect.scheduled
+[serveApp] · relay.connected
+[serveApp] · standalone.identity.trust_rotated
+[serveApp] · relay.standalone_control.applied
+[serveApp] · relay.rpc.inbound
+[serveApp] · mcp.request.ok
+[serveApp] · relay.rpc.outbound
+[serveApp] · relay.rpc.inbound
+[serveApp] · mcp.request.ok
+[serveApp] · relay.rpc.outbound
+[serveApp] · relay.rpc.inbound
+[serveApp] · mcp.request.ok
+[serveApp] · relay.rpc.outbound
+[serveApp] · relay.standalone_control.applied
+[serveApp] · standalone.identity.trust_rotated
+[serveApp] · relay.standalone_control.applied
+[serveApp] · relay.disconnected
+[serveApp] · relay.reconnect.scheduled
+[serveApp] · relay.connected
+[serveApp] · standalone.identity.trust_rotated
+[serveApp] · relay.standalone_control.applied
+[serveApp] · relay.disconnected
+[serveApp] · relay.reconnect.scheduled
+[serveApp] · relay.connected
+[serveApp] · standalone.identity.trust_rotated
+[serveApp] · relay.standalone_control.applied
+[serveApp] · relay.disconnected
+[serveApp] · relay.reconnect.scheduled
+[serveApp] ✗ relay.ws_error { reason: 'ws_error', generation: 6, name: 'Error' }
+[serveApp] · relay.disconnected
+[serveApp] · relay.reconnect.scheduled
+[serveApp] ✗ relay.ws_error { reason: 'ws_error', generation: 7, name: 'Error' }
+[serveApp] · relay.disconnected
+[serveApp] · relay.reconnect.scheduled

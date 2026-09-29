@@ -1,14 +1,35 @@
 import type { HubItem } from '../domain/fields';
+import { OnboardingError, type OnboardingErrorCode } from '../domain/errors';
 import type { ContentItem, Day, Hire, Lesson, Question, Roadmap, Week } from '../domain/models';
 import { gradeDay } from '../domain/quiz';
 import { appendScore, completeLessonDay, countCompletedDays } from '../domain/scores';
 import { parseHireItem, parseTemplateItems } from '../domain/v2-schemas';
 import { resolveSelectLabels, resolveV2FieldIds, V2, V2_HIRE_FIELDS, V2_ROADMAP_FIELDS } from '../domain/v2-fields';
-import type { LearningDeps, LearningService, LoadedLearning, SubmitQuizInput, SubmitQuizResult, SubmissionJournal } from '../ports/learning';
+import type { LearningDeps, LearningService, LoadedLearning, MemberRoadmapOption, PendingQuizSubmission, SubmitQuizInput, SubmitQuizResult, SubmissionJournal } from '../ports/learning';
 
 export type { SubmitQuizInput, SubmitQuizResult } from '../ports/learning';
 
 const MAX_SERIALIZED_BYTES = 16_000;
+const LEARNING_ERROR_CODES = [
+  'SCHEMA_DRIFT', 'SCORES_INVALID', 'PAGINATION_INVALID', 'HIRE_NOT_ACTIVE', 'HIRE_NOT_OWNED',
+  'HIRE_CANCELLING', 'RUN_INVALID', 'DAY_NOT_FOUND', 'LESSON_NOT_FOUND', 'QUIZ_INVALID',
+  'QUIZ_INCOMPLETE', 'WRITE_CONFLICT', 'SCORE_HISTORY_LIMIT',
+] as const satisfies readonly OnboardingErrorCode[];
+
+function learningErrorCode(message: string): OnboardingErrorCode | null {
+  for (const code of LEARNING_ERROR_CODES) if (message === code) return code;
+  return null;
+}
+
+async function withLearningErrors<T>(operation: () => Promise<T>): Promise<T> {
+  try { return await operation(); }
+  catch (error) {
+    if (error instanceof OnboardingError) throw error;
+    const code = error instanceof Error ? learningErrorCode(error.message) : null;
+    if (code) throw new OnboardingError(code);
+    throw error;
+  }
+}
 
 function field(row: HubItem, fieldId: string): unknown {
   return row.customFields?.find((entry) => entry.fieldId === fieldId)?.value;
@@ -40,10 +61,15 @@ function sameJournal(actual: SubmissionJournal | null, expected: SubmissionJourn
     actual.previousScores === expected.previousScores && JSON.stringify(actual.answers) === JSON.stringify(expected.answers);
 }
 
+function pendingMetadata(value: SubmissionJournal | null): PendingQuizSubmission | null {
+  return value ? { dayId: value.dayId, operationId: value.operationId,
+    answeredQuestions: Object.keys(value.answers).length } : null;
+}
+
 async function hireContext(deps: LearningDeps) {
   const { binding } = deps;
   const info = await deps.read.readListInfo(binding.hiresListId);
-  if (info.list.roomId !== binding.roomId) throw new Error('ROOM_MISMATCH');
+  if (info.list.roomId !== binding.roomId) throw new OnboardingError('SCHEMA_DRIFT');
   return { info, ids: resolveV2FieldIds(info.list.fieldDefinitions, V2_HIRE_FIELDS) };
 }
 function hireStatus(stages: { _id: string; name: string }[], stageId: string): 'learning' | 'done' {
@@ -81,7 +107,7 @@ async function loadRun(deps: LearningDeps, runId: string): Promise<Roadmap> {
   const overviewRows = rows.filter((row) => field(row, ids[V2.source]) === '__overview__');
   if (overviewRows.length !== 1 || logicalParent(overviewRows[0]) !== '') throw new Error('RUN_INVALID');
   const overview = overviewRows[0];
-  const weeks = rows.filter((row) => kindLabel(row) === 'Tuần').map((row): Week => {
+  const weeks = rows.filter((row) => row._id !== overview._id && kindLabel(row) === 'Tuần').map((row): Week => {
     const order = field(row, ids[V2.order]);
     if (logicalParent(row) !== overview._id || typeof order !== 'number' || !Number.isInteger(order)) throw new Error('RUN_INVALID');
     if (!row.name) throw new Error('RUN_INVALID');
@@ -117,31 +143,61 @@ async function loadRun(deps: LearningDeps, runId: string): Promise<Roadmap> {
   return { overviewId: overview._id, templateListId: text(field(overview, ids[V2.template])), tree: { weeks, items } };
 }
 
-async function loadMyRoadmapWithPorts(deps: LearningDeps, userId: string): Promise<LoadedLearning | null> {
+async function listMyHiresWithPorts(deps: LearningDeps, userId: string): Promise<Hire[]> {
   if (!userId) throw new Error('HIRE_NOT_OWNED');
   const { binding } = deps;
   const { info, ids } = await hireContext(deps);
   const candidates: Hire[] = [];
+  const seenItems = new Set<string>();
   for (const status of ['learning', 'done'] as const) {
     const stageName = status === 'learning' ? 'Đang học' : 'Hoàn tất';
     const stage = info.stages.find((entry) => entry.name === stageName);
     if (!stage) throw new Error('SCHEMA_DRIFT');
+    const seenCursors = new Set<string>();
     let cursor: string | undefined;
     do {
       const page = await deps.read.queryItems(binding.hiresListId, { stageId: stage._id, archived: false,
         customFields: [{ fieldId: ids[V2.employee], op: 'is', value: userId }] }, 100, cursor);
       for (const row of page.items) {
+        if (seenItems.has(row._id) || row.stageId !== stage._id) throw new Error('PAGINATION_INVALID');
+        seenItems.add(row._id);
         const hire = parseHireItem(row, ids, status);
         if (hire.employeeId !== userId) throw new Error('HIRE_NOT_OWNED');
         candidates.push(hire);
       }
+      if (page.nextCursor && seenCursors.has(page.nextCursor)) throw new Error('PAGINATION_INVALID');
+      if (page.nextCursor) seenCursors.add(page.nextCursor);
       cursor = page.nextCursor ?? undefined;
     } while (cursor);
   }
-  const hire = candidates.sort((a, b) => b.startDate.localeCompare(a.startDate) || b.id.localeCompare(a.id))[0];
-  if (!hire) return null;
+  return candidates.sort((a, b) => b.startDate.localeCompare(a.startDate) || b.id.localeCompare(a.id));
+}
+
+function roadmapOption(hire: Hire): MemberRoadmapOption {
+  if (hire.status !== 'learning' && hire.status !== 'done') throw new Error('HIRE_NOT_ACTIVE');
+  return { hireId: hire.id, positionName: hire.positionName, startDate: hire.startDate, status: hire.status,
+    doneDays: hire.doneDays, totalDays: hire.totalDays };
+}
+
+async function loadMyRoadmapWithPorts(deps: LearningDeps, userId: string, hireId?: string): Promise<LoadedLearning | null> {
+  const candidates = await listMyHiresWithPorts(deps, userId);
+  const hire = hireId ? candidates.find((candidate) => candidate.id === hireId) : candidates[0];
+  if (!hire) {
+    if (hireId) throw new Error('HIRE_NOT_OWNED');
+    return null;
+  }
   if (!hire.roadmapListId) throw new Error('RUN_INVALID');
-  return { hire, roadmap: await loadRun(deps, hire.roadmapListId) };
+  return deps.lock.run(hire.id, async () => {
+    let context = await ownHire(deps, userId, hire.id);
+    const pending = journal(field(context.row, context.ids[V2.pendingSubmission]));
+    if (!pending && context.hire.status === 'learning' && context.hire.doneDays >= context.hire.totalDays) {
+      await finishHireIfDone(deps, hire.id, context.hire, context.info.stages);
+      context = await ownHire(deps, userId, hire.id);
+      if (context.hire.status !== 'done') throw new Error('WRITE_CONFLICT');
+    }
+    return { hire: context.hire, roadmap: await loadRun(deps, context.hire.roadmapListId!),
+      pendingSubmission: pendingMetadata(pending) };
+  });
 }
 function dayChildren(roadmap: Roadmap, dayId: string) {
   const day = roadmap.tree.items.find((item): item is Day => item.kind === 'day' && item.id === dayId);
@@ -190,14 +246,15 @@ async function markLessonReadWithPorts(deps: LearningDeps, userId: string, hireI
     }
     const current = await ownHire(deps, userId, hireId);
     await finishHireIfDone(deps, hireId, current.hire, current.info.stages);
-    return { hire: (await ownHire(deps, userId, hireId)).hire, roadmap: updatedRoadmap };
+    const saved = await ownHire(deps, userId, hireId);
+    return { hire: saved.hire, roadmap: updatedRoadmap,
+      pendingSubmission: pendingMetadata(journal(field(saved.row, saved.ids[V2.pendingSubmission]))) };
   });
 }
 
-async function submitQuizWithPorts(deps: LearningDeps, input: SubmitQuizInput): Promise<SubmitQuizResult> {
+async function submitQuizLocked(deps: LearningDeps, input: SubmitQuizInput): Promise<SubmitQuizResult> {
   const { binding } = deps;
-  return deps.lock.run(input.hireId, async () => {
-    if (!/^[A-Za-z0-9_-]{8,64}$/.test(input.operationId)) throw new Error('QUIZ_INVALID');
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(input.operationId)) throw new Error('QUIZ_INVALID');
     const context = await ownHire(deps, input.userId, input.hireId);
     const runId = context.hire.roadmapListId!;
     const roadmap = await loadRun(deps, runId);
@@ -260,14 +317,29 @@ async function submitQuizWithPorts(deps: LearningDeps, input: SubmitQuizInput): 
       serialized(saved.hire.scores) !== projectedScores || savedAttempts[savedAttempts.length - 1] !== score) throw new Error('WRITE_CONFLICT');
     await finishHireIfDone(deps, input.hireId, saved.hire, saved.info.stages);
     const hire = (await ownHire(deps, input.userId, input.hireId)).hire;
-    return { hire, grade, attempt: hire.scores[String(day.order)]?.attempts?.length ?? 1 };
+  return { hire, grade, attempt: hire.scores[String(day.order)]?.attempts?.length ?? 1 };
+}
+
+function submitQuizWithPorts(deps: LearningDeps, input: SubmitQuizInput): Promise<SubmitQuizResult> {
+  return deps.lock.run(input.hireId, () => submitQuizLocked(deps, input));
+}
+
+function resumeQuizWithPorts(deps: LearningDeps, userId: string, hireId: string): Promise<SubmitQuizResult> {
+  return deps.lock.run(hireId, async () => {
+    const context = await ownHire(deps, userId, hireId);
+    const pending = journal(field(context.row, context.ids[V2.pendingSubmission]));
+    if (!pending || serialized(context.hire.scores) !== pending.previousScores) throw new Error('WRITE_CONFLICT');
+    return submitQuizLocked(deps, { userId, hireId, dayId: pending.dayId,
+      operationId: pending.operationId, answers: pending.answers });
   });
 }
 
 export function createLearningService(deps: LearningDeps): LearningService {
   return {
-    load: () => loadMyRoadmapWithPorts(deps, deps.actor.userId),
-    markRead: (hireId, lessonId) => markLessonReadWithPorts(deps, deps.actor.userId, hireId, lessonId),
-    submit: (input) => submitQuizWithPorts(deps, { ...input, userId: deps.actor.userId }),
+    listMine: () => withLearningErrors(async () => (await listMyHiresWithPorts(deps, deps.actor.userId)).map(roadmapOption)),
+    load: (hireId) => withLearningErrors(() => loadMyRoadmapWithPorts(deps, deps.actor.userId, hireId)),
+    markRead: (hireId, lessonId) => withLearningErrors(() => markLessonReadWithPorts(deps, deps.actor.userId, hireId, lessonId)),
+    submit: (input) => withLearningErrors(() => submitQuizWithPorts(deps, { ...input, userId: deps.actor.userId })),
+    resume: (hireId) => withLearningErrors(() => resumeQuizWithPorts(deps, deps.actor.userId, hireId)),
   };
 }

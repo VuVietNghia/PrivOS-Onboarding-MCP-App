@@ -50,6 +50,42 @@ Real access enforcement belongs to Hub isolated List ACL, with
 `Isolated_Item_Write_ACL_Enforce` enabled by a workspace administrator. The current A/B/C read and
 write matrix has not been verified on Hub; UI role checks alone are not acceptance evidence.
 
+## Member learning flow
+
+The member service exposes `listMine()` to list the signed-in member's active onboarding runs,
+`load(hireId?)` to open the selected run, and `resume(hireId)` to continue a persisted quiz
+submission after a reload or interrupted write. The UI selects the newest run by default and lets
+the member switch to an older active run.
+
+Provisioning writes `ASSIGNEE` directly to the hire, overview, week, day, lesson and question items.
+It reads the entire run back and verifies the exact item set and assignee before moving the hire to
+`Đang học`. A member can read their roadmap and files, mark lessons read, submit or retake quizzes,
+and resume a pending submission. The first completed quiz score remains the official score.
+
+The submission journal makes retries of the same operation idempotent and detects conflicting
+score state before overwriting it. PrivOS Lists currently provide no proven compare-and-swap or
+atomic append contract, so concurrent submissions from two devices are not claimed as exactly-once.
+Local typecheck, automated tests, production build and artifact inspection passed on 2026-09-29.
+Live Hub A/B/C authorization, file download, recovery and full P8 acceptance remain unrun.
+
+## Current-room member IDs
+
+For a connected PrivOS SDK instance, read the current room and its member IDs without configuring a room ID:
+
+```ts
+import { getCurrentRoomMemberIds } from './src/ui/onboarding/data/room-members';
+
+const { roomId, memberIds } = await getCurrentRoomMemberIds(app);
+```
+
+The function reads `mcpapp.context.get` on each call, selects `channels.members` for a public room
+(`c`) or `groups.members` for a private room (`p`), reads all pages, and checks room identity again
+before returning. Other room types raise `ROOM_TYPE_UNSUPPORTED`. Denied or unavailable member
+routes raise `ROOM_MEMBERS_UNAVAILABLE`; malformed or incomplete member pages also raise errors.
+The function does not read or create onboarding Lists. `rooms:read` is a required installation
+permission because the onboarding form must provide a member selector. The current user must also
+have access to the room; a manifest declaration alone does not grant access to a stale installation.
+
 ## Code layout
 
 `src/ui/onboarding/` has `domain/` models and validation, `ports/` typed capabilities, `flows/`
