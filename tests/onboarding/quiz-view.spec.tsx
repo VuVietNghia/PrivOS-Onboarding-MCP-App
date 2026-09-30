@@ -23,6 +23,50 @@ const questions: Question[] = [
 ];
 
 describe('quiz UI', () => {
+  it('blocks duplicate submissions and keeps answers after a failed save for retry', async () => {
+    const user = userEvent.setup();
+    let rejectSave: (cause: Error) => void = () => { throw new Error('SAVE_NOT_STARTED'); };
+    const onSubmit = vi.fn(() => new Promise<void>((_resolve, reject) => { rejectSave = reject; }));
+    render(<QuizView questions={questions} onSubmit={onSubmit} />, 'en');
+    await user.click(screen.getByRole('radio', { name: 'B' }));
+    await user.click(screen.getByRole('checkbox', { name: 'C' }));
+    await user.click(screen.getByRole('button', { name: 'Submit answers' }));
+    const saving = screen.getByRole('button', { name: 'Saving…' });
+    expect(saving.hasAttribute('disabled')).toBe(true);
+    await user.click(saving);
+    expect(onSubmit).toHaveBeenCalledOnce();
+    rejectSave(new Error('PRIVATE_DRIVER_DETAIL'));
+    expect((await screen.findByRole('alert')).textContent).not.toContain('PRIVATE_DRIVER_DETAIL');
+    expect(screen.getByRole('radio', { name: 'B' }).matches(':checked')).toBe(true);
+    expect(screen.getByRole('checkbox', { name: 'C' }).matches(':checked')).toBe(true);
+    onSubmit.mockImplementation(async () => {});
+    await user.click(screen.getByRole('button', { name: 'Submit answers' }));
+    expect(onSubmit).toHaveBeenCalledTimes(2);
+    expect(onSubmit).toHaveBeenLastCalledWith({ q1: ['b'], q2: ['a'] });
+  });
+
+  it('preserves radio and checkbox answers when the theme changes', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    const quiz = (theme: 'light' | 'dark' | 'brand') => <div className="onboarding-v4" data-theme-mode={theme}>
+      <QuizView questions={questions} onSubmit={onSubmit} />
+    </div>;
+    const view = render(quiz('light'), 'en');
+    await user.click(screen.getByRole('radio', { name: 'B' }));
+    await user.click(screen.getByRole('checkbox', { name: 'C' }));
+    await user.click(screen.getByRole('checkbox', { name: 'E' }));
+    for (const theme of ['dark', 'brand'] as const) {
+      view.rerender(quiz(theme));
+      expect(screen.getByRole('radio', { name: 'B' }).matches(':checked')).toBe(true);
+      expect(screen.getByRole('checkbox', { name: 'C' }).matches(':checked')).toBe(true);
+      expect(screen.getByRole('checkbox', { name: 'E' }).matches(':checked')).toBe(true);
+      expect(screen.getByRole('status').textContent).toBe('Answered 2/2');
+    }
+    await user.click(screen.getByRole('button', { name: 'Submit answers' }));
+    expect(onSubmit).toHaveBeenCalledOnce();
+    expect(onSubmit).toHaveBeenCalledWith({ q1: ['b'], q2: ['a', 'c'] });
+  });
+
   it('collects radio and checkbox answers without revealing correct choices', async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();

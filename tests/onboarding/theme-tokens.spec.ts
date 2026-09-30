@@ -37,6 +37,19 @@ function themeTokens(css: string, theme: 'light' | 'dark' | 'brand'): Readonly<R
 }
 
 describe('onboarding semantic theme tokens', () => {
+  it.each(['light', 'dark', 'brand'] as const)('keeps links and disabled controls readable in %s', (theme) => {
+    const tokens = themeTokens(readFileSync(themesPath, 'utf8'), theme);
+    for (const token of ['--v4-link', '--v4-disabled-bg', '--v4-disabled-text', '--v4-disabled-border']) {
+      expect(tokens[token], `${theme} ${token}`).toBeTypeOf('string');
+      expect(tokens[token], `${theme} ${token}`).toMatch(/^#[0-9a-f]{6}$/iu);
+    }
+    for (const surface of ['--v4-bg', '--v4-surface', '--v4-surface-2']) {
+      expect(contrast(tokens['--v4-link'], tokens[surface]), `${theme} link on ${surface}`).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(contrast(tokens['--v4-disabled-text'], tokens['--v4-disabled-bg'])).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(tokens['--v4-disabled-border'], tokens['--v4-disabled-bg'])).toBeGreaterThanOrEqual(3);
+  });
+
   it('meets text, focus, boundary, and primary control contrast in every theme', () => {
     const css = readFileSync(themesPath, 'utf8');
     for (const theme of ['light', 'dark', 'brand'] as const) {

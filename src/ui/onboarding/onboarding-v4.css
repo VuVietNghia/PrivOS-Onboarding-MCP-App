@@ -17,8 +17,6 @@ body { margin: 0; }
 }
 .onboarding-v4, .onboarding-v4 * { box-sizing: border-box; }
 @scope (.onboarding-v4) {
-.onboarding-v4 button { font: inherit; color: inherit; }
-.onboarding-v4 button:focus-visible { outline: 3px solid var(--v4-primary); outline-offset: 2px; }
 .v4-app { display: grid; grid-template-columns: 264px minmax(0,1fr); min-height: 100vh; }
 .v4-sidebar { position: sticky; top: 0; z-index: 20; display: flex; flex-direction: column; gap: 24px; height: 100vh; padding: 20px 16px; background: var(--v4-surface); border-right: 1px solid var(--v4-border); }
 .v4-brand { display: flex; align-items: center; gap: 12px; padding: 0 8px; }
@@ -58,7 +56,7 @@ body { margin: 0; }
 .v4-page-head p { max-width: 680px; margin: 0; color: var(--v4-text-3); }
 .v4-eyebrow { margin: 0 0 8px !important; font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
 .v4-primary-button, .v4-secondary-button, .v4-pager button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 0 16px; border: 1px solid var(--v4-border); border-radius: 999px; background: var(--v4-surface); color: var(--v4-text); cursor: pointer; white-space: nowrap; }
-.v4-primary-button { border-color: transparent; background: var(--v4-primary); color: var(--v4-on-primary) !important; }
+.v4-primary-button { border-color: transparent; background: var(--v4-primary); color: var(--v4-on-primary); }
 .v4-primary-button:disabled { opacity: .42; cursor: not-allowed; }
 .v4-secondary-button:hover, .v4-pager button:hover:not(:disabled) { border-color: var(--v4-text); }
 .v4-stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; margin-bottom: 24px; }
@@ -105,7 +103,7 @@ body { margin: 0; }
 .v4-pager { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .v4-pager button { min-height: 32px; padding: 0 12px; font-size: 12px; }
 .v4-pager button:disabled { opacity: .42; cursor: not-allowed; }
-.v4-diagnostics-entry { display: block; margin: 16px 12px; padding: 4px 8px; border: 1px solid #a3b0c2; border-radius: 999px; background: #fff; color: #536068; font-size: 10px; opacity: .7; cursor: pointer; }
+.v4-diagnostics-entry { display: block; margin: 16px 12px; padding: 4px 8px; border: 1px solid var(--v4-control-border); border-radius: 999px; background: var(--v4-surface); color: var(--v4-text-2); font-size: 10px; cursor: pointer; }
 .v4-template-tools { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 .v4-markdown { line-height: 1.65; overflow-wrap: anywhere; }
 .v4-markdown pre { overflow-x: auto; }

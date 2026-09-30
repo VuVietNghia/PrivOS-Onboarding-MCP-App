@@ -47,6 +47,25 @@ function gateway() {
 }
 
 describe('lesson attachments', () => {
+  it('disables a pending download, prevents duplicate calls, and enables retry after rejection', async () => {
+    const user = userEvent.setup();
+    const { api, download } = gateway();
+    let rejectDownload: (cause: Error) => void = () => { throw new Error('DOWNLOAD_NOT_STARTED'); };
+    download.mockImplementationOnce(() => new Promise<void>((_resolve, reject) => { rejectDownload = reject; }));
+    render(<AttachmentList files={[ref]} gateway={api} />, 'en');
+    const button = screen.getByRole('button', { name: 'Download guide.pdf' });
+    await user.click(button);
+    expect(button.hasAttribute('disabled')).toBe(true);
+    await user.click(button);
+    expect(download).toHaveBeenCalledOnce();
+    rejectDownload(new Error('PRIVATE_DRIVER_DETAIL'));
+    expect((await screen.findByRole('alert')).textContent).not.toContain('PRIVATE_DRIVER_DETAIL');
+    expect(button.hasAttribute('disabled')).toBe(false);
+    await user.click(button);
+    expect(download).toHaveBeenCalledTimes(2);
+    expect(download).toHaveBeenLastCalledWith('file-1');
+  });
+
   it('offers upload while creating a template before the first draft is saved', () => {
     const { api } = gateway();
     render(<TemplateBuilder initial={initial} initialName="Kỹ sư" onSave={async () => {}} filesGateway={api} />);

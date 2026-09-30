@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { createElement } from 'react';
+import { Children, createElement, isValidElement, type ReactNode } from 'react';
 import { beforeAll, describe, expect, it } from 'vitest';
 import appManifest from '../privos-app.json';
 import { createAppMcpHandler, TOOL_NAME } from '../src/mcp-message-handlers';
@@ -100,14 +100,19 @@ describe('lazy panel error boundary — Reload fallback', () => {
     const reloadPage = { reload: () => { called = true; } };
     const boundary = new LazyBoundary({ children: createElement('div'), reloadPage, logger: { event() {} } });
     boundary.state = derived;
-    const output = boundary.render() as any;
+    const output = boundary.render();
 
     const rendered = JSON.stringify(output);
     expect(rendered).toContain('A new version of this app is available');
     expect(rendered).toContain('Reload');
 
     // The Reload button must actually trigger a full page reload, not a re-render.
-    const button = output.props.children[1];
+    expect(isValidElement<{ children: ReactNode }>(output)).toBe(true);
+    if (!isValidElement<{ children: ReactNode }>(output)) throw new Error('EXPECTED_THEME_ROOT');
+    const recovery = Children.toArray(output.props.children)[0];
+    if (!isValidElement<{ children: ReactNode }>(recovery)) throw new Error('EXPECTED_RECOVERY_CONTENT');
+    const button = Children.toArray(recovery.props.children).find((child) => isValidElement(child) && child.type === 'button');
+    if (!isValidElement<{ onClick: () => void }>(button)) throw new Error('EXPECTED_RELOAD_BUTTON');
     expect(button.type).toBe('button');
     button.props.onClick();
     expect(called).toBe(true);

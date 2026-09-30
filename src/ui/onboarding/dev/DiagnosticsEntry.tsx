@@ -5,11 +5,13 @@ import P02ContractProbe from './P02ContractProbe';
 import P03LimitsProbe from './P03LimitsProbe';
 import PrivosProbeProvider from './privos-probes';
 import { probeIdentityKey, probeSurfaceKey } from './probe-keys';
+import type { OnboardingTheme } from '../views/OnboardingShell';
 
 interface DiagnosticsEntryProps {
   roomId: string;
   userId?: string;
   admin: boolean;
+  theme: OnboardingTheme;
 }
 
 const copy = {
@@ -25,14 +27,14 @@ const copy = {
   },
 } as const;
 
-export default function DiagnosticsEntry({ roomId, userId, admin }: DiagnosticsEntryProps) {
+export default function DiagnosticsEntry({ roomId, userId, admin, theme }: DiagnosticsEntryProps) {
   const { locale } = useUiLocale();
   const text = copy[locale];
   const [open, setOpen] = useState(false);
   const [screen, setScreen] = useState<'probe' | 'p02' | 'p03'>(admin ? 'probe' : 'p02');
   const identity = probeIdentityKey(roomId, userId);
-  if (!open) return <button className="v4-diagnostics-entry" type="button" onClick={() => setOpen(true)}>{text.open}</button>;
-  return <div className="onboarding-probes">
+  return <div className="onboarding-v4 v4-diagnostics-surface" data-theme-mode={theme} lang={locale}>
+    {!open ? <button className="v4-diagnostics-entry" type="button" onClick={() => setOpen(true)}>{text.open}</button> : <div className="onboarding-probes">
     <button type="button" onClick={() => setOpen(false)}>{text.back}</button>
     <PrivosProbeProvider>{(probe) => <div className="container" key={probeSurfaceKey(roomId, userId, admin)}>
       <h1>{text.title}</h1>
@@ -46,5 +48,6 @@ export default function DiagnosticsEntry({ roomId, userId, admin }: DiagnosticsE
       {screen === 'p02' && <P02ContractProbe key={identity} probe={probe} />}
       {admin && screen === 'p03' && <P03LimitsProbe key={identity} probe={probe} />}
     </div>}</PrivosProbeProvider>
+  </div>}
   </div>;
 }

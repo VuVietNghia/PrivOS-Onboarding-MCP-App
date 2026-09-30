@@ -24,6 +24,31 @@ const lesson: Lesson = { id: 'lesson-1', kind: 'lesson', name: 'Bài đọc', st
 const question: Question = { id: 'question-1', kind: 'question', name: 'Câu 1', stageId: 'week-1', order: 0, parentId: 'day-2', content: 'Chọn đáp án', options: ['A', 'B'], correctLabels: ['b'], explanation: 'Giải thích', selectedLabels: [], correct: null };
 
 describe('employee learning views', () => {
+  it('themes the unread, saving, and read lesson action', async () => {
+    const user = userEvent.setup();
+    const onRead = vi.fn();
+    const props = { day, children: [lesson], onBack: vi.fn(), onQuiz: vi.fn(), onRead };
+    const view = render(<DayLearningView {...props} />, 'en');
+    const action = screen.getByRole('button', { name: 'Mark as read' });
+    expect(action.classList.contains('v4-secondary-button')).toBe(true);
+    await user.click(action);
+    expect(onRead).toHaveBeenCalledOnce();
+    expect(onRead).toHaveBeenCalledWith(lesson.id);
+
+    view.rerender(<DayLearningView {...props} pendingLessonId={lesson.id} />);
+    const saving = screen.getByRole('button', { name: 'Saving…' });
+    expect(saving.classList.contains('v4-secondary-button')).toBe(true);
+    expect(saving.hasAttribute('disabled')).toBe(true);
+    await user.click(saving);
+
+    view.rerender(<DayLearningView {...props} children={[{ ...lesson, read: true }]} />);
+    const read = screen.getByRole('button', { name: 'Read' });
+    expect(read.classList.contains('v4-secondary-button')).toBe(true);
+    expect(read.hasAttribute('disabled')).toBe(true);
+    await user.click(read);
+    expect(onRead).toHaveBeenCalledOnce();
+  });
+
   it('uses the hire snapshot and lets employees open every day', async () => {
     const user = userEvent.setup();
     const hire: Hire = { id: 'hire-1', employeeId: 'user-1', name: 'B', positionId: 'position-1', positionName: 'Kỹ sư', totalDays: 2,

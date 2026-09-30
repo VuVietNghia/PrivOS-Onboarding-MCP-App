@@ -15,12 +15,14 @@ import { Component, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Logger } from '../shared/ports/effects';
 import type { ReloadPage } from './ports/presentation';
+import { useTheme } from './theme-provider';
 
 interface LazyBoundaryProps {
   children: ReactNode;
   reloadPage: ReloadPage;
   logger: Logger;
   copy?: { recovery: string; reload: string };
+  theme?: 'light' | 'dark';
 }
 
 interface LazyBoundaryState {
@@ -42,13 +44,15 @@ export class LazyBoundary extends Component<LazyBoundaryProps, LazyBoundaryState
     if (this.state.hasError) {
       const copy = this.props.copy ?? { recovery: 'A new version of this app is available.', reload: 'Reload' };
       return (
-        <div className="container">
-          <div className="error-message">
-            {copy.recovery}
+        <div className="onboarding-v4" data-theme-mode={this.props.theme ?? 'light'}>
+          <div className="v4-recovery">
+            <p role="alert">
+              {copy.recovery}
+            </p>
+            <button type="button" className="v4-primary-button" onClick={() => this.props.reloadPage.reload()}>
+              {copy.reload}
+            </button>
           </div>
-          <button type="button" className="btn-submit" onClick={() => this.props.reloadPage.reload()}>
-            {copy.reload}
-          </button>
         </div>
       );
     }
@@ -58,7 +62,8 @@ export class LazyBoundary extends Component<LazyBoundaryProps, LazyBoundaryState
 
 export function LocalizedLazyBoundary(props: Omit<LazyBoundaryProps, 'copy'>) {
   const { t } = useTranslation('common');
-  return <LazyBoundary {...props} copy={{ recovery: t('lazy.recovery'), reload: t('lazy.reload') }} />;
+  const { resolved } = useTheme();
+  return <LazyBoundary {...props} theme={props.theme ?? resolved} copy={{ recovery: t('lazy.recovery'), reload: t('lazy.reload') }} />;
 }
 
 export default LazyBoundary;

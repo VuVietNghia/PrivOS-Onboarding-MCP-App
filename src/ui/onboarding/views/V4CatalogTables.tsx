@@ -24,6 +24,7 @@ interface BaseProps<T, S extends string> {
 }
 
 export interface HiresCatalogTableProps extends BaseProps<Hire, HireStatus> {
+  statusCounts?: HireStatusCounts;
   onCreate?: () => void;
   onOpen?: (hire: Hire) => void;
   positionQuery?: string;
@@ -37,6 +38,14 @@ export interface HiresCatalogTableProps extends BaseProps<Hire, HireStatus> {
   onPositionSelect?: (position: Position) => void;
   onPositionClear?: () => void;
   onPositionClose?: () => void;
+}
+
+export type HireStatusCounts = Readonly<Record<HireStatus, number>>;
+
+export function countHireStatuses(items: readonly Hire[]): HireStatusCounts {
+  const counts: Record<HireStatus, number> = { provisioning: 0, learning: 0, done: 0, failed: 0, cancelled: 0 };
+  for (const hire of items) counts[hire.status] += 1;
+  return counts;
 }
 export interface PositionsCatalogTableProps extends BaseProps<Position, PositionStatus> {
   onCreate?: () => void;
@@ -75,7 +84,7 @@ function ErrorOrEmpty({ error, loading, empty, onReload }: { error: UiError | nu
 }
 
 export function HiresCatalogTable(props: HiresCatalogTableProps) {
-  const { items, loading, error, search, onSearch, status, onStatus, canPrevious, canNext, onPrevious, onNext, onReload, onCreate, onOpen, positionQuery = '', selectedPosition = null, positionOptions = [], positionLookupOpen = false, positionLookupLoading = false, positionLookupError = null, onPositionQuery, onPositionFocus, onPositionSelect, onPositionClear, onPositionClose } = props;
+  const { items, loading, error, search, onSearch, status, onStatus, statusCounts = countHireStatuses(items), canPrevious, canNext, onPrevious, onNext, onReload, onCreate, onOpen, positionQuery = '', selectedPosition = null, positionOptions = [], positionLookupOpen = false, positionLookupLoading = false, positionLookupError = null, onPositionQuery, onPositionFocus, onPositionSelect, onPositionClear, onPositionClose } = props;
   const { t, locale } = useCatalogCopy();
   const { t: errorT } = useTranslation('errors');
   const [activePositionIndex, setActivePositionIndex] = useState(-1);
@@ -84,11 +93,10 @@ export function HiresCatalogTable(props: HiresCatalogTableProps) {
     else setActivePositionIndex((current) => Math.min(current, positionOptions.length - 1));
   }, [positionLookupOpen, positionOptions]);
   const hireStatus: Record<HireStatus, string> = { provisioning: t.hireProvisioning, learning: t.hireLearning, done: t.hireDone, failed: t.hireFailed, cancelled: t.hireCancelled };
-  const count = (value: HireStatus) => items.filter((hire) => hire.status === value).length;
   return <section className="v4-screen" aria-labelledby="v4-hires-title">
     <div className="v4-page-head"><div><p className="v4-eyebrow">{t.onPage} · {items.length} {t.profiles}</p><h1 id="v4-hires-title">{t.manageOnboarding}</h1><p>{t.hiresSubtitle}</p></div><button type="button" className="v4-primary-button" disabled={!onCreate} onClick={onCreate}>{t.createOnboarding}</button></div>
     <div className="v4-stats" aria-label={t.onPage}>
-      {(['learning', 'done', 'provisioning', 'failed'] as const).map((kind) => <button className="v4-stat" key={kind} type="button" aria-pressed={status === kind} onClick={() => onStatus(status === kind ? 'all' : kind)}><span>{{ learning: t.learning, done: t.done, provisioning: t.provisioning, failed: t.attention }[kind]}</span><strong>{count(kind)}</strong><small>{t.onPage}</small></button>)}
+      {(['learning', 'done', 'provisioning', 'failed'] as const).map((kind) => <button className="v4-stat" key={kind} type="button" aria-pressed={status === kind} onClick={() => onStatus(status === kind ? 'all' : kind)}><span>{{ learning: t.learning, done: t.done, provisioning: t.provisioning, failed: t.attention }[kind]}</span><strong>{statusCounts[kind]}</strong><small>{t.onPage}</small></button>)}
     </div>
     <div className="v4-toolbar v4-hires-toolbar"><label className="v4-search"><span className="v4-visually-hidden">{t.searchHires}</span><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder={t.searchHiresPlaceholder} /></label>
       <div className="v4-position-typeahead" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) onPositionClose?.(); }}>

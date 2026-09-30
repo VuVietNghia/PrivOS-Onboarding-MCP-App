@@ -5,12 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { V4Onboarding } from '../../src/ui/onboarding/views/V4Onboarding';
 import { PrivosOnboardingRoot } from '../../src/ui/composition/PrivosOnboardingRoot';
 import type { RoomBootstrap } from '../../src/ui/onboarding/data/room-bootstrap';
-import type { Page, Position } from '../../src/ui/onboarding/domain/models';
+import type { Hire, Page, Position } from '../../src/ui/onboarding/domain/models';
 import { OnboardingI18nProvider } from '../../src/ui/i18n/OnboardingI18nProvider';
 
 const mocks = vi.hoisted(() => ({
   bootstrap: vi.fn<() => Promise<RoomBootstrap>>(),
-  hires: vi.fn(async () => ({ items: [], nextCursor: null })),
+  hires: vi.fn(async (): Promise<Page<Hire>> => ({ items: [], nextCursor: null })),
   positions: vi.fn(async (): Promise<Page<Position>> => ({ items: [], nextCursor: null })),
 }));
 
@@ -95,6 +95,22 @@ describe('v4 room bootstrap surface', () => {
     await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by status' }), 'done');
     await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', status: 'done' }, undefined));
     expect((screen.getByRole('button', { name: 'Create onboarding' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it('keeps every status count visible after filtering the hire list', async () => {
+    const learningHire: Hire = { id: 'h-learning', employeeId: 'u-learning', name: 'Learning hire', positionId: 'p1', positionName: 'Engineering', totalDays: 5, startDate: '2026-09-30', roadmapListId: 'r-learning', status: 'learning', doneDays: 1, scores: {}, errorCode: null, pendingAction: null };
+    const completedHireOne: Hire = { ...learningHire, id: 'h-done-1', employeeId: 'u-done-1', name: 'Completed hire one', roadmapListId: 'r-done-1', status: 'done', doneDays: 5 };
+    const completedHireTwo: Hire = { ...learningHire, id: 'h-done-2', employeeId: 'u-done-2', name: 'Completed hire two', roadmapListId: 'r-done-2', status: 'done', doneDays: 5 };
+    mocks.hires
+      .mockResolvedValueOnce({ items: [learningHire, completedHireOne, completedHireTwo], nextCursor: null })
+      .mockResolvedValueOnce({ items: [learningHire], nextCursor: null });
+    const user = userEvent.setup();
+    renderV4();
+
+    expect(await screen.findByRole('button', { name: /Completed 2/ })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: /Onboarding 1/ }));
+    await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', status: 'learning' }, undefined));
+    expect(screen.getByRole('button', { name: /Completed 2/ })).toBeTruthy();
   });
 
   it('keeps loaded position options visible while navigating with arrow keys', async () => {

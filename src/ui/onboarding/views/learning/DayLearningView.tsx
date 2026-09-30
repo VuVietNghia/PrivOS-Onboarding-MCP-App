@@ -30,7 +30,7 @@ export function DayLearningView({ day, children, filesGateway, pendingLessonId, 
       {lesson.videos.filter((url) => { try { return new URL(url).protocol === 'https:'; } catch { return false; } })
         .map((url) => <p key={url}><a href={url} target="_blank" rel="noopener noreferrer">{t('day.openVideo')}</a></p>)}
       {filesGateway && <AttachmentList files={lesson.attachments} gateway={filesGateway} />}
-      <button type="button" disabled={lesson.read || pendingLessonId === lesson.id}
+      <button type="button" className="v4-secondary-button" disabled={lesson.read || pendingLessonId === lesson.id}
         onClick={() => onRead(lesson.id)}>{lesson.read ? t('day.read') : pendingLessonId === lesson.id ? t('roadmap.saving') : t('day.markRead')}</button>
     </article>)}
     {questions.length > 0 && <button type="button" className="v4-primary-button" onClick={onQuiz}>{t('day.takeQuiz')}</button>}

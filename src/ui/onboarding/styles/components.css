@@ -1,10 +1,40 @@
 @import '../views/templates/ImportFolderPanel.css';
 
+.onboarding-v4.v4-diagnostics-surface {
+  min-height: 0;
+}
+
+.onboarding-v4 .v4-recovery {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.onboarding-v4 :where(button, input, select, textarea) {
+  font: inherit;
+}
+
+.onboarding-v4 .v4-nav-button {
+  transition: box-shadow 180ms;
+}
+
+.onboarding-v4 :where(button) {
+  border: 1px solid var(--v4-control-border);
+  border-radius: var(--v4-radius-sm);
+  background: var(--v4-surface);
+  color: var(--v4-text);
+  cursor: pointer;
+}
+
+.onboarding-v4 :where(button:hover:not(:disabled)) {
+  background: var(--v4-surface-2);
+}
+
 .onboarding-v4 :is(button, input, select, textarea) {
   color: inherit;
 }
 
-.onboarding-v4 :is(button, input, select, textarea):focus-visible {
+.onboarding-v4 :is(button, input, select, textarea, a):focus-visible {
   outline: 3px solid var(--v4-focus);
   outline-offset: 2px;
 }
@@ -13,18 +43,72 @@
   border-color: var(--v4-control-border);
 }
 
-.onboarding-v4 .v4-primary-button,
-.onboarding-v4 .v4-employee-preview-button,
-.onboarding-v4 .v4-builder-savebar button:last-child {
+.onboarding-v4 .v4-primary-button:not(:disabled),
+.onboarding-v4 .v4-employee-preview-button:not(:disabled),
+.onboarding-v4 .v4-builder-savebar button:last-child:not(:disabled) {
   border-color: transparent;
   background: var(--v4-primary-bg);
   color: var(--v4-primary-text);
 }
 
-.onboarding-v4[data-theme-mode="brand"] .v4-primary-button,
-.onboarding-v4[data-theme-mode="brand"] .v4-employee-preview-button,
-.onboarding-v4[data-theme-mode="brand"] .v4-builder-savebar button:last-child {
+.onboarding-v4[data-theme-mode="brand"] .v4-primary-button:not(:disabled),
+.onboarding-v4[data-theme-mode="brand"] .v4-employee-preview-button:not(:disabled),
+.onboarding-v4[data-theme-mode="brand"] .v4-builder-savebar button:last-child:not(:disabled) {
   background: linear-gradient(135deg, var(--v4-primary-gradient-start), var(--v4-primary-gradient-end));
+}
+
+.onboarding-v4 .v4-primary-button:hover:not(:disabled),
+.onboarding-v4 .v4-employee-preview-button:hover:not(:disabled) {
+  box-shadow: 0 0 0 2px var(--v4-control-border);
+}
+
+.onboarding-v4 .v4-secondary-button:hover:not(:disabled),
+.onboarding-v4 .v4-attachment-list button:hover:not(:disabled) {
+  background: var(--v4-surface-2);
+  border-color: var(--v4-control-border);
+}
+
+.onboarding-v4[data-theme-mode] button:disabled {
+  background: var(--v4-disabled-bg);
+  background-image: none;
+  color: var(--v4-disabled-text);
+  border-color: var(--v4-disabled-border);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.onboarding-v4 a,
+.onboarding-v4 a:visited {
+  color: var(--v4-link);
+  text-decoration: underline;
+  text-underline-offset: .18em;
+}
+
+.onboarding-v4 input[type="file"] {
+  max-width: 100%;
+}
+
+.onboarding-v4 input[type="file"]::file-selector-button {
+  margin-right: 8px;
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid var(--v4-control-border);
+  border-radius: var(--v4-radius-sm);
+  background: var(--v4-surface);
+  color: var(--v4-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.onboarding-v4 input[type="file"]:hover:not(:disabled)::file-selector-button {
+  background: var(--v4-surface-2);
+}
+
+.onboarding-v4 input[type="file"]:disabled::file-selector-button {
+  background: var(--v4-disabled-bg);
+  color: var(--v4-disabled-text);
+  border-color: var(--v4-disabled-border);
+  cursor: not-allowed;
 }
 
 .onboarding-v4 .v4-employee-preview-status {
