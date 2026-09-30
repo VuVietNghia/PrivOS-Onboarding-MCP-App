@@ -8,6 +8,7 @@ export interface Preferences {
 }
 export interface ExternalLinks {
   open(resolve: () => Promise<{ url: string; name: string }>, intent: 'view' | 'download'): Promise<void>;
+  save(blob: Blob, name: string): void;
 }
 export interface KeyedLock { run<T>(key: string, operation: () => Promise<T>): Promise<T> }
 export interface Lifetime { assertActive(): void; dispose(): void }

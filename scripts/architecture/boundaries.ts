@@ -49,7 +49,7 @@ export function boundaryFor(path: string): BoundaryRule {
     return { path: normalized, role: 'composition', allowedEffects: ['SDK', 'browser'], reason: 'Browser composition root' };
   }
   if (normalized.endsWith('.config.ts') || normalized.includes('/config/')
-    || normalized.startsWith('scripts/architecture/')) {
+    || normalized.startsWith('scripts/architecture/') || normalized.startsWith('scripts/i18n/')) {
     return { path: normalized, role: 'config', allowedEffects: ['node'], reason: 'Build configuration' };
   }
   if (['scripts/generate-manifest.ts', 'scripts/pair.ts', 'scripts/preflight.ts'].includes(normalized)) {

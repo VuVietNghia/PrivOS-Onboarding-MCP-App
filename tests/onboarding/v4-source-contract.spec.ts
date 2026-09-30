@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 const source = (path: string): string => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
 
 describe('v4 production source contract', () => {
-  it('uses the v4 room app without a demo role switch or legacy task flow', () => {
+  it('keeps employee preview owner-only while dev diagnostics stay out of production', () => {
     const entry = source('src/ui/App.tsx');
     const panel = source('src/ui/onboarding/views/OnboardingPanel.tsx');
     const surface = source('src/ui/onboarding/views/V4Onboarding.tsx');
@@ -13,7 +13,9 @@ describe('v4 production source contract', () => {
     expect(panel).not.toMatch(/(?:RoadmapView|toggleTask|role-switch|demoPositions)/);
     expect(surface).not.toMatch(/(?:roleSwitch|role-switch|RoadmapView|toggleTask|demoPositions)/);
     expect(panel).not.toContain('ENABLE_EMPLOYEE_PREVIEW');
-    expect(panel).toMatch(/import\.meta\.env\.DEV\s*&&\s*admin/);
+    expect(panel).toMatch(/employeePreviewControl=\{admin\s*\?/);
+    expect(panel).not.toMatch(/employeePreviewControl=\{import\.meta\.env\.DEV/);
+    expect(panel).toMatch(/const DiagnosticsEntry = import\.meta\.env\.DEV/);
   });
 
   it('keeps v4 List and File access on public mediated tools', () => {

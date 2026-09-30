@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { FilesGateway } from '../../data/files';
 import type { Day, Lesson, Question } from '../../domain/models';
 import type { Answers, GradeResult } from '../../domain/quiz';
 import type { LoadedLearning, MemberRoadmapOption } from '../../ports/learning';
 import type { OnboardingServices } from '../../ports/ui-services';
-import type { OnboardingLocale } from '../OnboardingShell';
 import { DayLearningView } from './DayLearningView';
 import { QuizResult } from './QuizResult';
 import { QuizView } from './QuizView';
 import { WeekRoadmap } from './WeekRoadmap';
-import { learningCopy } from './learning-copy';
+import { formatDateOnly } from '../../../i18n/formatters';
+import { parseLocale } from '../../../i18n/locale';
 
 export interface EmployeeRoadmapScreenProps {
   services: Pick<OnboardingServices, 'learning' | 'ids'>;
   filesGateway?: FilesGateway;
-  locale: OnboardingLocale;
 }
 
 interface ReadyState {
@@ -75,8 +75,9 @@ function applyLoaded(current: EmployeeScreenState, hireId: string, loaded: Loade
   }
 }
 
-export function EmployeeRoadmapScreen({ services, filesGateway, locale }: EmployeeRoadmapScreenProps) {
-  const t = learningCopy(locale);
+export function EmployeeRoadmapScreen({ services, filesGateway }: EmployeeRoadmapScreenProps) {
+  const { t, i18n } = useTranslation('learning');
+  const locale = parseLocale(i18n.resolvedLanguage) ?? 'vi';
   const [state, setState] = useState<EmployeeScreenState>({ kind: 'loading' });
   const [quizRevision, setQuizRevision] = useState(0);
   const [pendingLessonId, setPendingLessonId] = useState<string | null>(null);
@@ -86,7 +87,7 @@ export function EmployeeRoadmapScreen({ services, filesGateway, locale }: Employ
   const revision = useRef(0);
   const lessonAction = useRef(0);
   const quizAction = useRef(0);
-  const actionErrorMessage = actionError === 'load' ? t.loadFailed : actionError === 'save' ? t.saveFailed : undefined;
+  const actionErrorMessage = actionError === 'load' ? t('roadmap.loadFailed') : actionError === 'save' ? t('quiz.saveFailed') : undefined;
 
   const loadCatalog = useCallback(async () => {
     const request = ++revision.current;
@@ -186,43 +187,43 @@ export function EmployeeRoadmapScreen({ services, filesGateway, locale }: Employ
   };
 
   switch (state.kind) {
-    case 'loading': return <section className="v4-screen"><p role="status">{t.loadingRoadmap}</p></section>;
-    case 'empty': return <section className="v4-screen"><h1>{t.roadmapTitle}</h1><p>{t.noRoadmap}</p></section>;
-    case 'error': return <section className="v4-screen"><h1>{t.roadmapTitle}</h1><p role="alert">{t.loadFailed}</p>
-      <button type="button" className="v4-primary-button" onClick={() => void loadCatalog()}>{t.retry}</button></section>;
+    case 'loading': return <section className="v4-screen"><p role="status">{t('roadmap.loading')}</p></section>;
+    case 'empty': return <section className="v4-screen"><h1>{t('roadmap.title')}</h1><p>{t('roadmap.empty')}</p></section>;
+    case 'error': return <section className="v4-screen"><h1>{t('roadmap.title')}</h1><p role="alert">{t('roadmap.loadFailed')}</p>
+      <button type="button" className="v4-primary-button" onClick={() => void loadCatalog()}>{t('roadmap.retry')}</button></section>;
     case 'roadmap': return <section className="v4-screen v4-learning-screen"><div className="v4-learning-controls">
-      {state.roadmaps.length > 1 && <label>{t.selectRoadmap}<select aria-label={t.selectRoadmap} value={state.selectedHireId}
+      {state.roadmaps.length > 1 && <label>{t('roadmap.select')}<select aria-label={t('roadmap.select')} value={state.selectedHireId}
         onChange={(event) => void selectRoadmap(event.target.value)}>{state.roadmaps.map((option) => <option key={option.hireId} value={option.hireId}>
-          {option.positionName} · {option.startDate} · {option.status === 'done' ? t.doneStatus : t.learningStatus}
+          {option.positionName} · {formatDateOnly(option.startDate, locale)} · {t(`roadmap.status.${option.status}`)}
         </option>)}</select></label>}
       {state.loaded.pendingSubmission && <button type="button" className="v4-primary-button" disabled={pendingQuiz}
-        onClick={() => void resume()}>{pendingQuiz ? t.saving : t.continueSaving}</button>}
-      </div><WeekRoadmap roadmap={state.loaded.roadmap} hire={state.loaded.hire} selectedDayId={state.selectedDayId} locale={locale}
+        onClick={() => void resume()}>{pendingQuiz ? t('roadmap.saving') : t('roadmap.continueSaving')}</button>}
+      </div><WeekRoadmap roadmap={state.loaded.roadmap} hire={state.loaded.hire} selectedDayId={state.selectedDayId}
         onDay={(dayId) => { revision.current += 1; setActionError(null); setState({ ...state, kind: 'day', dayId }); }}
         error={actionErrorMessage} /></section>;
     case 'day': {
       const content = dayContent(state.loaded, state.dayId);
-      if (!content) return <section className="v4-screen"><p role="alert">{t.loadFailed}</p></section>;
+      if (!content) return <section className="v4-screen"><p role="alert">{t('roadmap.loadFailed')}</p></section>;
       return <section className="v4-screen v4-learning-screen"><DayLearningView day={content.day} children={content.children} filesGateway={filesGateway}
-        pendingLessonId={pendingLessonId ?? undefined} error={actionErrorMessage} onRead={(id) => void read(id)} locale={locale}
+        pendingLessonId={pendingLessonId ?? undefined} error={actionErrorMessage} onRead={(id) => void read(id)}
         onQuiz={() => { revision.current += 1; setActionError(null); setState({ ...state, kind: 'quiz' }); }}
         onBack={() => { revision.current += 1; setState({ kind: 'roadmap', loaded: state.loaded, roadmaps: state.roadmaps,
           selectedHireId: state.selectedHireId, selectedDayId: state.dayId }); }} /></section>;
     }
     case 'quiz': {
       const content = dayContent(state.loaded, state.dayId);
-      if (!content) return <section className="v4-screen"><p role="alert">{t.loadFailed}</p></section>;
+      if (!content) return <section className="v4-screen"><p role="alert">{t('roadmap.loadFailed')}</p></section>;
       const questions = content.children.filter((item): item is Question => item.kind === 'question');
       return <section className="v4-screen v4-learning-screen"><QuizView key={`${content.day.id}:${quizRevision}`} questions={questions}
-        pending={pendingQuiz} error={actionErrorMessage} onSubmit={submit} locale={locale}
+        pending={pendingQuiz} error={actionErrorMessage} onSubmit={submit}
         onBack={() => { revision.current += 1; setState({ ...state, kind: 'day' }); }} /></section>;
     }
     case 'result': {
       const content = dayContent(state.loaded, state.dayId);
-      if (!content) return <section className="v4-screen"><p role="alert">{t.loadFailed}</p></section>;
+      if (!content) return <section className="v4-screen"><p role="alert">{t('roadmap.loadFailed')}</p></section>;
       const questions = content.children.filter((item): item is Question => item.kind === 'question');
       return <section className="v4-screen v4-learning-screen"><QuizResult questions={questions} grade={state.result.grade}
-        attempts={state.result.attempts} firstScore={state.result.firstScore} locale={locale}
+        attempts={state.result.attempts} firstScore={state.result.firstScore}
         onRetake={() => { revision.current += 1; setQuizRevision((value) => value + 1); setState({ ...state, kind: 'quiz' }); }}
         onBack={() => { revision.current += 1; setState({ kind: 'day', loaded: state.loaded, roadmaps: state.roadmaps,
           selectedHireId: state.selectedHireId, dayId: state.dayId }); }} /></section>;

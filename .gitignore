@@ -13,6 +13,7 @@ AGENTS.md
 GEMINI.md
 pnpm-lock.yaml
 dist-source/
+.cache/
 *.tsbuildinfo
 
 # Standalone pairing identity (secret: relay creds + dispatch trust) — never commit

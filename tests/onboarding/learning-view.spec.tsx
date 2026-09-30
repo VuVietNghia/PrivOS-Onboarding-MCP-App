@@ -1,12 +1,21 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render as testingRender, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import type { Day, Hire, Lesson, Question, Roadmap } from '../../src/ui/onboarding/domain/models';
 import { EmployeeRoadmapScreen } from '../../src/ui/onboarding/views/learning/EmployeeRoadmapScreen';
 import { WeekRoadmap } from '../../src/ui/onboarding/views/learning/WeekRoadmap';
 import { DayLearningView } from '../../src/ui/onboarding/views/learning/DayLearningView';
 import type { LoadedLearning, MemberRoadmapOption } from '../../src/ui/onboarding/ports/learning';
+import { createUiI18n } from '../../src/ui/i18n/config';
+import type { UiLocale } from '../../src/ui/i18n/locale';
+
+function render(ui: ReactElement, locale: UiLocale = 'vi') {
+  const Wrapper = ({ children }: { children: ReactNode }) => <I18nextProvider i18n={createUiI18n(locale)}>{children}</I18nextProvider>;
+  return testingRender(ui, { wrapper: Wrapper });
+}
 
 afterEach(cleanup);
 
@@ -22,11 +31,11 @@ describe('employee learning views', () => {
       scores: { '2': { first: '1/1', attempts: ['1/1'] } }, errorCode: null, pendingAction: null };
     const roadmap: Roadmap = { overviewId: 'overview-1', templateListId: 'template-1', tree: { weeks: [{ id: 'week-1', name: 'Tuần 1', order: 0 }], items: [day, lesson, question] } };
     const onDay = vi.fn();
-    render(<WeekRoadmap roadmap={roadmap} hire={hire} onDay={onDay} locale="vi" />);
+    render(<WeekRoadmap roadmap={roadmap} hire={hire} onDay={onDay} />);
     expect(screen.getByText('Kỹ sư')).toBeTruthy();
     expect(screen.getByText('50%')).toBeTruthy();
     expect(screen.getByText(/1\/2/)).toBeTruthy();
-    expect(screen.getByText(/2026-09-24/)).toBeTruthy();
+    expect(screen.getByText(/24\/09\/2026/)).toBeTruthy();
     expect(screen.getByText(/Điểm lần đầu: 1\/1/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Tuần 1' }).getAttribute('aria-expanded')).toBe('true');
     await user.click(screen.getByRole('button', { name: /Ngày 2/ }));
@@ -38,7 +47,7 @@ describe('employee learning views', () => {
     const onQuiz = vi.fn();
     const onRead = vi.fn();
     render(<DayLearningView day={day} children={[lesson, question]} pendingLessonId="lesson-1" onBack={vi.fn()}
-      onQuiz={onQuiz} onRead={onRead} locale="vi" />);
+      onQuiz={onQuiz} onRead={onRead} />);
     expect((screen.getByRole('button', { name: 'Đang lưu…' }) as HTMLButtonElement).disabled).toBe(true);
     await user.click(screen.getByRole('button', { name: 'Làm quiz' }));
     expect(onQuiz).toHaveBeenCalledOnce();
@@ -50,7 +59,7 @@ describe('employee learning views', () => {
     render(<DayLearningView day={day} children={[{ ...lesson,
       content: '# Hướng dẫn\n\n**Quan trọng** <script>window.x=1</script> [x](javascript:alert(1))',
       videos: ['javascript:alert(2)', 'https://video.example/lesson'],
-    }]} onBack={vi.fn()} onQuiz={vi.fn()} onRead={vi.fn()} locale="vi" />);
+    }]} onBack={vi.fn()} onQuiz={vi.fn()} onRead={vi.fn()} />);
     expect(screen.getByRole('heading', { name: 'Hướng dẫn' })).toBeTruthy();
     expect(screen.getByText('Quan trọng').tagName).toBe('STRONG');
     expect(document.querySelector('script')).toBeNull();
@@ -60,7 +69,7 @@ describe('employee learning views', () => {
 
   it('uses English system controls without translating HR content', () => {
     render(<DayLearningView day={day} children={[{ ...lesson, videos: ['https://video.example/lesson'] }, question]}
-      onBack={vi.fn()} onQuiz={vi.fn()} onRead={vi.fn()} locale="en" />);
+      onBack={vi.fn()} onQuiz={vi.fn()} onRead={vi.fn()} />, 'en');
     expect(screen.getByRole('button', { name: 'Back to roadmap' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Take quiz' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Open video' })).toBeTruthy();
@@ -86,7 +95,7 @@ describe('employee learning views', () => {
       grade: { score: 1, total: 1, results: [{ itemId: 'question-1', correct: true, correctLabels: ['b'], explanation: 'Giải thích' }] }, attempt: 1 }));
     const learning = { listMine: vi.fn(async () => options), load, resume,
       markRead: vi.fn(), submit: vi.fn() };
-    render(<EmployeeRoadmapScreen services={{ learning, ids: { next: () => 'attempt-next' } }} locale="en" />);
+    render(<EmployeeRoadmapScreen services={{ learning, ids: { next: () => 'attempt-next' } }} />, 'en');
 
     expect(await screen.findByRole('button', { name: 'Continue saving' })).toBeTruthy();
     expect(screen.queryByText('attempt-12345678')).toBeNull();

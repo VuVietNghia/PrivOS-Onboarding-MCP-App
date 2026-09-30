@@ -1,7 +1,7 @@
 import type { McpApp } from '@privos_ai/app-react';
 import type { Scheduler } from '../../../shared/ports/effects';
 import type { FileMetadata, FilesGateway } from '../ports/files';
-export type { FileMetadata, FilesGateway } from '../ports/files';
+export type { FileContent, FileMetadata, FilesGateway } from '../ports/files';
 import { ensurePositionFolder, isVerifiedPositionFolder, type FolderCache } from './room-folders';
 import { idOf, unwrapToolResult } from './tool-result';
 

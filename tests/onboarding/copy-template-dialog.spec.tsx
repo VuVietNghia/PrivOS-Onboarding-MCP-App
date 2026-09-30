@@ -1,9 +1,20 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render as testingRender, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import type { Position, TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { CopyTemplateDialog } from '../../src/ui/onboarding/views/templates/CopyTemplateDialog';
+import { createUiI18n } from '../../src/ui/i18n/config';
+
+function TestI18nWrapper({ children }: { children: ReactNode }) {
+  return <I18nextProvider i18n={createUiI18n('vi')}>{children}</I18nextProvider>;
+}
+
+function render(ui: ReactElement) {
+  return testingRender(ui, { wrapper: TestI18nWrapper });
+}
 
 afterEach(cleanup);
 
@@ -20,9 +31,9 @@ describe('CopyTemplateDialog', () => {
     const onCopy = vi.fn(async () => {});
     render(<CopyTemplateDialog sources={[{ position, tree }]} onCopy={onCopy} onClose={vi.fn()} />);
     await user.click(screen.getByRole('radio', { name: 'Chọn ngày' }));
-    expect((screen.getByRole('button', { name: 'Copy template' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: 'Sao chép template' }) as HTMLButtonElement).disabled).toBe(true);
     await user.click(screen.getByRole('checkbox', { name: 'Ngày 2' }));
-    await user.click(screen.getByRole('button', { name: 'Copy template' }));
+    await user.click(screen.getByRole('button', { name: 'Sao chép template' }));
     expect(onCopy).toHaveBeenCalledWith(position, { kind: 'days', dayIds: ['day-2'] });
   });
 });

@@ -1,0 +1,11 @@
+{
+  "roadmap": {
+    "region": "Lộ trình học", "loading": "Đang tải lộ trình", "title": "Lộ trình của tôi", "empty": "Bạn chưa có lộ trình onboarding trong room này.", "loadFailed": "Không tải được lộ trình. Thử lại.", "retry": "Thử lại",
+    "select": "Lộ trình onboarding", "status": { "learning": "Đang học", "done": "Hoàn tất" }, "started": "Bắt đầu {{date}}", "progress": "{{done}}/{{total}} ngày hoàn thành", "progressLabel": "Tiến độ lộ trình", "emptyDays": "Chưa có ngày học trong lộ trình.",
+    "state": { "completed": "Đã hoàn thành", "inProgress": "Đang học", "notStarted": "Chưa bắt đầu" }, "firstScore": "Điểm lần đầu", "continueSaving": "Tiếp tục lưu bài", "saving": "Đang lưu…"
+  },
+  "day": { "region": "Học {{name}}", "back": "Về lộ trình", "empty": "Ngày học chưa có nội dung.", "openVideo": "Mở video", "read": "Đã đọc", "markRead": "Đánh dấu đã đọc", "takeQuiz": "Làm quiz" },
+  "quiz": { "region": "Làm quiz", "back": "Về ngày học", "title": "Quiz", "invalid": "Dữ liệu quiz không hợp lệ. Liên hệ HR.", "answered": "Đã trả lời {{answered}}/{{total}}", "question": "Câu {{count}}: {{content}}", "saveFailed": "Không lưu được bài làm. Thử lại.", "submit": "Nộp bài", "saving": "Đang lưu…" },
+  "result": { "region": "Kết quả quiz", "invalid": "Kết quả quiz không hợp lệ.", "attempt": "Kết quả lần {{count}}", "firstScore": "Điểm lần đầu: {{score}}", "attempts": "Các lượt: {{attempts}}", "correct": "Đúng", "incorrect": "Chưa đúng", "correctAnswer": "Đáp án đúng: {{answers}}", "retake": "Làm lại", "back": "Về ngày học" },
+  "attachments": { "empty": "Chưa có file đính kèm.", "open": "Mở", "openLabel": "Mở {{name}}", "download": "Tải xuống", "downloadLabel": "Tải xuống {{name}}", "downloading": "Đang tải…", "unlink": "Bỏ liên kết", "unlinkLabel": "Bỏ liên kết {{name}}", "previewEyebrow": "Tài liệu đính kèm", "previewTitle": "Xem trước {{name}}", "previewLoading": "Đang tải bản xem trước…", "previewUnavailable": "Định dạng file này chưa hỗ trợ xem trước. Hãy tải file xuống để xem.", "previewFailed": "Không tải được bản xem trước.", "close": "Đóng", "closePreview": "Đóng bản xem trước" }
+}

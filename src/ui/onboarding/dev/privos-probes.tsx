@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { usePrivosApp, usePrivosContext, useProviderEmbed, type McpApp } from '@privos_ai/app-react';
 import { createItem, createList, getListInfo, listRoomLists, updateItem } from '../data/onboarding-lists';
 import type { ProbeEnvironment, ProbeTransport } from './probe-port';
+import './probe-styles.css';
 
 export function createPrivosProbeTransport(app: McpApp): ProbeTransport {
   return {

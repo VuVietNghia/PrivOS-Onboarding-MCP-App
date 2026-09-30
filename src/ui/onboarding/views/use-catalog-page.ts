@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Page } from '../domain/models';
-import { describeError, OnboardingError } from '../domain/errors';
+import { OnboardingError } from '../domain/errors';
+import { toUiError, type UiError } from '../../i18n/ui-error';
 
 interface PageState<T> {
   key: string;
@@ -10,7 +11,7 @@ interface PageState<T> {
   pageIds: string[][];
   nextCursor: string | null;
   loading: boolean;
-  error: string | null;
+  error: UiError | null;
   reloadToken: number;
 }
 
@@ -57,7 +58,7 @@ export function useCatalogPage<T extends { id: string }>(key: string, load: (cur
         if (error instanceof OnboardingError && error.code === 'PAGINATION_INVALID' && previous.index > 0) {
           return { ...emptyState<T>(key), reloadToken: previous.reloadToken + 1 };
         }
-        return { ...previous, items: [], nextCursor: null, loading: false, error: describeError(error).message };
+        return { ...previous, items: [], nextCursor: null, loading: false, error: toUiError(error) };
       });
     });
     return () => { active = false; };
@@ -65,7 +66,7 @@ export function useCatalogPage<T extends { id: string }>(key: string, load: (cur
 
   const next = () => setState((previous) => {
     if (previous.key !== key || previous.loading || !previous.nextCursor) return previous;
-    if (previous.cursors.includes(previous.nextCursor)) return { ...previous, error: 'Phân trang không hợp lệ. Tải lại danh sách.', nextCursor: null };
+    if (previous.cursors.includes(previous.nextCursor)) return { ...previous, error: { code: 'PAGINATION_INVALID' }, nextCursor: null };
     return { ...previous, cursors: [...previous.cursors, previous.nextCursor], index: previous.index + 1, items: [], nextCursor: null, loading: true };
   });
   const previous = () => setState((previous) => previous.key === key && previous.index > 0

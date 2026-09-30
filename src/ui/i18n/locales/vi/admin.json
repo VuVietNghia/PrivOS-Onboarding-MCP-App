@@ -1,0 +1,21 @@
+{
+  "onPage": "Trong trang này", "profiles": "hồ sơ", "positions": "vị trí",
+  "manageOnboarding": "Quản lý onboarding", "hiresSubtitle": "Xem tiến độ và trạng thái của nhân sự trong room.", "createOnboarding": "Tạo onboarding",
+  "stats": { "learning": "Đang onboarding", "done": "Hoàn tất", "provisioning": "Đang khởi tạo", "attention": "Cần xử lý" },
+  "searchHires": "Tìm nhân sự", "searchHiresPlaceholder": "Tìm theo tên", "filterStatus": "Lọc trạng thái", "filterPosition": "Lọc theo vị trí",
+  "allStatuses": "Mọi trạng thái", "allPositions": "Mọi vị trí", "clearPosition": "Xóa bộ lọc vị trí", "noMatchingPositions": "Không có vị trí phù hợp.", "reset": "Đặt lại",
+  "showingProfiles": "Đang hiển thị {{count}} hồ sơ · trong trang này", "showingPositions": "Đang hiển thị {{count}} vị trí · trong trang này",
+  "employee": "Nhân sự", "position": "Vị trí", "startDate": "Ngày bắt đầu", "progress": "Tiến độ lộ trình", "quizScores": "Điểm quiz", "noQuizScores": "Chưa có điểm",
+  "actions": "Thao tác", "status": "Trạng thái", "days": "ngày", "viewRoadmap": "Xem lộ trình", "previous": "Trước", "next": "Sau", "reload": "Tải lại", "loading": "Đang tải…", "noHires": "Chưa có hồ sơ phù hợp.",
+  "templateEyebrow": "Template vị trí", "templateTitle": "Template theo vị trí", "templateSubtitle": "Mỗi vị trí có một template onboarding.", "createTemplate": "Tạo template",
+  "searchPosition": "Tìm vị trí", "filterTemplateStatus": "Lọc trạng thái template", "weeks": "Tuần", "dayItems": "Ngày", "lessons": "Bài học", "questions": "Câu hỏi", "missingAnswers": "Thiếu đáp án", "inUse": "Đang dùng",
+  "open": "Mở", "copy": "Sao chép", "disable": "Ngừng dùng", "noPositions": "Chưa có vị trí phù hợp.",
+  "hireStatus": { "provisioning": "Đang khởi tạo", "learning": "Đang học", "done": "Hoàn tất", "failed": "Khởi tạo lỗi", "cancelled": "Đã huỷ" },
+  "positionStatus": { "draft": "Bản nháp", "ready": "Sẵn sàng", "disabled": "Ngừng dùng" },
+  "disableDialog": { "label": "Xác nhận ngừng dùng vị trí", "title": "Ngừng dùng {{name}}?", "body": "Vị trí sẽ không xuất hiện trong form tạo onboarding mới.", "keep": "Giữ lại", "updating": "Đang cập nhật", "confirm": "Xác nhận" },
+  "drawer": {
+    "label": "Chi tiết onboarding", "loading": "Đang tải hồ sơ", "close": "Đóng", "position": "Vị trí:", "startDate": "Ngày bắt đầu:", "status": "Trạng thái:", "progress": "Tiến độ:",
+    "scores": "Điểm lần đầu và lịch sử", "scoreDay": "Ngày {{day}}: {{score}}", "noScores": "Chưa có điểm.", "resume": "Tiếp tục khởi tạo", "cancel": "Huỷ onboarding", "recount": "Đếm lại số đang dùng",
+    "confirmLabel": "Xác nhận huỷ onboarding", "confirmTitle": "Huỷ onboarding của {{name}}?", "confirmBody": "Lộ trình sẽ được xoá. Hồ sơ và điểm được giữ nếu đã bắt đầu học.", "keep": "Giữ lại", "cancelling": "Đang huỷ", "confirmCancel": "Xác nhận huỷ"
+  }
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PrivOS Onboarding — hướng bố cục</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #080D0F; --surface: #121A1F; --muted: #1C282E; --border: #1C282E;
+      --border-2: #434B4F; --text: #E8E9E8; --sub: #93989A; --primary: #3084C0;
+      --primary-hover: #599DCD; --success: #1DD787; --warning: #D7801D; --danger: #E62D2D;
+      --radius: 12px; --radius-lg: 16px;
+    }
+    body { margin: 0; background: #05090b; color: var(--text); font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+    .page { width: min(1500px, 100%); margin: auto; padding: 28px; }
+    .eyebrow { margin: 0 0 8px; color: var(--primary-hover); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: 28px; line-height: 1.25; }
+    .lead { max-width: 850px; margin: 10px 0 24px; color: var(--sub); font-size: 14px; line-height: 1.6; }
+    .option { margin: 0 0 28px; padding: 16px; border: 1px solid var(--border-2); border-radius: 18px; background: rgba(18,26,31,.7); cursor: pointer; transition: .2s ease; }
+    .option:hover { border-color: var(--primary-hover); transform: translateY(-1px); }
+    .option.selected { outline: 3px solid rgba(48,132,192,.35); border-color: var(--primary); }
+    .option-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 2px 14px; }
+    .option-title { display: flex; align-items: center; gap: 12px; }
+    .letter { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--primary); color: white; font-weight: 700; }
+    .option h2 { margin: 0; font-size: 18px; }
+    .option p { margin: 4px 0 0; color: var(--sub); font-size: 13px; }
+    .badge { padding: 5px 9px; border-radius: 999px; color: var(--success); background: rgba(29,215,135,.10); border: 1px solid rgba(29,215,135,.3); font-size: 11px; font-weight: 700; }
+    .mock { min-height: 590px; overflow: hidden; display: grid; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--bg); box-shadow: 0 20px 50px rgba(0,0,0,.35); }
+    .mock.a { grid-template-columns: 228px 1fr; grid-template-rows: 66px 1fr; }
+    .sidebar { grid-row: 1 / 3; padding: 18px 14px; border-right: 1px solid var(--border); background: #0b1216; }
+    .brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 20px; }
+    .brand-mark { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(145deg,#599DCD,#1D4F73); position: relative; }
+    .brand-mark:after { content: ''; position:absolute; inset:7px; border:2px solid white; border-radius:50% 50% 50% 8px; }
+    .brand strong { display:block; font-size:13px; } .brand small { color: var(--sub); font-size:10px; }
+    .nav-label { padding: 12px 10px 8px; color: #62686C; font-size: 10px; font-weight: 700; letter-spacing:.1em; text-transform:uppercase; }
+    .nav-item { display:flex; align-items:center; gap:10px; min-height:40px; margin:3px 0; padding:0 11px; border-radius:10px; color:var(--sub); font-size:13px; }
+    .nav-item.active { color:var(--text); background:var(--muted); box-shadow:inset 3px 0 var(--primary); }
+    .icon { width:17px; height:17px; border:1.5px solid currentColor; border-radius:5px; opacity:.8; }
+    .room { margin-top: 20px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; color: var(--sub); font-size: 10px; overflow:hidden; }
+    .room strong { display:block; color:var(--text); margin-bottom:4px; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:0 22px; border-bottom:1px solid var(--border); background:rgba(8,13,15,.88); }
+    .crumb strong { display:block; font-size:14px; } .crumb span { color:var(--sub); font-size:10px; }
+    .top-actions { display:flex; align-items:center; gap:8px; }
+    .seg { display:flex; padding:3px; border:1px solid var(--border); border-radius:9px; background:var(--surface); }
+    .seg span { padding:5px 8px; border-radius:6px; color:var(--sub); font-size:10px; }
+    .seg .on { color:var(--text); background:var(--muted); }
+    .theme-dot { width:18px; height:18px; border:2px solid var(--bg); outline:1px solid var(--border-2); border-radius:50%; background:#3084C0; }
+    .main { padding: 22px; min-width:0; }
+    .page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; margin-bottom:18px; }
+    .page-head h3 { margin:0; font-size:22px; } .page-head p { margin:5px 0 0; color:var(--sub); font-size:12px; }
+    .primary { height:36px; padding:0 14px; border:0; border-radius:9px; background:var(--primary); color:white; font-weight:650; font-size:12px; }
+    .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-bottom:14px; }
+    .stat { padding:14px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+    .stat span { color:var(--sub); font-size:10px; } .stat strong { display:block; margin-top:5px; font-size:22px; }
+    .toolbar { display:grid; grid-template-columns:1fr 170px 170px auto; gap:8px; margin-bottom:10px; }
+    .input { min-height:36px; display:flex; align-items:center; padding:0 11px; border:1px solid var(--border); border-radius:9px; background:var(--surface); color:var(--sub); font-size:11px; }
+    .table { overflow:hidden; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+    .tr { display:grid; grid-template-columns:1.25fr 1fr .75fr 1.2fr .65fr; align-items:center; min-height:49px; padding:0 14px; border-bottom:1px solid var(--border); font-size:11px; }
+    .tr:last-child { border:0; } .tr.head { min-height:38px; color:var(--sub); background:#0e161a; font-size:10px; font-weight:650; }
+    .person { display:flex; align-items:center; gap:8px; } .avatar { width:27px; height:27px; display:grid; place-items:center; border-radius:50%; background:#13354D; color:#ACCEE6; font-size:9px; }
+    .status { width:max-content; padding:4px 7px; border-radius:999px; font-size:9px; background:rgba(50,170,240,.12); color:#5BBBF3; }
+    .progress { display:flex; align-items:center; gap:7px; } .track { width:72px; height:5px; overflow:hidden; border-radius:99px; background:var(--muted); } .track i { display:block; width:62%; height:100%; background:var(--primary); }
+    .link { color:var(--primary-hover); font-weight:650; }
+    .mock.b { grid-template-columns: 72px 1fr; grid-template-rows: 66px 1fr; }
+    .mock.b .sidebar { padding:18px 10px; } .mock.b .brand { padding:0 12px 22px; } .mock.b .brand div:last-child,.mock.b .nav-label,.mock.b .nav-item span,.mock.b .room { display:none; }
+    .mock.b .nav-item { justify-content:center; padding:0; }
+    .mock.b .main { display:grid; grid-template-columns:minmax(0,1fr) 286px; gap:14px; }
+    .mock.b .main-core { min-width:0; }
+    .mock.b .stats { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .mock.b .stats .stat:last-child { display:none; }
+    .side-panel { border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); padding:15px; }
+    .side-panel h4 { margin:0 0 12px; font-size:13px; }
+    .timeline { display:grid; gap:12px; }
+    .event { display:grid; grid-template-columns:8px 1fr; gap:9px; color:var(--sub); font-size:10px; line-height:1.45; }
+    .event i { width:8px; height:8px; margin-top:3px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 4px rgba(48,132,192,.12); }
+    .tokens { display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
+    .token { padding:5px 8px; border:1px solid var(--border); border-radius:999px; color:var(--sub); font-size:10px; }
+    .hint { margin-top:16px; color:var(--sub); text-align:center; font-size:12px; }
+    @media (max-width: 980px) { .mock { min-width:900px; } .option { overflow:auto; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">PrivOS Onboarding · Layout direction</p>
+    <h1>Giữ trải nghiệm cũ, sửa hệ màu và nhịp bố cục</h1>
+    <p class="lead">Hai phương án đều dùng token chính thức của PrivOS: nền #080D0F, surface #121A1F, border #1C282E, text #E8E9E8, subtext #93989A, primary #3084C0 và radius 12–16px.</p>
+
+    <section class="option" data-choice="a" onclick="toggleSelect(this)">
+      <div class="option-head"><div class="option-title"><div class="letter">A</div><div><h2>Bảo toàn shell hiện tại</h2><p>Sidebar, topbar, thẻ tổng quan, bộ lọc và bảng giữ nguyên thứ tự sử dụng.</p></div></div><span class="badge">Đề xuất</span></div>
+      <div class="mock a">
+        <aside class="sidebar"><div class="brand"><div class="brand-mark"></div><div><strong>PrivOS Onboarding</strong><small>Không gian học tập</small></div></div><div class="nav-label">Quản trị</div><div class="nav-item active"><i class="icon"></i><span>Nhân sự</span></div><div class="nav-item"><i class="icon"></i><span>Onboarding mới</span></div><div class="nav-item"><i class="icon"></i><span>Template</span></div><div class="room"><strong>Room</strong>test-apps-6dps39</div></aside>
+        <header class="topbar"><div class="crumb"><strong>Nhân sự</strong><span>test-apps / Onboarding</span></div><div class="top-actions"><div class="seg"><span class="on">VI</span><span>EN</span></div><div class="theme-dot"></div></div></header>
+        <section class="main"><div class="page-head"><div><h3>Quản lý onboarding</h3><p>Theo dõi tiến độ và trạng thái nhân sự trong room.</p></div><button class="primary">+ Tạo onboarding</button></div><div class="stats"><div class="stat"><span>Đang onboarding</span><strong>12</strong></div><div class="stat"><span>Hoàn tất</span><strong>28</strong></div><div class="stat"><span>Đang khởi tạo</span><strong>2</strong></div><div class="stat"><span>Cần xử lý</span><strong style="color:#EB5757">1</strong></div></div><div class="toolbar"><div class="input">Tìm theo tên</div><div class="input">Mọi trạng thái</div><div class="input">Mọi vị trí</div><div class="input">Đặt lại</div></div><div class="table"><div class="tr head"><span>Nhân sự</span><span>Vị trí</span><span>Trạng thái</span><span>Tiến độ lộ trình</span><span>Thao tác</span></div><div class="tr"><span class="person"><i class="avatar">AN</i> An Nguyễn</span><span>Backend Developer</span><span class="status">Đang học</span><span class="progress"><i class="track"><i></i></i> 8/12</span><span class="link">Xem lộ trình</span></div><div class="tr"><span class="person"><i class="avatar">MH</i> Minh Hoàng</span><span>Product Designer</span><span class="status">Đang học</span><span class="progress"><i class="track"><i style="width:35%"></i></i> 4/11</span><span class="link">Xem lộ trình</span></div><div class="tr"><span class="person"><i class="avatar">TL</i> Thu Linh</span><span>QA Engineer</span><span class="status" style="color:#4ADF9F;background:rgba(29,215,135,.1)">Hoàn tất</span><span class="progress"><i class="track"><i style="width:100%;background:#1DD787"></i></i> 9/9</span><span class="link">Xem lộ trình</span></div></div></section>
+      </div>
+      <div class="tokens"><span class="token">Ít thay đổi thói quen</span><span class="token">Rủi ro thấp</span><span class="token">Responsive theo breakpoint</span><span class="token">Phù hợp sửa toàn app</span></div>
+    </section>
+
+    <section class="option" data-choice="b" onclick="toggleSelect(this)">
+      <div class="option-head"><div class="option-title"><div class="letter">B</div><div><h2>Shell gọn và thêm panel hoạt động</h2><p>Thu sidebar thành icon rail, chuyển thông tin phụ sang panel bên phải.</p></div></div></div>
+      <div class="mock b">
+        <aside class="sidebar"><div class="brand"><div class="brand-mark"></div><div><strong>PrivOS</strong></div></div><div class="nav-item active"><i class="icon"></i><span>Nhân sự</span></div><div class="nav-item"><i class="icon"></i><span>Tạo mới</span></div><div class="nav-item"><i class="icon"></i><span>Template</span></div></aside>
+        <header class="topbar"><div class="crumb"><strong>Quản lý onboarding</strong><span>test-apps-6dps39</span></div><div class="top-actions"><div class="seg"><span class="on">VI</span><span>EN</span></div><div class="theme-dot"></div></div></header>
+        <section class="main"><div class="main-core"><div class="page-head"><div><h3>Nhân sự</h3><p>12 người đang trong lộ trình.</p></div><button class="primary">+ Tạo onboarding</button></div><div class="stats"><div class="stat"><span>Đang onboarding</span><strong>12</strong></div><div class="stat"><span>Hoàn tất</span><strong>28</strong></div><div class="stat"><span>Cần xử lý</span><strong style="color:#EB5757">1</strong></div><div class="stat"></div></div><div class="toolbar" style="grid-template-columns:1fr 150px 150px"><div class="input">Tìm nhân sự</div><div class="input">Trạng thái</div><div class="input">Vị trí</div></div><div class="table"><div class="tr head"><span>Nhân sự</span><span>Vị trí</span><span>Trạng thái</span><span>Tiến độ</span><span></span></div><div class="tr"><span class="person"><i class="avatar">AN</i> An Nguyễn</span><span>Backend Developer</span><span class="status">Đang học</span><span class="progress"><i class="track"><i></i></i> 8/12</span><span class="link">Mở</span></div><div class="tr"><span class="person"><i class="avatar">MH</i> Minh Hoàng</span><span>Product Designer</span><span class="status">Đang học</span><span class="progress"><i class="track"><i style="width:35%"></i></i> 4/11</span><span class="link">Mở</span></div></div></div><aside class="side-panel"><h4>Hoạt động gần đây</h4><div class="timeline"><div class="event"><i></i><span><b>An Nguyễn</b> hoàn thành Ngày 3<br>5 phút trước</span></div><div class="event"><i style="background:#1DD787"></i><span><b>Thu Linh</b> hoàn tất lộ trình<br>1 giờ trước</span></div><div class="event"><i style="background:#D7801D"></i><span><b>Minh Hoàng</b> cần làm lại quiz<br>2 giờ trước</span></div></div></aside></section>
+      </div>
+      <div class="tokens"><span class="token">Nhiều không gian nội dung</span><span class="token">Thay đổi điều hướng</span><span class="token">Panel phụ tăng mật độ</span></div>
+    </section>
+    <p class="hint">Nhấn vào phương án phù hợp rồi phản hồi trong cuộc trò chuyện.</p>
+  </main>
+</body>
+</html>

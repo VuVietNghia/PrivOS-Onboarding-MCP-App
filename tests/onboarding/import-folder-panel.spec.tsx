@@ -1,10 +1,21 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render as testingRender, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import { ImportFolderPanel } from '../../src/ui/onboarding/views/templates/ImportFolderPanel';
 import { preflightPosition } from '../../src/shared/import/preflight';
 import { createBrowserEffects } from '../../src/ui/adapters/browser-effects';
+import { createUiI18n } from '../../src/ui/i18n/config';
+
+function TestI18nWrapper({ children }: { children: ReactNode }) {
+  return <I18nextProvider i18n={createUiI18n('vi')}>{children}</I18nextProvider>;
+}
+
+function render(ui: ReactElement) {
+  return testingRender(ui, { wrapper: TestI18nWrapper });
+}
 
 afterEach(cleanup);
 
@@ -71,7 +82,7 @@ describe('ImportFolderPanel', () => {
       selectedFile('AgentFiles/Role/Day_01_Start/quiz_day_01.md', '**Q1.1 (Trắc nghiệm).** Câu?\na) Một'),
     ] } });
     await user.click(screen.getByRole('button', { name: 'Kiểm tra nguồn' }));
-    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('quiz_day_01.md:1'));
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Nội dung Markdown không đúng định dạng.'));
     expect((screen.getByRole('button', { name: /Xác nhận nhập/ }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

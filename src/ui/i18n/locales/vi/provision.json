@@ -1,0 +1,9 @@
+{
+  "eyebrow": "Onboarding", "title": "Tạo onboarding", "subtitle": "Chọn nhân sự, vị trí và ngày bắt đầu.", "loadingMembers": "Đang tải thành viên room",
+  "employee": "Nhân sự", "selectEmployee": "Chọn nhân sự", "username": "Username hoặc user ID", "usernamePlaceholder": "username hoặc user ID trong PrivOS",
+  "position": "Vị trí", "selectPosition": "Chọn vị trí sẵn sàng", "startDate": "Ngày bắt đầu", "workingDay": "Ngày bắt đầu phải là thứ Hai đến thứ Sáu.",
+  "reloadMembers": "Tải lại thành viên", "submitting": "Đang khởi tạo…", "submit": "Tạo onboarding", "summary": "Tóm tắt", "loadingTemplate": "Đang tải template",
+  "summaryCounts": "{{weeks}} tuần · {{days}} ngày · {{lessons}} bài học · {{questions}} câu hỏi", "choosePosition": "Chọn vị trí để xem nội dung.",
+  "progressLabel": "Tiến độ khởi tạo onboarding", "progressValue": "{{phase}}: {{completed}}/{{total}}",
+  "phase": { "record": "Tạo hồ sơ", "list": "Tạo lộ trình", "content": "Thêm nội dung", "grant": "Cấp quyền", "activate": "Kích hoạt", "recount": "Cập nhật số đang dùng" }
+}

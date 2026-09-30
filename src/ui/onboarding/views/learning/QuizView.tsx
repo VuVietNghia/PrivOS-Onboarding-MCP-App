@@ -1,8 +1,7 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Answers } from '../../domain/quiz';
 import type { Question } from '../../domain/models';
-import type { OnboardingLocale } from '../OnboardingShell';
-import { learningCopy } from './learning-copy';
 
 export interface QuizViewProps {
   questions: readonly Question[];
@@ -10,7 +9,6 @@ export interface QuizViewProps {
   pending?: boolean;
   error?: string;
   onBack?: () => void;
-  locale: OnboardingLocale;
 }
 
 function valid(questions: readonly Question[]): boolean {
@@ -20,12 +18,12 @@ function valid(questions: readonly Question[]): boolean {
         /^[a-j]$/.test(label) && label.charCodeAt(0) - 97 < question.options.length));
 }
 
-export function QuizView({ questions, onSubmit, pending = false, error, onBack, locale }: QuizViewProps) {
-  const t = learningCopy(locale);
+export function QuizView({ questions, onSubmit, pending = false, error, onBack }: QuizViewProps) {
+  const { t } = useTranslation('learning');
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState(false);
-  if (!valid(questions)) return <p role="alert">{t.invalidQuiz}</p>;
+  if (!valid(questions)) return <p role="alert">{t('quiz.invalid')}</p>;
   const answered = questions.filter((question) => (answers[question.id]?.length ?? 0) > 0).length;
   const busy = pending || submitting;
   const select = (question: Question, label: string) => {
@@ -45,11 +43,11 @@ export function QuizView({ questions, onSubmit, pending = false, error, onBack, 
     catch { setLocalError(true); }
     finally { setSubmitting(false); }
   };
-  return <section className="v4-learning-quiz" aria-label={t.quizRegion}>
-    {onBack && <button type="button" className="v4-secondary-button" onClick={onBack}>{t.backDay}</button>}
-    <h1>{t.quizTitle}</h1>
+  return <section className="v4-learning-quiz" aria-label={t('quiz.region')}>
+    {onBack && <button type="button" className="v4-secondary-button" onClick={onBack}>{t('quiz.back')}</button>}
+    <h1>{t('quiz.title')}</h1>
     {questions.map((question, index) => <fieldset key={question.id} disabled={busy}>
-      <legend>{t.question} {index + 1}: {question.content}</legend>
+      <legend>{t('quiz.question', { count: index + 1, content: question.content })}</legend>
       {question.options.map((option, optionIndex) => {
         const label = String.fromCharCode(97 + optionIndex);
         const multi = question.correctLabels.length > 1;
@@ -57,9 +55,9 @@ export function QuizView({ questions, onSubmit, pending = false, error, onBack, 
           checked={(answers[question.id] ?? []).includes(label)} onChange={() => select(question, label)} />{option}</label>;
       })}
     </fieldset>)}
-    {(error || localError) && <p role="alert">{error ?? t.saveFailed}</p>}
-    <div className="v4-quiz-actionbar"><p role="status">{t.answered} {answered}/{questions.length}</p>
+    {(error || localError) && <p role="alert">{error ?? t('quiz.saveFailed')}</p>}
+    <div className="v4-quiz-actionbar"><p role="status">{t('quiz.answered', { answered, total: questions.length })}</p>
       <button type="button" className="v4-primary-button" disabled={busy || answered !== questions.length}
-        onClick={() => void submit()}>{busy ? t.saving : t.submit}</button></div>
+        onClick={() => void submit()}>{busy ? t('quiz.saving') : t('quiz.submit')}</button></div>
   </section>;
 }

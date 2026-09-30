@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Catalogs } from '../data/catalogs';
 import { localTodayIso } from '../domain/local-date';
 import type { Position, RoomBinding, TemplateTree } from '../domain/models';
 import { pickEmployee, type RoomMember } from '../domain/pick-employee';
 import { isWorkingDay } from '../domain/working-days';
-import { describeError } from '../domain/errors';
 import type { PreparedProvisionV4, ProvisionProgress } from '../ports/provision';
 import type { OnboardingServices } from '../ports/ui-services';
+import { toUiError, type UiError } from '../../i18n/ui-error';
+import { getErrorMessage } from '../../i18n/error-message';
+import { ProvisionProgressView } from '../components/ProvisionProgressView';
 
 export interface ProvisionV4FormProps {
   binding: RoomBinding;
@@ -16,6 +19,8 @@ export interface ProvisionV4FormProps {
 }
 
 export function ProvisionV4Form({ binding, catalogs, services, onDone }: ProvisionV4FormProps) {
+  const { t } = useTranslation('provision');
+  const { t: errorT } = useTranslation('errors');
   const [positions, setPositions] = useState<Position[]>([]);
   const [members, setMembers] = useState<RoomMember[] | null | undefined>(undefined);
   const [positionId, setPositionId] = useState('');
@@ -26,8 +31,8 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
   const [loadingTree, setLoadingTree] = useState(false);
   const [pending, setPending] = useState(false);
   const [progress, setProgress] = useState<ProvisionProgress | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [memberError, setMemberError] = useState<string | null>(null);
+  const [error, setError] = useState<UiError | null>(null);
+  const [memberError, setMemberError] = useState<UiError | null>(null);
   const [memberRetry, setMemberRetry] = useState(0);
   const operationId = useRef<string | null>(null);
 
@@ -46,7 +51,7 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
       } while (cursor && all.length < 10_000);
       if (active) setPositions(all);
     };
-    void loadPositions().catch((cause: unknown) => { if (active) setError(describeError(cause).message); });
+    void loadPositions().catch((cause: unknown) => { if (active) setError(toUiError(cause)); });
     return () => { active = false; };
   }, [catalogs]);
 
@@ -56,7 +61,7 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
     setMemberError(null);
     void services.members.list()
       .then((result) => { if (active) setMembers(result); })
-      .catch((cause: unknown) => { if (active) setMemberError(describeError(cause).message); });
+      .catch((cause: unknown) => { if (active) setMemberError(toUiError(cause)); });
     return () => { active = false; };
   }, [binding.roomId, memberRetry, services]);
 
@@ -74,7 +79,7 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
     if (!position) return () => { active = false; };
     setLoadingTree(true);
     void catalogs.template(position.templateListId).then((value) => { if (active) setTree(value); })
-      .catch((cause: unknown) => { if (active) setError(describeError(cause).message); })
+      .catch((cause: unknown) => { if (active) setError(toUiError(cause)); })
       .finally(() => { if (active) setLoadingTree(false); });
     return () => { active = false; };
   }, [catalogs, positionId, positions]);
@@ -84,12 +89,10 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
   const lessons = tree?.items.filter((item) => item.kind === 'lesson').length ?? 0;
   const questions = tree?.items.filter((item) => item.kind === 'question').length ?? 0;
   const canSubmit = !pending && !!position && !!tree && isWorkingDay(startDate) && members !== undefined && !memberError;
-  const selectedMember = members?.find((member) => member.id === employeeId);
-
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError(null);
     if (members === undefined || memberError) return;
-    if (!position || !tree || !isWorkingDay(startDate)) { setError('Chọn vị trí, template và ngày làm việc hợp lệ.'); return; }
+    if (!position || !tree || !isWorkingDay(startDate)) { setError({ code: 'PROVISION_INPUT_INVALID' }); return; }
     setPending(true);
     try {
       const selectedMember = members?.find((member) => member.id === employeeId);
@@ -98,7 +101,7 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
       if (members === null) {
         const found = await services.members.lookup(username.trim());
         const picked = pickEmployee(username, found);
-        if (!picked.ok) { setError(picked.message); return; }
+        if (!picked.ok) { setError({ code: picked.code }); return; }
         targetId = picked.employeeId;
         targetName = found.kind === 'found' ? found.member.name : username.trim();
       }
@@ -113,28 +116,27 @@ export function ProvisionV4Form({ binding, catalogs, services, onDone }: Provisi
       await services.provision.start(prepared, setProgress);
       operationId.current = null;
       onDone();
-    } catch (cause) { setError(describeError(cause).message); }
+    } catch (cause) { setError(toUiError(cause)); }
     finally { setPending(false); setProgress(null); }
   };
 
   return <section className="v4-screen" aria-labelledby="v4-provision-title">
-    <div className="v4-page-head"><div><p className="v4-eyebrow">Onboarding</p><h1 id="v4-provision-title">Tạo onboarding</h1><p>Chọn nhân sự, vị trí và ngày bắt đầu.</p></div></div>
-    <div className="v4-builder-grid"><form className="v4-builder-workspace v4-builder-intro" onSubmit={(event) => void submit(event)}>
-      {members === undefined && !memberError && <p role="status">Đang tải thành viên room</p>}
-      {members && <><label>Nhân sự<select value={employeeId} onChange={(event) => { setEmployeeId(event.target.value); operationId.current = null; }}>
-        <option value="">Chọn nhân sự</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name} (@{member.username})</option>)}</select></label>
-        {selectedMember && <p>User ID: {selectedMember.id}</p>}</>}
-      {members === null && <label>Username hoặc user ID<input value={username} onChange={(event) => { setUsername(event.target.value); operationId.current = null; }} placeholder="username hoặc user ID trong PrivOS" /></label>}
-      <label>Vị trí<select value={positionId} onChange={(event) => { setPositionId(event.target.value); operationId.current = null; }}>
-        <option value="">Chọn vị trí sẵn sàng</option>{positions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
-      <label>Ngày bắt đầu<input type="date" value={startDate} onChange={(event) => { setStartDate(event.target.value); operationId.current = null; }} /></label>
-      {startDate && !isWorkingDay(startDate) && <p role="alert">Ngày bắt đầu phải là thứ 2 đến thứ 6.</p>}
-      {memberError && <><p role="alert">{memberError}</p><button type="button" onClick={() => setMemberRetry((value) => value + 1)}>Tải lại thành viên</button></>}
-      {error && <p role="alert">{error}</p>}
-      {progress && <p role="status">{progress.phase}: {progress.completed}/{progress.total}</p>}
-      <button type="submit" className="v4-primary-button" disabled={!canSubmit}>{pending ? 'Đang khởi tạo…' : 'Tạo onboarding'}</button>
-    </form><aside className="v4-builder-readiness"><h2>Tóm tắt</h2>{loadingTree && <p>Đang tải template</p>}
-      {position && tree && <><p>{position.name}</p><p>{tree.weeks.length} tuần · {days} ngày · {lessons} bài học · {questions} câu hỏi</p></>}
-      {!position && <p>Chọn vị trí để xem nội dung.</p>}</aside></div>
+    <div className="v4-page-head"><div><p className="v4-eyebrow">{t('eyebrow')}</p><h1 id="v4-provision-title">{t('title')}</h1><p>{t('subtitle')}</p></div></div>
+    <div className="v4-provision-grid"><form className="v4-provision-form" onSubmit={(event) => void submit(event)}>
+      {members === undefined && !memberError && <p role="status">{t('loadingMembers')}</p>}
+      {members && <label>{t('employee')}<select value={employeeId} onChange={(event) => { setEmployeeId(event.target.value); operationId.current = null; }}>
+        <option value="">{t('selectEmployee')}</option>{members.map((member) => <option key={member.id} value={member.id}>{member.name} (@{member.username})</option>)}</select></label>}
+      {members === null && <label>{t('username')}<input value={username} onChange={(event) => { setUsername(event.target.value); operationId.current = null; }} placeholder={t('usernamePlaceholder')} /></label>}
+      <label>{t('position')}<select value={positionId} onChange={(event) => { setPositionId(event.target.value); operationId.current = null; }}>
+        <option value="">{t('selectPosition')}</option>{positions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>
+      <label>{t('startDate')}<input type="date" value={startDate} onChange={(event) => { setStartDate(event.target.value); operationId.current = null; }} /></label>
+      {startDate && !isWorkingDay(startDate) && <p role="alert">{t('workingDay')}</p>}
+      {memberError && <><p role="alert">{getErrorMessage(memberError, errorT)}</p><button className="v4-secondary-button" type="button" onClick={() => setMemberRetry((value) => value + 1)}>{t('reloadMembers')}</button></>}
+      {error && <p role="alert">{getErrorMessage(error, errorT)}</p>}
+      {progress && <ProvisionProgressView progress={progress} />}
+      <button type="submit" className="v4-primary-button" disabled={!canSubmit}>{pending ? t('submitting') : t('submit')}</button>
+    </form><aside className="v4-builder-readiness"><h2>{t('summary')}</h2>{loadingTree && <p>{t('loadingTemplate')}</p>}
+      {position && tree && <><p>{position.name}</p><p>{t('summaryCounts', { weeks: tree.weeks.length, days, lessons, questions })}</p></>}
+      {!position && <p>{t('choosePosition')}</p>}</aside></div>
   </section>;
 }

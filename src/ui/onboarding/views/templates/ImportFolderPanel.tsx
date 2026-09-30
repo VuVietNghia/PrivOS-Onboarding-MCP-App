@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { RoomBinding } from '../../domain/models';
 import { isRoomAdmin } from '../../domain/roles';
 import { createBrowserPositionSource, type BrowserImportFile } from '../../flows/browser-import-v4';
 import { dryRunSource, importSource } from '../../flows/import-v4';
 import type { OnboardingServices } from '../../ports/ui-services';
-import './ImportFolderPanel.css';
+import { getErrorMessage } from '../../../i18n/error-message';
+import { toImportUiError } from '../../../i18n/import-error';
+import type { UiError } from '../../../i18n/ui-error';
 
 export interface ImportFolderPanelProps {
   binding: RoomBinding;
@@ -27,32 +30,14 @@ interface PositionSummary {
 
 type Phase = 'idle' | 'checking' | 'ready' | 'importing' | 'done' | 'preflight-error' | 'import-error';
 
-function errorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    if (/^[^\r\n<>]+\.md:\d+(?:\s|$)/u.test(error.message)) return `Lỗi định dạng: ${error.message}`;
-    const known: Record<string, string> = {
-      SOURCE_PATH_INVALID: 'Đường dẫn trong thư mục nguồn không hợp lệ.',
-      SOURCE_PATH_CONFLICT: 'Thư mục có đường dẫn trùng hoặc nhiều thư mục gốc.',
-      SOURCE_EMPTY: 'Thư mục chưa có tệp Markdown.',
-      SOURCE_NO_POSITIONS: 'Thư mục chưa có nhánh vị trí.',
-      IMPORT_SOURCE_CHANGED: 'Nguồn đã đổi sau lần nhập trước. Dừng nhập để tránh ghi nhầm template.',
-      IMPORT_SOURCE_CONFLICT: 'Có nhiều vị trí cùng khóa nguồn nhập. Dừng nhập để kiểm tra.',
-      IMPORT_ORPHAN_CONFLICT: 'Template nhập dở không khớp nguồn hiện tại. Dừng nhập để kiểm tra.',
-      ROOM_MISMATCH: 'Room đang mở không khớp room đích.',
-      NOT_ADMIN: 'Chỉ owner hoặc admin của room được nhập template.',
-    };
-    if (known[error.message]) return known[error.message];
-    if (/duplicate Day_\d+/iu.test(error.message)) return `Ngày bị trùng trong nguồn: ${error.message}`;
-  }
-  return 'Không nhập được tài liệu. Kiểm tra nguồn và thử lại.';
-}
-
 export function ImportFolderPanel({ binding, roomId, userRoles, services, onDone }: ImportFolderPanelProps) {
+  const { t } = useTranslation('templates');
+  const { t: errorT } = useTranslation('errors');
   const [files, setFiles] = useState<BrowserImportFile[]>([]);
   const [phase, setPhase] = useState<Phase>('idle');
   const [positions, setPositions] = useState<PositionSummary[]>([]);
   const [processed, setProcessed] = useState(0);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<UiError | null>(null);
   const busy = phase === 'checking' || phase === 'importing';
   const canImport = isRoomAdmin(userRoles) && roomId === binding.roomId;
 
@@ -61,7 +46,7 @@ export function ImportFolderPanel({ binding, roomId, userRoles, services, onDone
     setPhase('checking');
     setPositions([]);
     setProcessed(0);
-    setError('');
+    setError(null);
     try {
       const summaries: PositionSummary[] = [];
       const source = createBrowserPositionSource(files, services.hasher);
@@ -75,7 +60,7 @@ export function ImportFolderPanel({ binding, roomId, userRoles, services, onDone
       setPhase('ready');
     } catch (cause) {
       setPositions([]);
-      setError(errorMessage(cause));
+      setError(toImportUiError(cause));
       setPhase('preflight-error');
     }
   };
@@ -84,7 +69,7 @@ export function ImportFolderPanel({ binding, roomId, userRoles, services, onDone
     if (!files.length || !positions.length || !canImport || busy ||
       (phase !== 'ready' && phase !== 'import-error')) return;
     setPhase('importing');
-    setError('');
+    setError(null);
     let completed = 0;
     try {
       const source = createBrowserPositionSource(files, services.hasher);
@@ -97,45 +82,45 @@ export function ImportFolderPanel({ binding, roomId, userRoles, services, onDone
       setPhase('done');
       onDone();
     } catch (cause) {
-      setError(errorMessage(cause));
+      setError(toImportUiError(cause));
       setPhase('import-error');
     }
   };
 
   return <section className="v4-import-panel" aria-labelledby="v4-import-title">
     <header className="v4-import-heading">
-      <div><p className="v4-eyebrow">Nguồn Markdown</p><h2 id="v4-import-title">Nhập template theo vị trí</h2></div>
-      <span className="v4-import-step">01 / 02</span>
+      <div><p className="v4-eyebrow">{t('import.eyebrow')}</p><h2 id="v4-import-title">{t('import.title')}</h2></div>
+      <span className="v4-import-step">{t('import.step')}</span>
     </header>
-    <p className="v4-import-intro">Chọn thư mục onboarding. Bản kiểm tra hiển thị số tuần, ngày, bài và câu hỏi trước khi ghi template nháp vào room.</p>
+    <p className="v4-import-intro">{t('import.intro')}</p>
     <div className="v4-import-picker">
-      <label htmlFor="v4-import-folder">Thư mục Markdown</label>
+      <label htmlFor="v4-import-folder">{t('import.folder')}</label>
       <input id="v4-import-folder" type="file" multiple disabled={busy}
         ref={(element) => { element?.setAttribute('webkitdirectory', ''); }}
-        onChange={(event) => { setFiles(Array.from(event.currentTarget.files ?? [])); setPhase('idle'); setPositions([]); setProcessed(0); setError(''); }} />
-      <small>{files.length ? `${files.length} tệp đã chọn` : 'Chọn thư mục chứa các nhánh vị trí và phần chung.'}</small>
+        onChange={(event) => { setFiles(Array.from(event.currentTarget.files ?? [])); setPhase('idle'); setPositions([]); setProcessed(0); setError(null); }} />
+      <small>{files.length ? t('import.filesSelected', { count: files.length }) : t('import.folderHint')}</small>
     </div>
     <div className="v4-import-actions">
       <button type="button" className="v4-secondary-button" disabled={!files.length || busy} onClick={() => void checkSource()}>
-        {phase === 'checking' ? 'Đang kiểm tra…' : 'Kiểm tra nguồn'}
+        {phase === 'checking' ? t('import.checking') : t('import.check')}
       </button>
       <button type="button" className="v4-primary-button" disabled={!canImport || !positions.length || busy || (phase !== 'ready' && phase !== 'import-error')}
         onClick={() => void confirmImport()}>
-        {phase === 'importing' ? 'Đang nhập…' : phase === 'import-error' ? 'Thử nhập lại' : `Xác nhận nhập ${positions.length} vị trí`}
+        {phase === 'importing' ? t('import.importing') : phase === 'import-error' ? t('import.retry') : t('import.confirm', { count: positions.length })}
       </button>
     </div>
-    {!canImport && <p className="v4-import-note">Chỉ owner hoặc admin của room hiện tại được nhập template. Bạn vẫn xem được bản kiểm tra nguồn.</p>}
-    {error && <p className="v4-import-error" role="alert">{error}</p>}
-    {phase === 'checking' && <p role="status">Đang đọc và kiểm tra Markdown…</p>}
-    {phase === 'importing' && <p role="status">Đang nhập vị trí {Math.min(processed + 1, positions.length)}/{positions.length}. Đã xử lý {processed} vị trí.</p>}
-    {phase === 'done' && <p role="status">Hoàn tất: {processed} vị trí. Template được giữ ở trạng thái nháp.</p>}
-    {phase === 'import-error' && <p role="status">Đã xử lý {processed}/{positions.length} vị trí. Chạy lại sẽ kiểm tra khóa nguồn trước khi ghi tiếp.</p>}
+    {!canImport && <p className="v4-import-note">{t('import.adminOnly')}</p>}
+    {error && <p className="v4-import-error" role="alert">{getErrorMessage(error, errorT)}</p>}
+    {phase === 'checking' && <p role="status">{t('import.reading')}</p>}
+    {phase === 'importing' && <p role="status">{t('import.progress', { current: Math.min(processed + 1, positions.length), total: positions.length, processed })}</p>}
+    {phase === 'done' && <p role="status">{t('import.done', { count: processed })}</p>}
+    {phase === 'import-error' && <p role="status">{t('import.partial', { processed, total: positions.length })}</p>}
     {!!positions.length && <div className="v4-import-report">
-      <h3>Bản kiểm tra nguồn</h3>
+      <h3>{t('import.report')}</h3>
       <ol>{positions.map((position) => <li key={position.sourceKey}>
-        <div className="v4-import-position-head"><strong>{position.name}</strong><span>{position.result === 'created' ? 'Đã nhập' : position.result === 'existing' ? 'Đã có' : 'Nháp'}</span></div>
-        <p>{position.weeks} tuần · {position.days} ngày · {position.lessons} bài · {position.questions} câu hỏi</p>
-        {position.missingAnswers > 0 && <small>{position.missingAnswers} câu chưa có đáp án; template giữ nháp.</small>}
+        <div className="v4-import-position-head"><strong>{position.name}</strong><span>{t(`import.result.${position.result}`)}</span></div>
+        <p>{t('import.counts', { weeks: position.weeks, days: position.days, lessons: position.lessons, questions: position.questions })}</p>
+        {position.missingAnswers > 0 && <small>{t('import.missingAnswers', { count: position.missingAnswers })}</small>}
       </li>)}</ol>
     </div>}
   </section>;

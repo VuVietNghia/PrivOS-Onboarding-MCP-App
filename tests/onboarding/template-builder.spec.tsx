@@ -1,10 +1,21 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render as testingRender, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { OnboardingError } from '../../src/ui/onboarding/domain/errors';
 import { TemplateBuilder as PureTemplateBuilder, type TemplateBuilderProps } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
+import { createUiI18n } from '../../src/ui/i18n/config';
+
+function TestI18nWrapper({ children }: { children: ReactNode }) {
+  return <I18nextProvider i18n={createUiI18n('vi')}>{children}</I18nextProvider>;
+}
+
+function render(ui: ReactElement) {
+  return testingRender(ui, { wrapper: TestI18nWrapper });
+}
 
 type TestBuilderProps<T> = T extends unknown ? Omit<T, 'ids' | 'focus'> : never;
 function TemplateBuilder(props: TestBuilderProps<TemplateBuilderProps>) {
@@ -38,7 +49,7 @@ describe('template builder', () => {
       initialName="Engineer" initialStatus="disabled" positionId="p1"
       onSave={async () => { throw new OnboardingError('SCHEMA_DRIFT'); }} />);
     await user.click(screen.getByRole('button', { name: 'Lưu nháp' }));
-    expect((await screen.findByRole('alert')).textContent).toContain('Cấu trúc list bị sửa ngoài app');
+    expect((await screen.findByRole('alert')).textContent).toContain('Cấu trúc danh sách đã bị thay đổi');
     expect(screen.getByRole('alert').textContent).not.toContain('SCHEMA_DRIFT');
   });
 
@@ -79,6 +90,11 @@ describe('template builder', () => {
     ], items: [{ id: 'd', kind: 'day', name: 'Ngày 1', stageId: 'w', order: 1, parentId: null, content: '' }] }} initialName="Kỹ sư" onSave={async () => {}} />);
     await user.click(screen.getByRole('button', { name: 'Xóa tuần' }));
     expect(screen.getByRole('dialog').textContent).toContain('1 ngày');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Giữ lại' }));
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Xóa tuần' }));
+    await user.click(screen.getByRole('button', { name: 'Xóa tuần' }));
     await user.click(screen.getByRole('button', { name: 'Giữ lại' }));
     expect(screen.getByRole('button', { name: /Tuần 1/ })).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Xóa tuần' }));

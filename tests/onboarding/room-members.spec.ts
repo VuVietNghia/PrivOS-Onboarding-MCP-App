@@ -323,13 +323,13 @@ describe('lookupUser', () => {
 
 describe('pickEmployee', () => {
   it('ô trống thì báo lỗi', () => {
-    expect(pickEmployee('  ', { kind: 'unavailable' })).toEqual({ ok: false, message: 'Chọn hoặc nhập nhân sự.' });
+    expect(pickEmployee('  ', { kind: 'unavailable' })).toEqual({ ok: false, code: 'EMPLOYEE_REQUIRED', message: 'Chọn hoặc nhập nhân sự.' });
   });
   it('tìm thấy thì dùng id của người đó', () => {
     expect(pickEmployee('mai', { kind: 'found', member: { id: 'u9', username: 'mai', name: 'Mai' } })).toEqual({ ok: true, employeeId: 'u9' });
   });
   it('không tìm thấy thì báo lỗi, không dùng giá trị thô', () => {
-    expect(pickEmployee('ghost', { kind: 'not-found' })).toEqual({ ok: false, message: 'Không tìm thấy người dùng "ghost".' });
+    expect(pickEmployee('ghost', { kind: 'not-found' })).toEqual({ ok: false, code: 'EMPLOYEE_NOT_FOUND', message: 'Không tìm thấy người dùng "ghost".' });
   });
   it('không tra được (thiếu quyền) thì coi giá trị nhập là user id', () => {
     expect(pickEmployee(' abc123 ', { kind: 'unavailable' })).toEqual({ ok: true, employeeId: 'abc123' });

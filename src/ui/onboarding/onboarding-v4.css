@@ -1,54 +1,22 @@
+@import './styles/tokens.css';
+@import './styles/themes.css';
+@import './styles/layout.css';
+@import './styles/components.css';
+@import './styles/responsive.css';
+
+html, body, #root { min-height: 100%; }
+body { margin: 0; }
+
 .onboarding-v4 {
-  --v4-primary: #266a9a;
-  --v4-primary-hover: #13354d;
-  --v4-on-primary: #fff;
-  --v4-bg: #fcfcfe;
-  --v4-surface: #f1f4f8;
-  --v4-surface-2: #e3e8f3;
-  --v4-glass: rgba(252,252,254,.88);
-  --v4-text: #0b1113;
-  --v4-text-2: #27373f;
-  --v4-text-3: #536068;
-  --v4-border: #d6dbeb;
-  --v4-border-2: #a3b0c2;
-  --v4-shadow: 0 2px 8px rgba(0,5,10,.05);
   background: var(--v4-bg);
   color: var(--v4-text);
-  font-family: Montserrat, sans-serif;
+  font-family: var(--v4-font-family);
   font-size: 14px;
   line-height: 1.55;
   min-height: 100vh;
 }
-.onboarding-v4[data-theme-mode="dark"] {
-  --v4-primary: #3084c0;
-  --v4-primary-hover: #83b5d9;
-  --v4-bg: #080d0f;
-  --v4-surface: #121a1f;
-  --v4-surface-2: #1c282e;
-  --v4-glass: rgba(8,13,15,.88);
-  --v4-text: #e8e9e8;
-  --v4-text-2: #b6b9bb;
-  --v4-text-3: #93989a;
-  --v4-border: #1c282e;
-  --v4-border-2: #434b4f;
-  --v4-shadow: 0 4px 12px rgba(0,0,0,.2);
-}
-.onboarding-v4[data-theme-mode="brand"] {
-  --v4-primary: #ffc814;
-  --v4-primary-hover: #ffe27e;
-  --v4-on-primary: #00050a;
-  --v4-bg: #00050a;
-  --v4-surface: #000f1d;
-  --v4-surface-2: #001930;
-  --v4-glass: rgba(0,5,10,.88);
-  --v4-text: #e6e8eb;
-  --v4-text-2: #cdd1d6;
-  --v4-text-3: #9ba3ad;
-  --v4-border: #001930;
-  --v4-border-2: #38475b;
-  --v4-shadow: 0 4px 12px rgba(0,0,0,.3);
-}
 .onboarding-v4, .onboarding-v4 * { box-sizing: border-box; }
+@scope (.onboarding-v4) {
 .onboarding-v4 button { font: inherit; color: inherit; }
 .onboarding-v4 button:focus-visible { outline: 3px solid var(--v4-primary); outline-offset: 2px; }
 .v4-app { display: grid; grid-template-columns: 264px minmax(0,1fr); min-height: 100vh; }
@@ -273,4 +241,5 @@
   .v4-learning-week li > button { flex-direction: column; }
   .v4-quiz-actionbar { bottom: 8px; flex-wrap: wrap; }
   .v4-quiz-actionbar button { width: 100%; }
+}
 }

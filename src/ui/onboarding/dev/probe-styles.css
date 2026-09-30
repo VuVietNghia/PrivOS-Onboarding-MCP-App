@@ -1,0 +1,34 @@
+.onboarding-probes {
+  min-height: 100vh;
+  padding: 24px;
+  background: #FCFCFE;
+  color: #0B1113;
+  font: 14px/1.5 Inter, system-ui, sans-serif;
+}
+
+.onboarding-probes .container {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+}
+
+.onboarding-probes .form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.onboarding-probes button {
+  min-height: 38px;
+  padding: 7px 12px;
+  border: 1px solid #75838B;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #0B1113;
+  cursor: pointer;
+}
+
+.onboarding-probes button:focus-visible {
+  outline: 3px solid #266A9A;
+  outline-offset: 2px;
+}

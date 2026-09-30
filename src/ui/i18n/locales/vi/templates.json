@@ -1,0 +1,40 @@
+{
+  "defaults": { "week": "Tuần {{count}}", "day": "Ngày {{count}}", "lesson": "Bài học {{count}}", "question": "Câu hỏi {{count}}" },
+  "builder": {
+    "label": "Biên soạn template", "previewNote": "Đây là bản xem trước. Các thay đổi chưa được lưu.",
+    "eyebrowCreate": "Template studio / tạo mới", "eyebrowEdit": "Template studio / chỉnh sửa",
+    "createTitle": "Tạo template onboarding", "editTitle": "Chỉnh sửa template onboarding", "subtitle": "Biên soạn tuần, ngày, bài học và câu hỏi ôn tập.",
+    "positionInfo": "01 / Thông tin template", "positionQuestion": "Template này dành cho vị trí nào?", "positionName": "Tên vị trí", "positionPlaceholder": "Ví dụ: Intern Backend Developer",
+    "weekName": "Tên tuần", "weekHelp": "Đặt tên ngắn gọn để nhân sự dễ theo dõi.", "deleteWeek": "Xóa tuần",
+    "emptyWeekTitle": "Tuần này chưa có ngày học", "emptyWeekBody": "Thêm ngày đầu tiên để bắt đầu biên soạn.", "addDay": "Thêm ngày",
+    "readinessLabel": "Kiểm tra template", "readinessTitle": "Kiểm tra trước khi dùng", "readinessPreview": "Kiểm tra các mục còn thiếu trong bản xem trước.", "readinessLive": "Lưu nháp bất kỳ lúc nào.",
+    "issueCount_zero": "Đủ điều kiện", "issueCount_one": "{{count}} mục cần bổ sung", "issueCount_other": "{{count}} mục cần bổ sung", "ready": "Đủ điều kiện", "fallbackIssue": "Kiểm tra cấu trúc template",
+    "pendingFile": "{{files}}: nhập tên vị trí để tải file.", "retryUpload": "Thử lại tải file", "saveDraft": "Lưu nháp", "markReady": "Sẵn sàng",
+    "saveState": { "preview": "Chế độ xem trước · chưa lưu", "idle": "Chưa thay đổi", "dirty": "Chưa lưu", "saving": "Đang lưu", "saved": "Đã lưu", "error": "Lưu thất bại" },
+    "deleteDialog": { "label": "Xác nhận xóa tuần", "title": "Xóa tuần?", "body": "Tuần này có {{count}} ngày. Các bài học và câu hỏi trong tuần cũng sẽ bị xóa.", "keep": "Giữ lại", "confirm": "Xác nhận xóa" }
+  },
+  "status": { "draft": "Bản nháp", "ready": "Sẵn sàng", "disabled": "Ngừng dùng" },
+  "issues": {
+    "POSITION_NAME": "Tên vị trí bắt buộc", "NO_WEEK": "Thêm ít nhất một tuần", "WEEK_NAME": "Đặt tên cho tuần", "EMPTY_WEEK": "Thêm ngày vào tuần",
+    "DAY_NAME": "Đặt tên cho ngày", "EMPTY_DAY": "Thêm nội dung hợp lệ cho ngày", "LESSON_TITLE": "Đặt tiêu đề bài học", "LESSON_CONTENT": "Nhập nội dung bài học",
+    "QUESTION_CONTENT": "Nhập nội dung câu hỏi", "OPTION_COUNT": "Câu hỏi cần 2–10 lựa chọn", "OPTION_EMPTY": "Điền nội dung lựa chọn", "ANSWER_INVALID": "Chọn đáp án đúng hợp lệ"
+  },
+  "rail": { "label": "Danh sách ngày onboarding", "title": "Tuần onboarding", "help": "Chọn tuần và ngày để chỉnh sửa.", "weekIndex": "T{{index}}", "dayCount_one": "{{count}} ngày", "dayCount_other": "{{count}} ngày", "addDay": "Thêm ngày", "addWeek": "Thêm tuần" },
+  "day": {
+    "section": "02 / Ngày học", "heading": "Ngày {{count}}", "name": "Tên ngày", "goal": "Mục tiêu học tập", "delete": "Xóa ngày",
+    "contentSection": "03 / Nội dung học", "contentTitle": "Bài học và tài liệu", "addLesson": "Thêm bài học", "lesson": "Bài học", "deleteLesson": "Xóa bài học", "lessonTitle": "Tiêu đề bài học", "markdown": "Nội dung Markdown",
+    "quizSection": "04 / Câu hỏi ôn tập", "quizTitle": "Quiz trong ngày", "addQuestion": "Thêm câu hỏi"
+  },
+  "question": { "title": "Câu hỏi", "delete": "Xóa câu hỏi", "content": "Nội dung câu hỏi", "option": "Lựa chọn {{count}}", "correctAnswer": "Đáp án đúng {{count}}", "correct": "Đúng", "moveUp": "Lên {{count}}", "moveDown": "Xuống {{count}}", "removeOption": "Xóa lựa chọn {{count}}", "addOption": "Thêm lựa chọn", "explanation": "Giải thích sau khi nộp" },
+  "assets": { "region": "Tài liệu cho {{name}}", "fallbackLesson": "bài học", "title": "Tài liệu đính kèm", "attach": "Đính kèm file", "uploading": "Đang tải lên" },
+  "import": {
+    "eyebrow": "Nguồn Markdown", "title": "Nhập template theo vị trí", "step": "01 / 02", "intro": "Chọn thư mục onboarding. Bản kiểm tra hiển thị nội dung trước khi tạo template nháp.",
+    "folder": "Thư mục Markdown", "filesSelected": "{{count}} tệp đã chọn", "folderHint": "Chọn thư mục chứa các nhánh vị trí và phần chung.", "checking": "Đang kiểm tra…", "check": "Kiểm tra nguồn", "importing": "Đang nhập…", "retry": "Thử nhập lại", "confirm": "Xác nhận nhập {{count}} vị trí",
+    "adminOnly": "Chỉ owner hoặc admin của room hiện tại được nhập template. Bạn vẫn xem được bản kiểm tra nguồn.", "reading": "Đang đọc và kiểm tra Markdown…",
+    "progress": "Đang nhập vị trí {{current}}/{{total}}. Đã xử lý {{processed}} vị trí.", "done": "Hoàn tất: {{count}} vị trí. Template được giữ ở trạng thái nháp.", "partial": "Đã xử lý {{processed}}/{{total}} vị trí. Chạy lại sẽ tiếp tục từ dữ liệu đã kiểm tra.",
+    "report": "Bản kiểm tra nguồn", "result": { "created": "Đã nhập", "existing": "Đã có", "pending": "Nháp" },
+    "counts": "{{weeks}} tuần · {{days}} ngày · {{lessons}} bài · {{questions}} câu hỏi", "missingAnswers": "{{count}} câu chưa có đáp án; template giữ nháp."
+  },
+  "copy": { "label": "Sao chép template", "title": "Sao chép template", "source": "Vị trí nguồn", "empty": "Chưa có template nguồn.", "loading": "Đang tải template…", "scope": "Nội dung sao chép", "all": "Toàn bộ", "weeks": "Chọn tuần", "days": "Chọn ngày", "close": "Đóng", "pending": "Đang sao chép…", "submit": "Sao chép template" },
+  "shell": { "back": "Quay lại danh sách", "loadingTemplate": "Đang tải template", "importFolder": "Nhập thư mục Markdown", "loadingCopy": "Đang tải template để sao chép" }
+}

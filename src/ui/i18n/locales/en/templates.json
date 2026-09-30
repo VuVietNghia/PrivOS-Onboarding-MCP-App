@@ -1,0 +1,40 @@
+{
+  "defaults": { "week": "Week {{count}}", "day": "Day {{count}}", "lesson": "Lesson {{count}}", "question": "Question {{count}}" },
+  "builder": {
+    "label": "Template editor", "previewNote": "This is a preview. Changes are not saved.",
+    "eyebrowCreate": "Template studio / create", "eyebrowEdit": "Template studio / edit",
+    "createTitle": "Create onboarding template", "editTitle": "Edit onboarding template", "subtitle": "Build weeks, days, lessons, and review questions.",
+    "positionInfo": "01 / Template information", "positionQuestion": "Which position is this template for?", "positionName": "Position name", "positionPlaceholder": "Example: Backend Developer Intern",
+    "weekName": "Week name", "weekHelp": "Use a short name that employees can follow easily.", "deleteWeek": "Delete week",
+    "emptyWeekTitle": "This week has no learning days", "emptyWeekBody": "Add the first day to start writing content.", "addDay": "Add day",
+    "readinessLabel": "Template checks", "readinessTitle": "Check before use", "readinessPreview": "Review missing items in this preview.", "readinessLive": "Save a draft at any time.",
+    "issueCount_zero": "Ready to use", "issueCount_one": "{{count}} item needs attention", "issueCount_other": "{{count}} items need attention", "ready": "Ready to use", "fallbackIssue": "Check template structure",
+    "pendingFile": "{{files}}: enter a position name to upload the file.", "retryUpload": "Retry file upload", "saveDraft": "Save draft", "markReady": "Mark ready",
+    "saveState": { "preview": "Preview mode · not saved", "idle": "No changes", "dirty": "Unsaved changes", "saving": "Saving", "saved": "Saved", "error": "Save failed" },
+    "deleteDialog": { "label": "Confirm week deletion", "title": "Delete week?", "body": "This week has {{count}} days. Its lessons and questions will also be deleted.", "keep": "Keep week", "confirm": "Confirm deletion" }
+  },
+  "status": { "draft": "Draft", "ready": "Ready", "disabled": "Disabled" },
+  "issues": {
+    "POSITION_NAME": "Position name is required", "NO_WEEK": "Add at least one week", "WEEK_NAME": "Name the week", "EMPTY_WEEK": "Add a day to the week",
+    "DAY_NAME": "Name the day", "EMPTY_DAY": "Add valid content to the day", "LESSON_TITLE": "Add a lesson title", "LESSON_CONTENT": "Add lesson content",
+    "QUESTION_CONTENT": "Add question content", "OPTION_COUNT": "A question needs 2–10 options", "OPTION_EMPTY": "Complete each option", "ANSWER_INVALID": "Select a valid correct answer"
+  },
+  "rail": { "label": "Onboarding day list", "title": "Onboarding weeks", "help": "Select a week and day to edit.", "weekIndex": "W{{index}}", "dayCount_one": "{{count}} day", "dayCount_other": "{{count}} days", "addDay": "Add day", "addWeek": "Add week" },
+  "day": {
+    "section": "02 / Learning day", "heading": "Day {{count}}", "name": "Day name", "goal": "Learning goal", "delete": "Delete day",
+    "contentSection": "03 / Learning content", "contentTitle": "Lessons and resources", "addLesson": "Add lesson", "lesson": "Lesson", "deleteLesson": "Delete lesson", "lessonTitle": "Lesson title", "markdown": "Markdown content",
+    "quizSection": "04 / Review questions", "quizTitle": "Daily quiz", "addQuestion": "Add question"
+  },
+  "question": { "title": "Question", "delete": "Delete question", "content": "Question text", "option": "Option {{count}}", "correctAnswer": "Correct answer {{count}}", "correct": "Correct", "moveUp": "Move option {{count}} up", "moveDown": "Move option {{count}} down", "removeOption": "Remove option {{count}}", "addOption": "Add option", "explanation": "Explanation after submission" },
+  "assets": { "region": "Attachments for {{name}}", "fallbackLesson": "lesson", "title": "Attachments", "attach": "Attach file", "uploading": "Uploading" },
+  "import": {
+    "eyebrow": "Markdown source", "title": "Import templates by position", "step": "01 / 02", "intro": "Choose an onboarding folder. The source check previews its content before draft templates are created.",
+    "folder": "Markdown folder", "filesSelected": "{{count}} files selected", "folderHint": "Choose the folder containing position branches and shared content.", "checking": "Checking…", "check": "Check source", "importing": "Importing…", "retry": "Retry import", "confirm": "Confirm import of {{count}} positions",
+    "adminOnly": "Only a room owner or admin can import templates. You can still review the source check.", "reading": "Reading and checking Markdown…",
+    "progress": "Importing position {{current}}/{{total}}. {{processed}} positions processed.", "done": "Complete: {{count}} positions. Templates remain in draft status.", "partial": "Processed {{processed}}/{{total}} positions. Retrying continues from the checked data.",
+    "report": "Source check", "result": { "created": "Imported", "existing": "Already exists", "pending": "Draft" },
+    "counts": "{{weeks}} weeks · {{days}} days · {{lessons}} lessons · {{questions}} questions", "missingAnswers": "{{count}} questions have no answer; the template remains a draft."
+  },
+  "copy": { "label": "Copy template", "title": "Copy template", "source": "Source position", "empty": "No source templates are available.", "loading": "Loading template…", "scope": "Content to copy", "all": "Everything", "weeks": "Select weeks", "days": "Select days", "close": "Close", "pending": "Copying…", "submit": "Copy template" },
+  "shell": { "back": "Back to list", "loadingTemplate": "Loading template", "importFolder": "Import Markdown folder", "loadingCopy": "Loading template to copy" }
+}

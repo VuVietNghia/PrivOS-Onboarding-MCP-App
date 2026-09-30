@@ -1,0 +1,11 @@
+{
+  "roadmap": {
+    "region": "Learning roadmap", "loading": "Loading roadmap", "title": "My roadmap", "empty": "You do not have an onboarding roadmap in this room.", "loadFailed": "Could not load the roadmap. Try again.", "retry": "Retry",
+    "select": "Onboarding roadmap", "status": { "learning": "Learning", "done": "Completed" }, "started": "Started {{date}}", "progress": "{{done}}/{{total}} days completed", "progressLabel": "Roadmap progress", "emptyDays": "This roadmap has no learning days.",
+    "state": { "completed": "Completed", "inProgress": "In progress", "notStarted": "Not started" }, "firstScore": "First score", "continueSaving": "Continue saving", "saving": "Saving…"
+  },
+  "day": { "region": "Learning {{name}}", "back": "Back to roadmap", "empty": "This learning day has no content.", "openVideo": "Open video", "read": "Read", "markRead": "Mark as read", "takeQuiz": "Take quiz" },
+  "quiz": { "region": "Take quiz", "back": "Back to day", "title": "Quiz", "invalid": "The quiz data is invalid. Contact HR.", "answered": "Answered {{answered}}/{{total}}", "question": "Question {{count}}: {{content}}", "saveFailed": "Could not save the answers. Try again.", "submit": "Submit answers", "saving": "Saving…" },
+  "result": { "region": "Quiz result", "invalid": "The quiz result is invalid.", "attempt": "Attempt result {{count}}", "firstScore": "First score: {{score}}", "attempts": "Attempts: {{attempts}}", "correct": "Correct", "incorrect": "Incorrect", "correctAnswer": "Correct answer: {{answers}}", "retake": "Retake quiz", "back": "Back to day" },
+  "attachments": { "empty": "No attachments.", "open": "Open", "openLabel": "Open {{name}}", "download": "Download", "downloadLabel": "Download {{name}}", "downloading": "Downloading…", "unlink": "Unlink", "unlinkLabel": "Unlink {{name}}", "previewEyebrow": "Attached document", "previewTitle": "Preview {{name}}", "previewLoading": "Loading preview…", "previewUnavailable": "Preview is not available for this file type. Download the file to view it.", "previewFailed": "The preview could not be loaded.", "close": "Close", "closePreview": "Close preview" }
+}

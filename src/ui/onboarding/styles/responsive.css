@@ -1,0 +1,83 @@
+@media (max-width: 760px) {
+  .onboarding-v4 .v4-app {
+    display: block;
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-v4 .v4-builder-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .onboarding-v4 .v4-page-head {
+    gap: var(--v4-space-4);
+  }
+
+  .onboarding-v4 .v4-learning-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-v4 .v4-learning-hero > strong {
+    justify-self: start;
+  }
+
+  .onboarding-v4 .v4-provision-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-v4 .v4-provision-grid .v4-builder-readiness {
+    position: static;
+  }
+
+  .onboarding-v4 .v4-builder-option {
+    grid-template-columns: 24px minmax(0, 1fr) auto;
+  }
+
+  .onboarding-v4 .v4-builder-option > label {
+    grid-column: 1 / -1;
+  }
+
+  .onboarding-v4 .v4-builder-savebar,
+  .onboarding-v4 .v4-quiz-actionbar {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .onboarding-v4 .v4-drawer {
+    width: 100%;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1050px) {
+  .onboarding-v4 .v4-app {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .onboarding-v4 .v4-builder-grid {
+    grid-template-columns: 184px minmax(0, 1fr);
+  }
+
+  .onboarding-v4 .v4-builder-readiness {
+    grid-column: 2;
+  }
+
+  .onboarding-v4 .v4-provision-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-v4 .v4-provision-grid .v4-builder-readiness {
+    position: static;
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .onboarding-v4 .v4-top-actions,
+  .onboarding-v4 .v4-language,
+  .onboarding-v4 .v4-themes {
+    width: 100%;
+  }
+
+  .onboarding-v4 .v4-language,
+  .onboarding-v4 .v4-themes {
+    justify-content: center;
+  }
+}

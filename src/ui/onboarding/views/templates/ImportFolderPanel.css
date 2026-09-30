@@ -1,3 +1,4 @@
+@scope (.onboarding-v4) {
 .v4-import-panel { display: grid; gap: 18px; max-width: 900px; padding: 26px; border: 1px solid var(--v4-border); border-radius: 18px; background: var(--v4-surface); color: var(--v4-text); box-shadow: var(--v4-shadow); }
 .v4-import-heading { display: flex; align-items: start; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--v4-border); padding-bottom: 16px; }
 .v4-import-heading h2 { margin: 2px 0 0; font-size: 22px; line-height: 1.25; }
@@ -19,3 +20,4 @@
 .v4-import-position-head { display: flex; justify-content: space-between; gap: 12px; }
 .v4-import-position-head span { color: var(--v4-primary); font-size: 12px; font-weight: 700; }
 @media (max-width: 640px) { .v4-import-panel { padding: 18px; } .v4-import-heading h2 { font-size: 19px; } .v4-import-actions button { flex: 1; } }
+}

@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { PrivosAppProvider, usePrivosContext } from '@privos_ai/app-react';
 import { ThemeProvider } from './theme-provider';
-import { LazyBoundary } from './lazy-boundary';
+import { LocalizedLazyBoundary } from './lazy-boundary';
 import OnboardingPanel from './onboarding/views/OnboardingPanel';
 import { PrivosOnboardingRoot } from './composition/PrivosOnboardingRoot';
 import { createBrowserPresentation, createBrowserThemePreferences } from './adapters/browser-effects';
+import { PrivosI18nRoot } from './composition/PrivosI18nRoot';
 
 const presentation = createBrowserPresentation();
 const themePreferences = createBrowserThemePreferences();
@@ -20,9 +21,11 @@ function ThemedApp() {
   const { theme } = usePrivosContext();
   return (
     <ThemeProvider hostTheme={theme} preferences={themePreferences} target={presentation.themeTarget}>
-      <LazyBoundary reloadPage={presentation.reloadPage} logger={presentation.logger}>
-        <PrivosOnboardingRoot><OnboardingPanel /></PrivosOnboardingRoot>
-      </LazyBoundary>
+      <PrivosI18nRoot>
+        <LocalizedLazyBoundary reloadPage={presentation.reloadPage} logger={presentation.logger}>
+          <PrivosOnboardingRoot><OnboardingPanel /></PrivosOnboardingRoot>
+        </LocalizedLazyBoundary>
+      </PrivosI18nRoot>
     </ThemeProvider>
   );
 }

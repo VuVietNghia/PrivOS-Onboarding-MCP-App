@@ -1,0 +1,335 @@
+@import '../views/templates/ImportFolderPanel.css';
+
+.onboarding-v4 :is(button, input, select, textarea) {
+  color: inherit;
+}
+
+.onboarding-v4 :is(button, input, select, textarea):focus-visible {
+  outline: 3px solid var(--v4-focus);
+  outline-offset: 2px;
+}
+
+.onboarding-v4 :is(input, select, textarea) {
+  border-color: var(--v4-control-border);
+}
+
+.onboarding-v4 .v4-primary-button,
+.onboarding-v4 .v4-employee-preview-button,
+.onboarding-v4 .v4-builder-savebar button:last-child {
+  border-color: transparent;
+  background: var(--v4-primary-bg);
+  color: var(--v4-primary-text);
+}
+
+.onboarding-v4[data-theme-mode="brand"] .v4-primary-button,
+.onboarding-v4[data-theme-mode="brand"] .v4-employee-preview-button,
+.onboarding-v4[data-theme-mode="brand"] .v4-builder-savebar button:last-child {
+  background: linear-gradient(135deg, var(--v4-primary-gradient-start), var(--v4-primary-gradient-end));
+}
+
+.onboarding-v4 .v4-employee-preview-status {
+  padding: 5px 10px;
+  border: 1px solid var(--v4-control-border);
+  border-radius: 999px;
+  background: var(--v4-surface-2);
+  color: var(--v4-text-2);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.onboarding-v4 .v4-provision-form {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+  padding: clamp(20px, 3vw, 28px);
+  border: 1px solid var(--v4-border);
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--v4-surface), var(--v4-surface-2));
+  box-shadow: var(--v4-shadow);
+}
+
+.onboarding-v4 .v4-provision-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--v4-text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.onboarding-v4 .v4-provision-form :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--v4-control-border);
+  border-radius: var(--v4-radius-md);
+  background: var(--v4-surface);
+  color: var(--v4-text);
+  font: inherit;
+  font-weight: 400;
+}
+
+.onboarding-v4 .v4-provision-form :is(input, select):hover {
+  border-color: var(--v4-text-3);
+}
+
+.onboarding-v4 .v4-provision-form :is(input, select):disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.onboarding-v4 .v4-provision-form > :is(p[role="alert"], p[role="status"]) {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--v4-radius-sm);
+  background: var(--v4-surface-2);
+}
+
+.onboarding-v4 .v4-provision-form > .v4-primary-button,
+.onboarding-v4 .v4-provision-form > .v4-secondary-button {
+  justify-self: start;
+}
+
+.onboarding-v4 .v4-badge-done,
+.onboarding-v4 .v4-badge-ready {
+  color: var(--v4-success);
+}
+
+.onboarding-v4 .v4-badge-failed,
+.onboarding-v4 .v4-table-error,
+.onboarding-v4 .v4-import-error,
+.onboarding-v4 .v4-builder-week-editor > button,
+.onboarding-v4 .v4-builder-dialog button + button {
+  color: var(--v4-error);
+}
+
+.onboarding-v4 .v4-import-error,
+.onboarding-v4 .v4-builder-dialog button + button {
+  border-color: var(--v4-error);
+}
+
+.onboarding-v4 .v4-learning-quiz label {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--v4-border);
+  border-radius: var(--v4-radius-md);
+  background: var(--v4-bg);
+  cursor: pointer;
+}
+
+.onboarding-v4 .v4-learning-quiz label:has(input:checked) {
+  border-color: var(--v4-primary);
+  background: var(--v4-surface-2);
+}
+
+.onboarding-v4 .v4-builder-dialog {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+.onboarding-v4 .v4-drawer-content,
+.onboarding-v4 .v4-builder-entry,
+.onboarding-v4 .v4-builder-option {
+  min-width: 0;
+}
+
+.onboarding-v4 .v4-drawer-content button,
+.onboarding-v4 .v4-builder-dialog button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--v4-control-border);
+  border-radius: var(--v4-radius-sm);
+  background: var(--v4-surface);
+}
+
+.onboarding-v4 .v4-table-wrap:focus-visible {
+  outline: 3px solid var(--v4-focus);
+  outline-offset: 2px;
+}
+
+.onboarding-v4 .v4-attachment-list {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.onboarding-v4 .v4-attachment-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--v4-border);
+  border-radius: var(--v4-radius-md);
+  background: var(--v4-surface-2);
+}
+
+.onboarding-v4 .v4-attachment-list li > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.onboarding-v4 .v4-attachment-list small {
+  grid-column: 1;
+  color: var(--v4-text-3);
+  font-size: 11px;
+}
+
+.onboarding-v4 .v4-attachment-list button {
+  min-height: 38px;
+  padding: 7px 11px;
+  border: 1px solid var(--v4-control-border);
+  border-radius: var(--v4-radius-sm);
+  background: var(--v4-surface);
+  cursor: pointer;
+}
+
+.onboarding-v4 .v4-attachment-list [role="alert"] {
+  grid-column: 1 / -1;
+  color: var(--v4-error);
+}
+
+.onboarding-v4 .v4-attachment-preview-backdrop {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 32px);
+  background: rgb(4 10 16 / .72);
+  backdrop-filter: blur(10px);
+}
+
+.onboarding-v4 .v4-attachment-preview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(920px, 100%);
+  height: min(760px, calc(100vh - 32px));
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--v4-border);
+  border-radius: var(--v4-radius-lg);
+  background: var(--v4-bg);
+  box-shadow: 0 24px 80px rgb(0 0 0 / .36);
+}
+
+.onboarding-v4 .v4-attachment-preview > header,
+.onboarding-v4 .v4-attachment-preview > footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--v4-surface);
+}
+
+.onboarding-v4 .v4-attachment-preview > header {
+  border-bottom: 1px solid var(--v4-border);
+}
+
+.onboarding-v4 .v4-attachment-preview > header small {
+  color: var(--v4-primary);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.onboarding-v4 .v4-attachment-preview h2 {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--v4-text);
+  font-size: clamp(17px, 2.4vw, 23px);
+}
+
+.onboarding-v4 .v4-attachment-preview-body {
+  min-height: 0;
+  overflow: auto;
+  padding: clamp(18px, 4vw, 40px);
+  background: var(--v4-surface-2);
+}
+
+.onboarding-v4 .v4-attachment-preview-markdown,
+.onboarding-v4 .v4-attachment-preview-text {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(18px, 4vw, 36px);
+  border: 1px solid var(--v4-border);
+  border-radius: var(--v4-radius-md);
+  background: var(--v4-surface);
+  color: var(--v4-text);
+  box-shadow: var(--v4-shadow);
+}
+
+.onboarding-v4 .v4-attachment-preview-text {
+  min-height: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.65;
+}
+
+.onboarding-v4 .v4-attachment-preview-image {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  margin: auto;
+  border-radius: var(--v4-radius-md);
+  box-shadow: var(--v4-shadow);
+}
+
+.onboarding-v4 .v4-attachment-preview-frame {
+  width: 100%;
+  min-height: 100%;
+  border: 0;
+  border-radius: var(--v4-radius-md);
+  background: #fff;
+}
+
+.onboarding-v4 .v4-attachment-preview > footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--v4-border);
+}
+
+.onboarding-v4 .v4-attachment-preview > footer [role="alert"] {
+  margin: 0 auto 0 0;
+  color: var(--v4-error);
+}
+
+@media (max-width: 640px) {
+  .onboarding-v4 .v4-attachment-list li {
+    grid-template-columns: minmax(0, 1fr) 1fr 1fr;
+  }
+
+  .onboarding-v4 .v4-attachment-list button {
+    grid-row: 2;
+  }
+
+  .onboarding-v4 .v4-attachment-list small {
+    grid-column: auto;
+  }
+
+  .onboarding-v4 .v4-attachment-preview-backdrop {
+    padding: 0;
+  }
+
+  .onboarding-v4 .v4-attachment-preview {
+    width: 100%;
+    height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .onboarding-v4 .v4-attachment-preview > header,
+  .onboarding-v4 .v4-attachment-preview > footer {
+    padding: 12px 14px;
+  }
+
+  .onboarding-v4 .v4-attachment-preview-body {
+    padding: 12px;
+  }
+}

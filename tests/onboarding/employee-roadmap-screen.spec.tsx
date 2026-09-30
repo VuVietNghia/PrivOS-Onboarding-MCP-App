@@ -1,12 +1,21 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render as testingRender, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import type { FilesGateway } from '../../src/ui/onboarding/ports/files';
 import type { LearningService, LoadedLearning, MemberRoadmapOption } from '../../src/ui/onboarding/ports/learning';
 import type { Hire, Question, Roadmap } from '../../src/ui/onboarding/domain/models';
 import { OnboardingError } from '../../src/ui/onboarding/domain/errors';
 import { EmployeeRoadmapScreen } from '../../src/ui/onboarding/views/learning/EmployeeRoadmapScreen';
+import { createUiI18n } from '../../src/ui/i18n/config';
+
+function render(ui: ReactElement) {
+  const i18n = createUiI18n('en');
+  const Wrapper = ({ children }: { children: ReactNode }) => <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
+  return Object.assign(testingRender(ui, { wrapper: Wrapper }), { i18n });
+}
 
 afterEach(cleanup);
 
@@ -70,9 +79,14 @@ function learningService(initial = snapshot()): { service: LearningService; curr
   return { service, current: () => current };
 }
 
-function files(): { gateway: FilesGateway; open: ReturnType<typeof vi.fn> } {
+function files(): { gateway: FilesGateway; content: ReturnType<typeof vi.fn> } {
   const open = vi.fn(async () => {});
-  return { open, gateway: { folder: vi.fn(async () => 'folder-1'), upload: vi.fn(), metadata: vi.fn(), open,
+  const content = vi.fn(async () => ({
+    fileId: 'file-1', name: 'guide.pdf', mimeType: 'text/markdown', blob: new Blob(), text: '',
+  }));
+  return { content, gateway: { folder: vi.fn(async () => 'folder-1'), upload: vi.fn(), metadata: vi.fn(),
+    content,
+    download: vi.fn(async () => {}), open,
     move: vi.fn(async () => {}) } };
 }
 
@@ -88,11 +102,13 @@ describe('employee roadmap screen integration', () => {
     const learning = learningService();
     const file = files();
     render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'attempt-12345678' } }}
-      filesGateway={file.gateway} locale="en" />);
+      filesGateway={file.gateway} />);
 
     await user.click(await screen.findByRole('button', { name: /Day 1/ }));
     await user.click(screen.getByRole('button', { name: 'Open guide.pdf' }));
-    expect(file.open).toHaveBeenCalledWith('file-1', 'view');
+    expect(file.content).toHaveBeenCalledWith('file-1');
+    expect(await screen.findByRole('dialog', { name: 'Preview guide.pdf' })).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Close preview' }));
     await user.click(screen.getByRole('button', { name: 'Mark as read' }));
     await user.click(screen.getByRole('button', { name: 'Take quiz' }));
     await user.click(screen.getByRole('radio', { name: 'B' }));
@@ -106,14 +122,14 @@ describe('employee roadmap screen integration', () => {
   it('renders empty state and retries a safe loading error', async () => {
     const empty = learningService();
     empty.service.listMine = vi.fn(async () => []);
-    const view = render(<EmployeeRoadmapScreen services={{ learning: empty.service, ids: { next: () => 'id' } }} locale="en" />);
+    const view = render(<EmployeeRoadmapScreen services={{ learning: empty.service, ids: { next: () => 'id' } }} />);
     expect(await screen.findByText('You do not have an onboarding roadmap in this room.')).toBeTruthy();
 
     const retry = learningService();
     retry.service.listMine = vi.fn()
       .mockRejectedValueOnce(new OnboardingError('HIRE_NOT_OWNED', 'private-hire-id'))
       .mockResolvedValueOnce([option]);
-    view.rerender(<EmployeeRoadmapScreen services={{ learning: retry.service, ids: { next: () => 'id' } }} locale="en" />);
+    view.rerender(<EmployeeRoadmapScreen services={{ learning: retry.service, ids: { next: () => 'id' } }} />);
     expect(await screen.findByText('Could not load the roadmap. Try again.')).toBeTruthy();
     expect(screen.queryByText('private-hire-id')).toBeNull();
     await userEvent.setup().click(screen.getByRole('button', { name: 'Retry' }));
@@ -125,9 +141,9 @@ describe('employee roadmap screen integration', () => {
     const old = learningService(snapshot('Old roadmap'));
     old.service.listMine = vi.fn(() => oldPage.promise);
     const fresh = learningService(snapshot('New roadmap'));
-    const view = render(<EmployeeRoadmapScreen services={{ learning: old.service, ids: { next: () => 'old' } }} locale="en" />);
+    const view = render(<EmployeeRoadmapScreen services={{ learning: old.service, ids: { next: () => 'old' } }} />);
 
-    view.rerender(<EmployeeRoadmapScreen services={{ learning: fresh.service, ids: { next: () => 'new' } }} locale="en" />);
+    view.rerender(<EmployeeRoadmapScreen services={{ learning: fresh.service, ids: { next: () => 'new' } }} />);
     expect(await screen.findByText('New roadmap')).toBeTruthy();
     oldPage.resolve([option]);
     await waitFor(() => expect(screen.queryByText('Old roadmap')).toBeNull());
@@ -138,7 +154,7 @@ describe('employee roadmap screen integration', () => {
     const learning = learningService();
     const write = deferred<LoadedLearning>();
     learning.service.markRead = vi.fn(() => write.promise);
-    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'attempt-12345678' } }} locale="en" />);
+    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'attempt-12345678' } }} />);
 
     await user.click(await screen.findByRole('button', { name: /Day 1/ }));
     await user.click(screen.getByRole('button', { name: 'Mark as read' }));
@@ -155,7 +171,7 @@ describe('employee roadmap screen integration', () => {
     const learning = learningService();
     const save = deferred<Awaited<ReturnType<LearningService['submit']>>>();
     learning.service.submit = vi.fn(() => save.promise);
-    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'attempt-12345678' } }} locale="en" />);
+    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'attempt-12345678' } }} />);
 
     await user.click(await screen.findByRole('button', { name: /Day 1/ }));
     await user.click(screen.getByRole('button', { name: 'Take quiz' }));
@@ -176,7 +192,7 @@ describe('employee roadmap screen integration', () => {
     const learning = learningService(pending);
     const save = deferred<Awaited<ReturnType<LearningService['resume']>>>();
     learning.service.resume = vi.fn(() => save.promise);
-    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'unused' } }} locale="en" />);
+    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'unused' } }} />);
 
     await user.click(await screen.findByRole('button', { name: 'Continue saving' }));
     await user.click(screen.getByRole('button', { name: /Day 1/ }));
@@ -193,13 +209,13 @@ describe('employee roadmap screen integration', () => {
     learning.service.listMine = vi.fn(async () => [option, olderOption]);
     learning.service.load = vi.fn(async (hireId) => hireId === 'hire-2' ? snapshotFor('hire-2', 'Older roadmap') : snapshot());
     const services = { learning: learning.service, ids: { next: () => 'attempt-12345678' } };
-    const view = render(<EmployeeRoadmapScreen services={services} locale="en" />);
+    const view = render(<EmployeeRoadmapScreen services={services} />);
 
     await user.selectOptions(await screen.findByRole('combobox', { name: 'Onboarding roadmap' }), 'hire-2');
     await user.click(await screen.findByRole('button', { name: /Day 1/ }));
     await user.click(screen.getByRole('button', { name: 'Take quiz' }));
     await user.click(screen.getByRole('radio', { name: 'B' }));
-    view.rerender(<EmployeeRoadmapScreen services={services} locale="vi" />);
+    await act(async () => { await view.i18n.changeLanguage('vi'); });
 
     expect(screen.getByRole<HTMLInputElement>('radio', { name: 'B' }).checked).toBe(true);
     expect(learning.service.listMine).toHaveBeenCalledTimes(1);
@@ -211,7 +227,7 @@ describe('employee roadmap screen integration', () => {
     const olderOption: MemberRoadmapOption = { ...option, hireId: 'hire-2', positionName: 'Older roadmap' };
     const learning = learningService();
     learning.service.listMine = vi.fn(async () => [option, olderOption]);
-    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'attempt-12345678' } }} locale="en" />);
+    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: () => 'attempt-12345678' } }} />);
 
     await user.click(await screen.findByRole('button', { name: /Day 1/ }));
     await user.click(screen.getByRole('button', { name: 'Take quiz' }));
@@ -235,7 +251,7 @@ describe('employee roadmap screen integration', () => {
       .mockRejectedValueOnce(new Error('REFRESH_FAILED'))
       .mockResolvedValueOnce(completed);
     const nextId = vi.fn(() => 'attempt-stable');
-    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: nextId } }} locale="en" />);
+    render(<EmployeeRoadmapScreen services={{ learning: learning.service, ids: { next: nextId } }} />);
 
     await user.click(await screen.findByRole('button', { name: /Day 1/ }));
     await user.click(screen.getByRole('button', { name: 'Take quiz' }));

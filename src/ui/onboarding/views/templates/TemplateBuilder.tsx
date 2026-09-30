@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { answerLabels, type OptionDraft } from '../../domain/template-draft';
 import type { TemplateTree } from '../../domain/models';
 import type { ContentItem, Day, Lesson, Question } from '../../domain/models';
 import type { FileMetadata, FilesGateway } from '../../data/files';
 import { validateReady, type ReadinessIssue } from '../../domain/template-readiness';
-import { describeError } from '../../domain/errors';
 import { WeekRail } from './WeekRail';
 import { DayEditor } from './DayEditor';
 import type { IdGenerator } from '../../../../shared/ports/effects';
 import type { FocusTarget } from '../../../ports/presentation';
+import { getErrorMessage } from '../../../i18n/error-message';
+import { toUiError, type UiError } from '../../../i18n/ui-error';
+import { useDialogFocus } from '../use-dialog-focus';
 
 interface TemplateBuilderBaseProps {
   initial: TemplateTree;
@@ -28,20 +31,14 @@ interface PendingFile { lessonId: string; file: File; uploaded?: FileMetadata }
 
 function draftId(ids: IdGenerator): string { return `draft:${ids.next()}`; }
 
-const issueLabels: Record<string, string> = {
-  POSITION_NAME: 'Tên vị trí bắt buộc', NO_WEEK: 'Thêm ít nhất một tuần', WEEK_NAME: 'Đặt tên cho tuần',
-  EMPTY_WEEK: 'Thêm ngày vào tuần', DAY_NAME: 'Đặt tên cho ngày', EMPTY_DAY: 'Thêm nội dung hợp lệ cho ngày',
-  LESSON_TITLE: 'Đặt tiêu đề bài học', LESSON_CONTENT: 'Nhập nội dung bài học',
-  QUESTION_CONTENT: 'Nhập nội dung câu hỏi', OPTION_COUNT: 'Câu hỏi cần 2–10 lựa chọn',
-  OPTION_EMPTY: 'Điền nội dung lựa chọn', ANSWER_INVALID: 'Chọn đáp án đúng hợp lệ',
-};
-
 function initialOptions(tree: TemplateTree, ids: IdGenerator): Record<string, OptionDraft[]> {
   return Object.fromEntries(tree.items.filter((item): item is Question => item.kind === 'question').map((question) => [question.id,
     question.options.map((text, index) => ({ id: draftId(ids), text, correct: question.correctLabels.includes(String.fromCharCode(97 + index)) }))]));
 }
 
 export function TemplateBuilder(props: TemplateBuilderProps) {
+  const { t } = useTranslation('templates');
+  const { t: errorT } = useTranslation('errors');
   const { initial, initialName } = props;
   const preview = props.mode === 'preview';
   const [tree, setTree] = useState<TemplateTree>(() => ({ weeks: initial.weeks.map((week) => ({ ...week })), items: initial.items.map((item) => ({ ...item })) }));
@@ -50,11 +47,13 @@ export function TemplateBuilder(props: TemplateBuilderProps) {
   const [selectedDayId, setSelectedDayId] = useState<string | null>(initial.items.find((item) => item.kind === 'day')?.id ?? null);
   const [optionsByQuestion, setOptionsByQuestion] = useState<Record<string, OptionDraft[]>>(() => initialOptions(initial, props.ids));
   const [saveState, setSaveState] = useState<'idle' | 'dirty' | 'saving' | 'saved' | 'error'>('idle');
-  const [saveError, setSaveError] = useState('');
+  const [saveError, setSaveError] = useState<UiError | null>(null);
   const [deletingWeekId, setDeletingWeekId] = useState<string | null>(null);
+  const deleteDialogRef = useRef<HTMLDivElement>(null);
+  const deleteKeepRef = useRef<HTMLButtonElement>(null);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
-  const [uploadError, setUploadError] = useState('');
+  const [uploadError, setUploadError] = useState<UiError | null>(null);
   const [uploading, setUploading] = useState(false);
   const editRevision = useRef(0);
   const saving = useRef(false);
@@ -65,6 +64,7 @@ export function TemplateBuilder(props: TemplateBuilderProps) {
   const positionIdRef = useRef(props.positionId);
   const createdHere = useRef(!props.positionId);
   const savedStatus = useRef<'draft' | 'ready'>(props.initialStatus === 'ready' ? 'ready' : 'draft');
+  useDialogFocus({ open: deletingWeekId !== null, onClose: () => setDeletingWeekId(null), containerRef: deleteDialogRef, initialFocusRef: deleteKeepRef });
   const syncPending = () => setPendingFiles([...pendingRef.current]);
   useEffect(() => { if (props.positionId) positionIdRef.current = props.positionId; }, [props.positionId]);
   const issues = useMemo(() => validateReady(tree, name), [tree, name]);
@@ -101,26 +101,26 @@ export function TemplateBuilder(props: TemplateBuilderProps) {
   const addWeek = () => {
     const id = draftId(props.ids);
     const order = Math.max(-1, ...tree.weeks.map((week) => week.order)) + 1;
-    editTree({ ...tree, weeks: [...tree.weeks, { id, name: `Tuần ${order + 1}`, order }] });
+    editTree({ ...tree, weeks: [...tree.weeks, { id, name: t('defaults.week', { count: order + 1 }), order }] });
     setSelectedWeekId(id); setSelectedDayId(null);
   };
   const addDay = (weekId: string) => {
     const order = Math.max(0, ...days.map((day) => day.order)) + 1;
     const id = draftId(props.ids);
-    editTree({ ...tree, items: [...tree.items, { id, kind: 'day', name: `Ngày ${order}`, stageId: weekId, order, parentId: null, content: '' }] });
+    editTree({ ...tree, items: [...tree.items, { id, kind: 'day', name: t('defaults.day', { count: order }), stageId: weekId, order, parentId: null, content: '' }] });
     setSelectedWeekId(weekId); setSelectedDayId(id);
   };
   const addLesson = () => {
     if (!selectedDay) return;
     const order = dayChildren.filter((item) => item.kind === 'lesson').length;
-    editTree({ ...tree, items: [...tree.items, { id: draftId(props.ids), kind: 'lesson', name: `Bài học ${order + 1}`, stageId: selectedDay.stageId, order, parentId: selectedDay.id, content: '', attachments: [], videos: [], read: false }] });
+    editTree({ ...tree, items: [...tree.items, { id: draftId(props.ids), kind: 'lesson', name: t('defaults.lesson', { count: order + 1 }), stageId: selectedDay.stageId, order, parentId: selectedDay.id, content: '', attachments: [], videos: [], read: false }] });
   };
   const addQuestion = () => {
     if (!selectedDay) return;
     const id = draftId(props.ids);
     const options = [{ id: draftId(props.ids), text: '', correct: false }, { id: draftId(props.ids), text: '', correct: false }];
     const order = dayChildren.filter((item) => item.kind === 'question').length;
-    editTree({ ...tree, items: [...tree.items, { id, kind: 'question', name: `Câu hỏi ${order + 1}`, stageId: selectedDay.stageId, order, parentId: selectedDay.id, content: '', options: ['', ''], correctLabels: [], explanation: '', selectedLabels: [], correct: null }] });
+    editTree({ ...tree, items: [...tree.items, { id, kind: 'question', name: t('defaults.question', { count: order + 1 }), stageId: selectedDay.stageId, order, parentId: selectedDay.id, content: '', options: ['', ''], correctLabels: [], explanation: '', selectedLabels: [], correct: null }] });
     setOptionsByQuestion((current) => ({ ...current, [id]: options }));
   };
   const updateItem = (next: ContentItem) => editTree({ ...tree, items: tree.items.map((item) => item.id === next.id ? next : item) });
@@ -165,7 +165,7 @@ export function TemplateBuilder(props: TemplateBuilderProps) {
     uploadRunning.current = true;
     saving.current = true;
     setUploading(true);
-    setUploadError('');
+    setUploadError(null);
     setSaveState('saving');
     try {
       let didSave = false;
@@ -189,7 +189,7 @@ export function TemplateBuilder(props: TemplateBuilderProps) {
       }
       if (!didSave) setSaveState('dirty');
     } catch {
-      setUploadError(`Không tải hoặc lưu được ${pendingRef.current[0]?.file.name ?? 'file'}. Thử lại.`);
+      setUploadError({ code: 'FILE_UPLOAD_FAILED' });
       setSaveState('error');
     } finally {
       uploadRunning.current = false;
@@ -208,31 +208,48 @@ export function TemplateBuilder(props: TemplateBuilderProps) {
     if (saving.current || pendingRef.current.length || (status === 'ready' && issues.length)) return;
     saving.current = true;
     const savedRevision = editRevision.current;
-    setSaveState('saving'); setSaveError('');
+    setSaveState('saving'); setSaveError(null);
     try {
       const positionId = await props.onSave(treeRef.current, nameRef.current.trim(), status, positionIdRef.current);
       if (positionId) positionIdRef.current = positionId;
       savedStatus.current = status;
       setSaveState(editRevision.current === savedRevision ? 'saved' : 'dirty');
     }
-    catch (error: unknown) { setSaveError(describeError(error).message); setSaveState('error'); }
+    catch (error: unknown) { setSaveError(toUiError(error)); setSaveState('error'); }
     finally { saving.current = false; if (pendingRef.current.length) void processUploads(nameRef.current); }
   };
+  const issueLabel = (code: string): string => {
+    switch (code) {
+      case 'POSITION_NAME': return t('issues.POSITION_NAME');
+      case 'NO_WEEK': return t('issues.NO_WEEK');
+      case 'WEEK_NAME': return t('issues.WEEK_NAME');
+      case 'EMPTY_WEEK': return t('issues.EMPTY_WEEK');
+      case 'DAY_NAME': return t('issues.DAY_NAME');
+      case 'EMPTY_DAY': return t('issues.EMPTY_DAY');
+      case 'LESSON_TITLE': return t('issues.LESSON_TITLE');
+      case 'LESSON_CONTENT': return t('issues.LESSON_CONTENT');
+      case 'QUESTION_CONTENT': return t('issues.QUESTION_CONTENT');
+      case 'OPTION_COUNT': return t('issues.OPTION_COUNT');
+      case 'OPTION_EMPTY': return t('issues.OPTION_EMPTY');
+      case 'ANSWER_INVALID': return t('issues.ANSWER_INVALID');
+      default: return t('builder.fallbackIssue');
+    }
+  };
 
-  return <section className="v4-template-builder" aria-label="Biên soạn template">
-    {preview && <p className="v4-builder-preview-note" role="note">Thử giao diện P2: thay đổi chỉ tồn tại khi màn này đang mở, chưa ghi vào PrivOS Lists. Lưu và publish chưa khả dụng.</p>}
-    <div className="v4-builder-title"><div><small>Template studio / {props.positionId ? 'chỉnh sửa' : 'tạo mới'}</small><h1>{props.positionId ? 'Chỉnh sửa template onboarding' : 'Tạo template onboarding'}</h1><p>Biên soạn tuần, ngày, bài học và câu hỏi ôn tập.</p></div><span>{props.initialStatus === 'ready' ? 'Sẵn sàng' : props.initialStatus === 'disabled' ? 'Ngừng dùng' : 'Bản nháp'}</span></div>
+  return <section className="v4-template-builder" aria-label={t('builder.label')}>
+    {preview && <p className="v4-builder-preview-note" role="note">{t('builder.previewNote')}</p>}
+    <div className="v4-builder-title"><div><small>{t(props.positionId ? 'builder.eyebrowEdit' : 'builder.eyebrowCreate')}</small><h1>{t(props.positionId ? 'builder.editTitle' : 'builder.createTitle')}</h1><p>{t('builder.subtitle')}</p></div><span>{t(`status.${props.initialStatus === 'ready' ? 'ready' : props.initialStatus === 'disabled' ? 'disabled' : 'draft'}`)}</span></div>
     <div className="v4-builder-grid">
       <WeekRail weeks={tree.weeks} days={days} selectedWeekId={selectedWeekId} selectedDayId={selectedDayId} onSelectWeek={(id) => { setSelectedWeekId(id); setSelectedDayId(days.find((day) => day.stageId === id)?.id ?? null); }} onSelectDay={setSelectedDayId} onAddWeek={addWeek} onAddDay={addDay} />
       <main className="v4-builder-workspace">
-        <section className="v4-builder-intro"><small>01 / Thông tin template</small><h2>Template này dành cho vị trí nào?</h2><label>Tên vị trí<input id="v4-builder-position-name" value={name} onChange={(event) => { editRevision.current += 1; nameRef.current = event.target.value; setName(event.target.value); setSaveState('dirty'); if (pendingRef.current.length) void processUploads(event.target.value); }} placeholder="Ví dụ: Intern Backend Developer" /></label></section>
-        {selectedWeek && <section className="v4-builder-week-editor"><label>Tên tuần<input id={`v4-builder-${selectedWeek.id}-name`} value={selectedWeek.name} onChange={(event) => editTree({ ...tree, weeks: tree.weeks.map((week) => week.id === selectedWeek.id ? { ...week, name: event.target.value } : week) })} /></label><small>Tuần được lưu thành item trong PrivOS List.</small><button type="button" disabled={tree.weeks.length <= 1 || uploading} onClick={() => setDeletingWeekId(selectedWeek.id)}>Xóa tuần</button></section>}
-        {selectedWeek && !selectedDay && <section className="v4-builder-empty"><h2>Tuần này chưa có ngày học</h2><p>Thêm ngày đầu tiên để bắt đầu biên soạn.</p><button type="button" onClick={() => addDay(selectedWeek.id)}>Thêm ngày</button></section>}
+        <section className="v4-builder-intro"><small>{t('builder.positionInfo')}</small><h2>{t('builder.positionQuestion')}</h2><label>{t('builder.positionName')}<input id="v4-builder-position-name" value={name} onChange={(event) => { editRevision.current += 1; nameRef.current = event.target.value; setName(event.target.value); setSaveState('dirty'); if (pendingRef.current.length) void processUploads(event.target.value); }} placeholder={t('builder.positionPlaceholder')} /></label></section>
+        {selectedWeek && <section className="v4-builder-week-editor"><label>{t('builder.weekName')}<input id={`v4-builder-${selectedWeek.id}-name`} value={selectedWeek.name} onChange={(event) => editTree({ ...tree, weeks: tree.weeks.map((week) => week.id === selectedWeek.id ? { ...week, name: event.target.value } : week) })} /></label><small>{t('builder.weekHelp')}</small><button type="button" disabled={tree.weeks.length <= 1 || uploading} onClick={() => setDeletingWeekId(selectedWeek.id)}>{t('builder.deleteWeek')}</button></section>}
+        {selectedWeek && !selectedDay && <section className="v4-builder-empty"><h2>{t('builder.emptyWeekTitle')}</h2><p>{t('builder.emptyWeekBody')}</p><button type="button" onClick={() => addDay(selectedWeek.id)}>{t('builder.addDay')}</button></section>}
         {selectedDay && <DayEditor day={selectedDay} children={dayChildren} optionsByQuestion={optionsByQuestion} onUpdate={updateItem} onRemove={removeItem} onAddLesson={addLesson} onAddQuestion={addQuestion} onQuestionChange={updateQuestion} ids={props.ids} filesGateway={preview ? undefined : props.filesGateway} positionId={props.positionId} onSelectFile={!preview && createdHere.current ? selectFile : undefined} uploadDisabled={uploading || saving.current} onAttach={attachFile} onUnlink={unlinkFile} />}
       </main>
-      <aside className="v4-builder-readiness" aria-label="Kiểm tra template"><h2>Kiểm tra trước khi dùng</h2><p>{preview ? 'Kiểm tra các mục còn thiếu trong bản thử giao diện.' : 'Lưu nháp bất kỳ lúc nào.'}</p><strong>{issues.length ? `${issues.length} mục cần bổ sung` : 'Đủ điều kiện'}</strong><ul>{issues.map((issue, index) => <li key={`${issue.code}:${issue.itemId ?? ''}:${index}`}><button type="button" onClick={() => focusIssue(issue)}>{issueLabels[issue.code] ?? 'Kiểm tra cấu trúc template'}</button></li>)}</ul></aside>
+      <aside className="v4-builder-readiness" aria-label={t('builder.readinessLabel')}><h2>{t('builder.readinessTitle')}</h2><p>{t(preview ? 'builder.readinessPreview' : 'builder.readinessLive')}</p><strong>{issues.length ? t('builder.issueCount', { count: issues.length }) : t('builder.ready')}</strong><ul>{issues.map((issue, index) => <li key={`${issue.code}:${issue.itemId ?? ''}:${index}`}><button type="button" onClick={() => focusIssue(issue)}>{issueLabel(issue.code)}</button></li>)}</ul></aside>
     </div>
-    <div className="v4-builder-savebar"><span role="status">{preview ? 'Chế độ thử giao diện · chưa lưu' : { idle: 'Chưa thay đổi', dirty: 'Chưa lưu', saving: 'Đang lưu', saved: 'Đã lưu', error: 'Lưu thất bại' }[saveState]}</span>{pendingFiles.length > 0 && !name.trim() && <p>{pendingFiles.map((entry) => entry.file.name).join(', ')}: nhập tên vị trí để tải file.</p>}{uploadError && <p role="alert">{uploadError} <button type="button" onClick={() => void processUploads(nameRef.current)}>Thử lại tải file</button></p>}{saveError && <p role="alert">{saveError}</p>}<div><button type="button" disabled={preview || saving.current || pendingFiles.length > 0} onClick={() => void save('draft')}>Lưu nháp</button><button type="button" disabled={preview || saving.current || pendingFiles.length > 0 || issues.length > 0} onClick={() => void save('ready')}>Sẵn sàng</button></div></div>
-    {deletingWeekId && <div role="dialog" aria-modal="true" aria-label="Xác nhận xóa tuần" className="v4-builder-dialog"><h2>Xóa tuần?</h2><p>Tuần này có {deletingDays.length} ngày. Các bài học và câu hỏi trong tuần cũng sẽ bị xóa.</p><button type="button" onClick={() => setDeletingWeekId(null)}>Giữ lại</button><button type="button" disabled={uploading} onClick={removeWeek}>Xác nhận xóa</button></div>}
+    <div className="v4-builder-savebar"><span role="status">{preview ? t('builder.saveState.preview') : t(`builder.saveState.${saveState}`)}</span>{pendingFiles.length > 0 && !name.trim() && <p>{t('builder.pendingFile', { files: pendingFiles.map((entry) => entry.file.name).join(', ') })}</p>}{uploadError && <p role="alert">{pendingFiles[0]?.file.name}: {getErrorMessage(uploadError, errorT)} <button type="button" onClick={() => void processUploads(nameRef.current)}>{t('builder.retryUpload')}</button></p>}{saveError && <p role="alert">{getErrorMessage(saveError, errorT)}</p>}<div><button type="button" disabled={preview || saving.current || pendingFiles.length > 0} onClick={() => void save('draft')}>{t('builder.saveDraft')}</button><button type="button" disabled={preview || saving.current || pendingFiles.length > 0 || issues.length > 0} onClick={() => void save('ready')}>{t('builder.markReady')}</button></div></div>
+    {deletingWeekId && <div ref={deleteDialogRef} role="dialog" aria-modal="true" aria-label={t('builder.deleteDialog.label')} className="v4-builder-dialog"><h2>{t('builder.deleteDialog.title')}</h2><p>{t('builder.deleteDialog.body', { count: deletingDays.length })}</p><button ref={deleteKeepRef} type="button" onClick={() => setDeletingWeekId(null)}>{t('builder.deleteDialog.keep')}</button><button type="button" disabled={uploading} onClick={removeWeek}>{t('builder.deleteDialog.confirm')}</button></div>}
   </section>;
 }

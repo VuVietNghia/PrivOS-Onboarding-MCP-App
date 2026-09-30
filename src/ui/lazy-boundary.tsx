@@ -12,6 +12,7 @@
  * fix, so the fallback asks for a full reload instead.
  */
 import { Component, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Logger } from '../shared/ports/effects';
 import type { ReloadPage } from './ports/presentation';
 
@@ -19,6 +20,7 @@ interface LazyBoundaryProps {
   children: ReactNode;
   reloadPage: ReloadPage;
   logger: Logger;
+  copy?: { recovery: string; reload: string };
 }
 
 interface LazyBoundaryState {
@@ -38,19 +40,25 @@ export class LazyBoundary extends Component<LazyBoundaryProps, LazyBoundaryState
 
   render(): ReactNode {
     if (this.state.hasError) {
+      const copy = this.props.copy ?? { recovery: 'A new version of this app is available.', reload: 'Reload' };
       return (
         <div className="container">
           <div className="error-message">
-            A new version of this app is available.
+            {copy.recovery}
           </div>
           <button type="button" className="btn-submit" onClick={() => this.props.reloadPage.reload()}>
-            Reload
+            {copy.reload}
           </button>
         </div>
       );
     }
     return this.props.children;
   }
+}
+
+export function LocalizedLazyBoundary(props: Omit<LazyBoundaryProps, 'copy'>) {
+  const { t } = useTranslation('common');
+  return <LazyBoundary {...props} copy={{ recovery: t('lazy.recovery'), reload: t('lazy.reload') }} />;
 }
 
 export default LazyBoundary;

@@ -1,0 +1,36 @@
+{
+  "dayCount_one": "{{count}} ngày",
+  "dayCount_other": "{{count}} ngày",
+  "genericError": "Đã xảy ra lỗi. Vui lòng thử lại.",
+  "shell": {
+    "navigation": "Điều hướng chính",
+    "administration": "Quản trị",
+    "hires": "Nhân sự",
+    "provision": "Onboarding mới",
+    "templates": "Template",
+    "roadmap": "Lộ trình của tôi",
+    "language": "Ngôn ngữ",
+    "appearance": "Giao diện",
+    "light": "Giao diện sáng",
+    "dark": "Giao diện tối",
+    "brand": "Giao diện thương hiệu",
+    "workspace": "Không gian học tập",
+    "room": "Room",
+    "onboarding": "Onboarding",
+    "previewEmployee": "Xem giao diện nhân sự",
+    "previewMode": "Chế độ xem thử nhân sự",
+    "previewAdmin": "Quay lại quản trị"
+  },
+  "theme": {
+    "auto": "Tự động",
+    "light": "Sáng",
+    "dark": "Tối"
+  },
+  "fallback": {
+    "roomRequired": "Mở app bên trong một room."
+  },
+  "lazy": {
+    "recovery": "Đã có phiên bản mới của ứng dụng.",
+    "reload": "Tải lại"
+  }
+}

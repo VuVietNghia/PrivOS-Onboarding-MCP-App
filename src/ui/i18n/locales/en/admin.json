@@ -1,0 +1,21 @@
+{
+  "onPage": "On this page", "profiles": "profiles", "positions": "positions",
+  "manageOnboarding": "Manage onboarding", "hiresSubtitle": "Track employee progress and status in this room.", "createOnboarding": "Create onboarding",
+  "stats": { "learning": "Onboarding", "done": "Completed", "provisioning": "Setting up", "attention": "Needs attention" },
+  "searchHires": "Search people", "searchHiresPlaceholder": "Search by name", "filterStatus": "Filter by status", "filterPosition": "Filter by position",
+  "allStatuses": "All statuses", "allPositions": "All positions", "clearPosition": "Clear position filter", "noMatchingPositions": "No matching positions.", "reset": "Reset",
+  "showingProfiles": "Showing {{count}} profiles · on this page", "showingPositions": "Showing {{count}} positions · on this page",
+  "employee": "Employee", "position": "Position", "startDate": "Start date", "progress": "Roadmap progress", "quizScores": "Quiz scores", "noQuizScores": "No scores yet",
+  "actions": "Actions", "status": "Status", "days": "days", "viewRoadmap": "View roadmap", "previous": "Previous", "next": "Next", "reload": "Reload", "loading": "Loading…", "noHires": "No matching profiles.",
+  "templateEyebrow": "Position templates", "templateTitle": "Templates by position", "templateSubtitle": "Each position has an onboarding template.", "createTemplate": "Create template",
+  "searchPosition": "Search positions", "filterTemplateStatus": "Filter template status", "weeks": "Weeks", "dayItems": "Days", "lessons": "Lessons", "questions": "Questions", "missingAnswers": "Missing answers", "inUse": "In use",
+  "open": "Open", "copy": "Copy", "disable": "Disable", "noPositions": "No matching positions.",
+  "hireStatus": { "provisioning": "Setting up", "learning": "Learning", "done": "Completed", "failed": "Setup failed", "cancelled": "Cancelled" },
+  "positionStatus": { "draft": "Draft", "ready": "Ready", "disabled": "Disabled" },
+  "disableDialog": { "label": "Confirm position disablement", "title": "Disable {{name}}?", "body": "This position will no longer appear in the create onboarding form.", "keep": "Keep position", "updating": "Updating", "confirm": "Confirm" },
+  "drawer": {
+    "label": "Onboarding details", "loading": "Loading profile", "close": "Close", "position": "Position:", "startDate": "Start date:", "status": "Status:", "progress": "Progress:",
+    "scores": "First scores and history", "scoreDay": "Day {{day}}: {{score}}", "noScores": "No scores yet.", "resume": "Resume setup", "cancel": "Cancel onboarding", "recount": "Recount active roadmaps",
+    "confirmLabel": "Confirm onboarding cancellation", "confirmTitle": "Cancel onboarding for {{name}}?", "confirmBody": "The roadmap will be deleted. The profile and scores are kept after learning has started.", "keep": "Keep onboarding", "cancelling": "Cancelling", "confirmCancel": "Confirm cancellation"
+  }
+}

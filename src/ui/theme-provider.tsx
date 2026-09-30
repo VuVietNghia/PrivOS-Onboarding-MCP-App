@@ -8,6 +8,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import type { ReactNode } from 'react';
 import type { Preferences } from '../shared/ports/effects';
 import type { ThemeTarget } from './ports/presentation';
+import { useTranslation } from 'react-i18next';
 
 type ThemeMode = 'auto' | 'light' | 'dark';
 type ResolvedTheme = 'light' | 'dark';
@@ -76,10 +77,11 @@ export function ThemeProvider({ children, hostTheme, preferences, target }: Them
 /** Small theme toggle button */
 export function ThemeToggle() {
   const { mode, setMode } = useTheme();
+  const { t } = useTranslation('common');
   const options: { value: ThemeMode; label: string }[] = [
-    { value: 'auto', label: 'Auto' },
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
+    { value: 'auto', label: t('theme.auto') },
+    { value: 'light', label: t('theme.light') },
+    { value: 'dark', label: t('theme.dark') },
   ];
 
   return (

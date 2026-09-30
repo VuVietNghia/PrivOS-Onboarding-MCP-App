@@ -1,0 +1,36 @@
+{
+  "dayCount_one": "{{count}} day",
+  "dayCount_other": "{{count}} days",
+  "genericError": "Something went wrong. Please try again.",
+  "shell": {
+    "navigation": "Main navigation",
+    "administration": "Administration",
+    "hires": "People",
+    "provision": "New onboarding",
+    "templates": "Templates",
+    "roadmap": "My roadmap",
+    "language": "Language",
+    "appearance": "Appearance",
+    "light": "Light theme",
+    "dark": "Dark theme",
+    "brand": "Brand theme",
+    "workspace": "Learning workspace",
+    "room": "Room",
+    "onboarding": "Onboarding",
+    "previewEmployee": "Preview employee view",
+    "previewMode": "Employee preview mode",
+    "previewAdmin": "Return to administration"
+  },
+  "theme": {
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "fallback": {
+    "roomRequired": "Open this app inside a room."
+  },
+  "lazy": {
+    "recovery": "A new version of this app is available.",
+    "reload": "Reload"
+  }
+}

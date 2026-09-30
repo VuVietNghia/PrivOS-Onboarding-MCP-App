@@ -1,0 +1,9 @@
+{
+  "eyebrow": "Onboarding", "title": "Create onboarding", "subtitle": "Select an employee, position, and start date.", "loadingMembers": "Loading room members",
+  "employee": "Employee", "selectEmployee": "Select an employee", "username": "Username or user ID", "usernamePlaceholder": "PrivOS username or user ID",
+  "position": "Position", "selectPosition": "Select a ready position", "startDate": "Start date", "workingDay": "The start date must be Monday through Friday.",
+  "reloadMembers": "Reload members", "submitting": "Creating…", "submit": "Create onboarding", "summary": "Summary", "loadingTemplate": "Loading template",
+  "summaryCounts": "{{weeks}} weeks · {{days}} days · {{lessons}} lessons · {{questions}} questions", "choosePosition": "Select a position to preview its content.",
+  "progressLabel": "Onboarding setup progress", "progressValue": "{{phase}}: {{completed}}/{{total}}",
+  "phase": { "record": "Create profile", "list": "Create roadmap", "content": "Add content", "grant": "Grant access", "activate": "Activate", "recount": "Update usage count" }
+}

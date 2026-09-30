@@ -1,13 +1,9 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { UiLocale } from '../../i18n/locale';
 
 export type OnboardingScreen = 'hires' | 'provision' | 'templates' | 'roadmap';
-export type OnboardingLocale = 'vi' | 'en';
 export type OnboardingTheme = 'light' | 'dark' | 'brand';
-
-const labels = {
-  vi: { navigation: 'Điều hướng chính', administration: 'Quản trị', hires: 'Nhân sự', provision: 'Onboarding mới', templates: 'Template', roadmap: 'Lộ trình của tôi', language: 'Ngôn ngữ', appearance: 'Giao diện', light: 'Giao diện sáng', dark: 'Giao diện tối', brand: 'Giao diện thương hiệu', workspace: 'Không gian học tập', room: 'Room', onboarding: 'Onboarding' },
-  en: { navigation: 'Main navigation', administration: 'Administration', hires: 'People', provision: 'New onboarding', templates: 'Templates', roadmap: 'My roadmap', language: 'Language', appearance: 'Appearance', light: 'Light theme', dark: 'Dark theme', brand: 'Brand theme', workspace: 'Learning workspace', room: 'Room', onboarding: 'Onboarding' },
-} satisfies Record<OnboardingLocale, Record<string, string>>;
 
 export interface OnboardingShellProps {
   role: 'admin' | 'employee';
@@ -15,12 +11,11 @@ export interface OnboardingShellProps {
   screen: OnboardingScreen;
   onNavigate: (screen: OnboardingScreen) => void;
   children: ReactNode;
-  locale?: OnboardingLocale;
-  onLocaleChange?: (locale: OnboardingLocale) => void;
+  locale?: UiLocale;
+  onLocaleChange?: (locale: UiLocale) => void;
   theme?: OnboardingTheme;
   onThemeChange?: (theme: OnboardingTheme) => void;
-  employeePreviewControl?: { active: boolean; onToggle: () => void;
-    labels: Record<OnboardingLocale, { inactive: string; active: string }> };
+  employeePreviewControl?: { active: boolean; onToggle: () => void };
 }
 
 function NavIcon({ screen }: { screen: OnboardingScreen }) {
@@ -34,27 +29,28 @@ function NavIcon({ screen }: { screen: OnboardingScreen }) {
 }
 
 export function OnboardingShell({ role, roomId, screen, onNavigate, children, locale = 'vi', onLocaleChange, theme = 'light', onThemeChange, employeePreviewControl }: OnboardingShellProps) {
-  const t = labels[locale];
+  const { t } = useTranslation('common');
   const pages: { id: OnboardingScreen; title: string }[] = role === 'admin'
-    ? [{ id: 'hires', title: t.hires }, { id: 'provision', title: t.provision }, { id: 'templates', title: t.templates }]
-    : [{ id: 'roadmap', title: t.roadmap }];
+    ? [{ id: 'hires', title: t('shell.hires') }, { id: 'provision', title: t('shell.provision') }, { id: 'templates', title: t('shell.templates') }]
+    : [{ id: 'roadmap', title: t('shell.roadmap') }];
   const currentTitle = pages.find((page) => page.id === screen)?.title ?? pages[0].title;
 
-  return <div className="onboarding-v4" data-theme-mode={theme}>
+  return <div className="onboarding-v4" data-theme-mode={theme} lang={locale}>
     <div className="v4-app">
-      <aside className="v4-sidebar" aria-label={t.navigation}>
-        <div className="v4-brand"><span className="v4-brand-mark" aria-hidden="true" /><span><strong>PrivOS Onboarding</strong><small>{t.workspace}</small></span></div>
-        {role === 'admin' && <div className="v4-nav-label">{t.administration}</div>}
-        <nav className="v4-nav" aria-label={t.navigation}>{pages.map((page) => <button key={page.id} type="button" className={`v4-nav-button${screen === page.id ? ' active' : ''}`} aria-label={page.title} aria-current={screen === page.id ? 'page' : undefined} onClick={() => onNavigate(page.id)}><NavIcon screen={page.id} /><span>{page.title}</span></button>)}</nav>
-        <div className="v4-room-note"><strong>{t.room}</strong><span>{roomId}</span></div>
+      <aside className="v4-sidebar" aria-label={t('shell.navigation')}>
+        <div className="v4-brand"><span className="v4-brand-mark" aria-hidden="true" /><span><strong>PrivOS Onboarding</strong><small>{t('shell.workspace')}</small></span></div>
+        {role === 'admin' && <div className="v4-nav-label">{t('shell.administration')}</div>}
+        <nav className="v4-nav" aria-label={t('shell.navigation')}>{pages.map((page) => <button key={page.id} type="button" className={`v4-nav-button${screen === page.id ? ' active' : ''}`} aria-label={page.title} aria-current={screen === page.id ? 'page' : undefined} onClick={() => onNavigate(page.id)}><NavIcon screen={page.id} /><span>{page.title}</span></button>)}</nav>
+        <div className="v4-room-note"><strong>{t('shell.room')}</strong><span>{roomId}</span></div>
       </aside>
       <div className="v4-shell">
-        <header className="v4-topbar"><div className="v4-context"><strong>{currentTitle}</strong><span>{roomId} / {t.onboarding}</span></div>
+        <header className="v4-topbar"><div className="v4-context"><strong>{currentTitle}</strong><span>{roomId} / {t('shell.onboarding')}</span></div>
           <div className="v4-top-actions">
+            {employeePreviewControl?.active && <span className="v4-employee-preview-status" role="status">{t('shell.previewMode')}</span>}
             {employeePreviewControl && <button type="button" className="v4-employee-preview-button" onClick={employeePreviewControl.onToggle}>
-              {employeePreviewControl.active ? employeePreviewControl.labels[locale].active : employeePreviewControl.labels[locale].inactive}</button>}
-            <div className="v4-language" role="group" aria-label={t.language}>{(['vi', 'en'] as const).map((value) => <button key={value} type="button" className={locale === value ? 'active' : ''} aria-pressed={locale === value} onClick={() => onLocaleChange?.(value)}>{value.toUpperCase()}</button>)}</div>
-            <div className="v4-themes" role="group" aria-label={t.appearance}>{(['light', 'dark', 'brand'] as const).map((value) => <button key={value} type="button" className={`v4-theme-dot${theme === value ? ' active' : ''}`} data-theme={value} aria-label={t[value]} aria-pressed={theme === value} onClick={() => onThemeChange?.(value)} />)}</div>
+              {employeePreviewControl.active ? t('shell.previewAdmin') : t('shell.previewEmployee')}</button>}
+            <div className="v4-language" role="group" aria-label={t('shell.language')}>{(['vi', 'en'] as const).map((value) => <button key={value} type="button" className={locale === value ? 'active' : ''} aria-pressed={locale === value} onClick={() => onLocaleChange?.(value)}>{value.toUpperCase()}</button>)}</div>
+            <div className="v4-themes" role="group" aria-label={t('shell.appearance')}>{(['light', 'dark', 'brand'] as const).map((value) => <button key={value} type="button" className={`v4-theme-dot${theme === value ? ' active' : ''}`} data-theme={value} aria-label={t(`shell.${value}`)} aria-pressed={theme === value} onClick={() => onThemeChange?.(value)} />)}</div>
           </div>
         </header>
         <main className="v4-main">{children}</main>

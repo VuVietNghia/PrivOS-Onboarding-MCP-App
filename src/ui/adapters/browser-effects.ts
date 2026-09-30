@@ -62,6 +62,17 @@ export function createBrowserEffects(): {
         throw error;
       }
     },
+    save(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = name;
+      anchor.rel = 'noopener noreferrer';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      scheduler.after(0, () => URL.revokeObjectURL(url));
+    },
   };
   return { clock, ids, hasher, scheduler, links,
     focus: { focus: (id) => document.getElementById(id)?.focus() } };

@@ -1,12 +1,21 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render as testingRender, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactElement, ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import type { FilesGateway } from '../../src/ui/onboarding/data/files';
 import type { TemplateTree } from '../../src/ui/onboarding/domain/models';
 import { AttachmentList } from '../../src/ui/onboarding/components/AttachmentList';
 import { PrivosRestError } from '../../src/ui/privos-rest';
 import { TemplateBuilder as PureTemplateBuilder, type TemplateBuilderProps } from '../../src/ui/onboarding/views/templates/TemplateBuilder';
+import { createUiI18n } from '../../src/ui/i18n/config';
+import type { UiLocale } from '../../src/ui/i18n/locale';
+
+function render(ui: ReactElement, locale: UiLocale = 'vi') {
+  const Wrapper = ({ children }: { children: ReactNode }) => <I18nextProvider i18n={createUiI18n(locale)}>{children}</I18nextProvider>;
+  return testingRender(ui, { wrapper: Wrapper });
+}
 
 type TestBuilderProps<T> = T extends unknown ? Omit<T, 'ids' | 'focus'> : never;
 function TemplateBuilder(props: TestBuilderProps<TemplateBuilderProps>) {
@@ -25,10 +34,16 @@ const initial: TemplateTree = { weeks: [{ id: 'week-1', name: 'Tuần 1', order:
 function gateway() {
   const upload = vi.fn(async () => ({ ...ref, roomId: 'room-1', folderId: 'folder-1' }));
   const open = vi.fn(async () => {});
+  const content = vi.fn(async () => ({
+    fileId: 'file-1', name: 'guide.md', mimeType: 'text/markdown',
+    blob: new Blob(['# Welcome\n\nRead this first.'], { type: 'text/markdown' }),
+    text: '# Welcome\n\nRead this first.',
+  }));
+  const download = vi.fn(async () => {});
   const api: FilesGateway = { folder: vi.fn(async () => 'folder-1'), upload,
-    metadata: vi.fn(async () => ({ ...ref, roomId: 'room-1', folderId: 'folder-1' })), open,
+    metadata: vi.fn(async () => ({ ...ref, roomId: 'room-1', folderId: 'folder-1' })), content, download, open,
     move: vi.fn(async () => {}) };
-  return { api, upload, open };
+  return { api, upload, open, content, download };
 }
 
 describe('lesson attachments', () => {
@@ -153,18 +168,32 @@ describe('lesson attachments', () => {
     expect(api.move).not.toHaveBeenCalled();
   });
 
-  it('opens and downloads by file id through the gateway', async () => {
+  it('downloads by file id through the authenticated content gateway', async () => {
     const user = userEvent.setup();
-    const { api, open } = gateway();
+    const { api, download } = gateway();
     render(<AttachmentList files={[ref]} gateway={api} />);
-    await user.click(screen.getByRole('button', { name: 'Mở guide.pdf' }));
     await user.click(screen.getByRole('button', { name: 'Tải xuống guide.pdf' }));
-    expect(open.mock.calls).toEqual([['file-1', 'view'], ['file-1', 'download']]);
+    expect(download).toHaveBeenCalledWith('file-1');
+  });
+
+  it('previews a Markdown attachment inside an accessible dialog', async () => {
+    const user = userEvent.setup();
+    const { api, content } = gateway();
+    render(<AttachmentList files={[{ ...ref, name: 'guide.md', mimeType: 'md' }]} gateway={api} />, 'en');
+
+    await user.click(screen.getByRole('button', { name: 'Open guide.md' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Preview guide.md' });
+    expect(dialog.textContent).toContain('Welcome');
+    expect(dialog.textContent).toContain('Read this first.');
+    expect(content).toHaveBeenCalledWith('file-1');
+    await user.click(screen.getByRole('button', { name: 'Close preview' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('localizes employee attachment controls in English', () => {
     const { api } = gateway();
-    render(<AttachmentList files={[ref]} gateway={api} locale="en" />);
+    render(<AttachmentList files={[ref]} gateway={api} />, 'en');
     expect(screen.getByRole('button', { name: 'Open guide.pdf' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Download guide.pdf' })).toBeTruthy();
     expect(screen.queryByText('Mở')).toBeNull();
@@ -173,8 +202,8 @@ describe('lesson attachments', () => {
   it('shows a safe permission message when another member receives 403', async () => {
     const user = userEvent.setup();
     const { api } = gateway();
-    vi.mocked(api.open).mockRejectedValueOnce(new PrivosRestError('raw private response', 403, 'error-not-allowed'));
-    render(<AttachmentList files={[ref]} gateway={api} locale="en" />);
+    vi.mocked(api.content).mockRejectedValueOnce(new PrivosRestError('raw private response', 403, 'error-not-allowed'));
+    render(<AttachmentList files={[ref]} gateway={api} />, 'en');
     await user.click(screen.getByRole('button', { name: 'Open guide.pdf' }));
     expect((await screen.findByRole('alert')).textContent).toBe('You do not have permission to open this file.');
     expect(screen.queryByText(/raw private response/)).toBeNull();

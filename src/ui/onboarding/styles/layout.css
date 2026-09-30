@@ -1,0 +1,36 @@
+.onboarding-v4 .v4-main {
+  width: 100%;
+}
+
+.onboarding-v4 .v4-screen {
+  min-width: 0;
+}
+
+.onboarding-v4 .v4-page-head {
+  align-items: flex-start;
+}
+
+.onboarding-v4 .v4-app {
+  grid-template-columns: 232px minmax(0, 1fr);
+}
+
+.onboarding-v4 .v4-page-head h1 {
+  font-size: clamp(28px, 3vw, 32px);
+}
+
+.onboarding-v4 .v4-builder-grid {
+  grid-template-columns: 208px minmax(0, 1fr) 208px;
+}
+
+.onboarding-v4 .v4-provision-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 16px;
+  align-items: start;
+}
+
+.onboarding-v4 .v4-provision-grid .v4-builder-readiness {
+  position: sticky;
+  top: 84px;
+  padding: 16px;
+}

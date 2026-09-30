@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useMemo } from 'react';
+import { act, cleanup, fireEvent, render as testingRender, screen, waitFor } from '@testing-library/react';
+import { useMemo, type ReactElement, type ReactNode } from 'react';
+import { I18nextProvider } from 'react-i18next';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { McpApp, RestResponse } from '@privos_ai/app-react';
 import type { Catalogs } from '../../src/ui/onboarding/data/catalogs';
@@ -11,9 +12,18 @@ import { createBrowserEffects } from '../../src/ui/adapters/browser-effects';
 import { provisionV4, resumeV4, recountPositionV4 } from '../../src/ui/onboarding/data/privos/compat-flows';
 import type { RoomBinding } from '../../src/ui/onboarding/domain/models';
 import type { OnboardingServices } from '../../src/ui/onboarding/ports/ui-services';
+import { createUiI18n } from '../../src/ui/i18n/config';
 import { fakeRestApp, forbidden, ok, type FakeRoute } from './fake-app';
 
 afterEach(() => { cleanup(); vi.useRealTimers(); });
+
+function TestI18nWrapper({ children }: { children: ReactNode }) {
+  return <I18nextProvider i18n={createUiI18n('vi')}>{children}</I18nextProvider>;
+}
+
+function render(ui: ReactElement) {
+  return testingRender(ui, { wrapper: TestI18nWrapper });
+}
 
 const catalogs: Catalogs = {
   positions: async () => ({ items: [], nextCursor: null }),
@@ -96,7 +106,7 @@ describe('ProvisionV4Form', () => {
       statusCode: 400, body: { success: false, error: 'User not found.' },
     }) }]);
     await submitOwnerLookup('ghost');
-    expect((await screen.findByRole('alert')).textContent).toContain('Không tìm thấy người dùng');
+    expect((await screen.findByRole('alert')).textContent).toContain('Không tìm thấy nhân sự đã nhập.');
     expect(start).not.toHaveBeenCalled();
   });
 
@@ -105,7 +115,7 @@ describe('ProvisionV4Form', () => {
       user: { _id: 'different-id', username: 'mai', name: 'Mai' },
     }) }]);
     await submitOwnerLookup('user-123');
-    expect((await screen.findByRole('alert')).textContent).toContain('Có lỗi không xác định');
+    expect((await screen.findByRole('alert')).textContent).toContain('Đã xảy ra lỗi. Vui lòng thử lại.');
     expect(start).not.toHaveBeenCalled();
   });
 
@@ -114,7 +124,7 @@ describe('ProvisionV4Form', () => {
       statusCode: 500, body: { success: false, error: 'internal failure' },
     }) }]);
     await submitOwnerLookup('mai');
-    expect((await screen.findByRole('alert')).textContent).toContain('Hub từ chối thao tác');
+    expect((await screen.findByRole('alert')).textContent).toContain('Dịch vụ từ chối thao tác. Thử lại sau.');
     expect(start).not.toHaveBeenCalled();
   });
 
@@ -173,7 +183,7 @@ describe('ProvisionV4Form', () => {
     fireEvent.change(screen.getByLabelText('Vị trí'), { target: { value: 'P1' } });
     await act(async () => { await Promise.resolve(); });
     expect((screen.getByLabelText('Ngày bắt đầu') as HTMLInputElement).value).toBe('2026-09-26');
-    expect(screen.getByRole('alert').textContent).toContain('thứ 2 đến thứ 6');
+    expect(screen.getByRole('alert').textContent).toContain('thứ Hai đến thứ Sáu');
     expect((screen.getByRole('button', { name: 'Tạo onboarding' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -197,7 +207,7 @@ describe('ProvisionV4Form', () => {
     }) : ({ statusCode: 200, body: { success: true, data: { members: [{ _id: 'U1', username: 'an', name: 'An' }], offset: 0, total: 1 } } }) }]);
     render(<ProvisionV4Form app={app} roomType="c" binding={{ roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' }}
       catalogs={catalogs} actorRoles={[]} onDone={() => {}} />);
-    expect((await screen.findByRole('alert')).textContent).toContain('Hub từ chối thao tác');
+    expect((await screen.findByRole('alert')).textContent).toContain('Dịch vụ từ chối thao tác. Thử lại sau.');
     expect(screen.queryByLabelText('Username hoặc user ID')).toBeNull();
     expect((screen.getByRole('button', { name: 'Tạo onboarding' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Tải lại thành viên' }));
@@ -211,7 +221,7 @@ describe('ProvisionV4Form', () => {
     }) }]);
     render(<ProvisionV4Form app={app} roomType="p" binding={{ roomId: 'R1', positionsListId: 'P1', hiresListId: 'H1' }}
       catalogs={catalogs} actorRoles={[]} onDone={() => {}} />);
-    expect((await screen.findByRole('alert')).textContent).toContain('Có lỗi không xác định');
+    expect((await screen.findByRole('alert')).textContent).toContain('Đã xảy ra lỗi. Vui lòng thử lại.');
     expect(screen.queryByLabelText('Username hoặc user ID')).toBeNull();
     expect((screen.getByRole('button', { name: 'Tạo onboarding' }) as HTMLButtonElement).disabled).toBe(true);
   });
@@ -250,7 +260,7 @@ describe('ProvisionV4Form', () => {
     expect((option as HTMLOptionElement).value).toBe('u1');
     expect(screen.queryByText('User ID: u1')).toBeNull();
     fireEvent.change(screen.getByRole('combobox', { name: 'Nhân sự' }), { target: { value: 'u1' } });
-    expect(screen.getByText('User ID: u1')).not.toBeNull();
+    expect(screen.queryByText('User ID: u1')).toBeNull();
     expect(screen.queryByLabelText('Username hoặc user ID')).toBeNull();
   });
 
@@ -345,7 +355,7 @@ describe('ProvisionV4Form', () => {
     view.rerender(<ProvisionV4Form {...props} roomType="c" binding={binding('R1')} />);
     expect(await screen.findByRole('option', { name: 'Old (@old)' })).not.toBeNull();
     fireEvent.change(screen.getByRole('combobox', { name: 'Nhân sự' }), { target: { value: 'old' } });
-    expect(screen.getByText('User ID: old')).not.toBeNull();
+    expect(screen.queryByText('User ID: old')).toBeNull();
     view.rerender(<ProvisionV4Form {...props} roomType="c" binding={binding('R2')} />);
     expect(await screen.findByRole('option', { name: 'New (@new)' })).not.toBeNull();
     expect(screen.queryByText('User ID: old')).toBeNull();
