@@ -1,0 +1,1476 @@
+
+ RUN  v2.1.9 /mnt/e/Hoc-tap/WebStormProject/onboarding-mini-app/privos-mcp-app-demo
+
+ ❯ tests/onboarding/catalog-filter-ux.spec.tsx (4 tests | 2 failed) 188ms
+   × catalog filter UX > offers hire statuses in one native select and applies the selected value 127ms
+     → Unable to find an accessible element with the role "combobox" and name "Filter by status"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Manage onboarding":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"v4-hires-title"[39m
+    [33mclass[39m=[32m"v4-screen"[39m
+  [36m/>[39m
+
+  Name "Employee":
+  [36m<div[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Employee"[39m
+    [33mclass[39m=[32m"v4-table-wrap"[39m
+    [33mrole[39m=[32m"region"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"v4-eyebrow"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mclass[39m=[32m"v4-list-meta"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Manage onboarding":
+  [36m<h1[39m
+    [33mid[39m=[32m"v4-hires-title"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Create onboarding":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-primary-button"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "All statuses":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"true"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Learning":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Completed":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Setting up":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Setup failed":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Cancelled":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Previous":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Next":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Search people":
+  [36m<input[39m
+    [33mplaceholder[39m=[32m"Search by name"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Filter by position":
+  [36m<input[39m
+    [33maria-autocomplete[39m=[32m"list"[39m
+    [33maria-controls[39m=[32m"v4-position-options"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Filter by position"[39m
+    [33mid[39m=[32m"v4-position-filter"[39m
+    [33mplaceholder[39m=[32m"All positions"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "Filter by status":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Filter by status"[39m
+    [33mclass[39m=[32m"v4-status-filters"[39m
+    [33mrole[39m=[32m"group"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  table:
+
+  Name "Employee":
+  [36m<table[39m
+    [33maria-label[39m=[32m"Employee"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead />[39m
+
+  Name "":
+  [36m<tbody />[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Employee Position Start date Roadmap progress Quiz scores Status Actions":
+  [36m<tr />[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Employee":
+  [36m<th />[39m
+
+  Name "Position":
+  [36m<th />[39m
+
+  Name "Start date":
+  [36m<th />[39m
+
+  Name "Roadmap progress":
+  [36m<th />[39m
+
+  Name "Quiz scores":
+  [36m<th />[39m
+
+  Name "Status":
+  [36m<th />[39m
+
+  Name "Actions":
+  [36m<th />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"v4-hires-title"[39m
+      [33mclass[39m=[32m"v4-screen"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-page-head"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"v4-eyebrow"[39m
+          [36m>[39m
+            [0mEmployee[0m
+          [36m</p>[39m
+          [36m<h1[39m
+            [33mid[39m=[32m"v4-hires-title"[39m
+          [36m>[39m
+            [0mManage onboarding[0m
+          [36m</h1>[39m
+          [36m<p>[39m
+            [0mTrack employee progress and status in this room.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"v4-primary-button"[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCreate onboarding[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-toolbar v4-hires-toolbar"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"v4-search"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mSearch people[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mplaceholder[39m=[32m"Search by name"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-position-typeahead"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mfor[39m=[32m"v4-position-filter"[39m
+          [36m>[39m
+            [0mFilter by position[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-autocomplete[39m=[32m"list"[39m
+            [33maria-controls[39m=[32m"v4-position-options"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Filter by position"[39m
+            [33mid[39m=[32m"v4-position-filter"[39m
+            [33mplaceholder[39m=[32m"All positions"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Filter by status"[39m
+        [33mclass[39m=[32m"v4-status-filters"[39m
+        [33mrole[39m=[32m"group"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"true"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mAll statuses[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mLearning[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCompleted[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mSetting up[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mSetup failed[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCancelled[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33maria-live[39m=[32m"polite"[39m
+        [33mclass[39m=[32m"v4-list-meta"[39m
+      [36m>[39m
+        [0mShowing 0 profiles · on this page[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33maria-label[39m=[32m"Employee"[39m
+        [33mclass[39m=[32m"v4-table-wrap"[39m
+        [33mrole[39m=[32m"region"[39m
+        [33mtabindex[39m=[32m"0"[39m
+      [36m>[39m
+        [36m<table[39m
+          [33maria-label[39m=[32m"Employee"[39m
+        [36m>[39m
+          [36m<thead>[39m
+            [36m<tr>[39m
+              [36m<th>[39m
+                [0mEmployee[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mPosition[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mStart date[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mRoadmap progress[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mQuiz scores[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mStatus[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mActions[0m
+              [36m</th>[39m
+            [36m</tr>[39m
+          [36m</thead>[39m
+          [36m<tbody />[39m
+        [36m</table>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-table-state"[39m
+        [36m>[39m
+          [36m<p>[39m
+            [0mNo matching profiles.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-pager"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mPrevious[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mNext[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   × catalog filter UX > offers a reset beside an empty filtered template result and clears both conditions 42ms
+     → Unable to find an accessible element with the role "combobox" and name "Filter template status"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Templates by position":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+    [33mclass[39m=[32m"v4-screen"[39m
+  [36m/>[39m
+
+  Name "Templates by position":
+  [36m<div[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Templates by position"[39m
+    [33mclass[39m=[32m"v4-table-wrap"[39m
+    [33mrole[39m=[32m"region"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"v4-eyebrow"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mclass[39m=[32m"v4-list-meta"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Templates by position":
+  [36m<h1[39m
+    [33mid[39m=[32m"v4-positions-title"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Create template":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-primary-button"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Clear filters":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-secondary-button v4-clear-filters"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "All statuses":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Draft":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Ready":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"true"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Disabled":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Clear filters":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-secondary-button"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Previous":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Next":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Search positions":
+  [36m<input[39m
+    [33mplaceholder[39m=[32m"Search positions"[39m
+    [33mvalue[39m=[32m"Engineer"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "Filter template status":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Filter template status"[39m
+    [33mclass[39m=[32m"v4-status-filters"[39m
+    [33mrole[39m=[32m"group"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  table:
+
+  Name "Templates by position":
+  [36m<table[39m
+    [33maria-label[39m=[32m"Templates by position"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead />[39m
+
+  Name "":
+  [36m<tbody />[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Position Weeks Days Lessons Questions Missing answers In use Status Actions":
+  [36m<tr />[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Position":
+  [36m<th />[39m
+
+  Name "Weeks":
+  [36m<th />[39m
+
+  Name "Days":
+  [36m<th />[39m
+
+  Name "Lessons":
+  [36m<th />[39m
+
+  Name "Questions":
+  [36m<th />[39m
+
+  Name "Missing answers":
+  [36m<th />[39m
+
+  Name "In use":
+  [36m<th />[39m
+
+  Name "Status":
+  [36m<th />[39m
+
+  Name "Actions":
+  [36m<th />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+      [33mclass[39m=[32m"v4-screen"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-page-head"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"v4-eyebrow"[39m
+          [36m>[39m
+            [0mPosition templates[0m
+          [36m</p>[39m
+          [36m<h1[39m
+            [33mid[39m=[32m"v4-positions-title"[39m
+          [36m>[39m
+            [0mTemplates by position[0m
+          [36m</h1>[39m
+          [36m<p>[39m
+            [0mEach position has an onboarding template.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"v4-primary-button"[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCreate template[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-toolbar"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"v4-search"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mSearch positions[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mplaceholder[39m=[32m"Search positions"[39m
+            [33mvalue[39m=[32m"Engineer"[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"v4-secondary-button v4-clear-filters"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mClear filters[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Filter template status"[39m
+        [33mclass[39m=[32m"v4-status-filters"[39m
+        [33mrole[39m=[32m"group"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mAll statuses[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mDraft[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"true"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mReady[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mDisabled[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33maria-live[39m=[32m"polite"[39m
+        [33mclass[39m=[32m"v4-list-meta"[39m
+      [36m>[39m
+        [0mShowing 0 positions · on this page · Latest updated[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33maria-label[39m=[32m"Templates by position"[39m
+        [33mclass[39m=[32m"v4-table-wrap"[39m
+        [33mrole[39m=[32m"region"[39m
+        [33mtabindex[39m=[32m"0"[39m
+      [36m>[39m
+        [36m<table[39m
+          [33maria-label[39m=[32m"Templates by position"[39m
+        [36m>[39m
+          [36m<thead>[39m
+            [36m<tr>[39m
+              [36m<th>[39m
+                [0mPosition[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mWeeks[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mDays[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mLessons[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mQuestions[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mMissing answers[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mIn use[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mStatus[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mActions[0m
+              [36m</th>[39m
+            [36m</tr>[39m
+          [36m</thead>[39m
+          [36m<tbody />[39m
+        [36m</table>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-table-state"[39m
+        [36m>[39m
+          [36m<p>[39m
+            [0mNo results match your filters.[0m
+            [36m<button[39m
+              [33mclass[39m=[32m"v4-secondary-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mClear filters[0m
+            [36m</button>[39m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-pager"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mPrevious[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mNext[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/onboarding/catalog-filter-ux.spec.tsx > catalog filter UX > offers hire statuses in one native select and applies the selected value
+TestingLibraryElementError: Unable to find an accessible element with the role "combobox" and name "Filter by status"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Manage onboarding":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"v4-hires-title"[39m
+    [33mclass[39m=[32m"v4-screen"[39m
+  [36m/>[39m
+
+  Name "Employee":
+  [36m<div[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Employee"[39m
+    [33mclass[39m=[32m"v4-table-wrap"[39m
+    [33mrole[39m=[32m"region"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"v4-eyebrow"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mclass[39m=[32m"v4-list-meta"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Manage onboarding":
+  [36m<h1[39m
+    [33mid[39m=[32m"v4-hires-title"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Create onboarding":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-primary-button"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "All statuses":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"true"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Learning":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Completed":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Setting up":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Setup failed":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Cancelled":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Previous":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Next":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Search people":
+  [36m<input[39m
+    [33mplaceholder[39m=[32m"Search by name"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Filter by position":
+  [36m<input[39m
+    [33maria-autocomplete[39m=[32m"list"[39m
+    [33maria-controls[39m=[32m"v4-position-options"[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Filter by position"[39m
+    [33mid[39m=[32m"v4-position-filter"[39m
+    [33mplaceholder[39m=[32m"All positions"[39m
+    [33mrole[39m=[32m"combobox"[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "Filter by status":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Filter by status"[39m
+    [33mclass[39m=[32m"v4-status-filters"[39m
+    [33mrole[39m=[32m"group"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  table:
+
+  Name "Employee":
+  [36m<table[39m
+    [33maria-label[39m=[32m"Employee"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead />[39m
+
+  Name "":
+  [36m<tbody />[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Employee Position Start date Roadmap progress Quiz scores Status Actions":
+  [36m<tr />[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Employee":
+  [36m<th />[39m
+
+  Name "Position":
+  [36m<th />[39m
+
+  Name "Start date":
+  [36m<th />[39m
+
+  Name "Roadmap progress":
+  [36m<th />[39m
+
+  Name "Quiz scores":
+  [36m<th />[39m
+
+  Name "Status":
+  [36m<th />[39m
+
+  Name "Actions":
+  [36m<th />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"v4-hires-title"[39m
+      [33mclass[39m=[32m"v4-screen"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-page-head"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"v4-eyebrow"[39m
+          [36m>[39m
+            [0mEmployee[0m
+          [36m</p>[39m
+          [36m<h1[39m
+            [33mid[39m=[32m"v4-hires-title"[39m
+          [36m>[39m
+            [0mManage onboarding[0m
+          [36m</h1>[39m
+          [36m<p>[39m
+            [0mTrack employee progress and status in this room.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"v4-primary-button"[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCreate onboarding[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-toolbar v4-hires-toolbar"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"v4-search"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mSearch people[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mplaceholder[39m=[32m"Search by name"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-position-typeahead"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mfor[39m=[32m"v4-position-filter"[39m
+          [36m>[39m
+            [0mFilter by position[0m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-autocomplete[39m=[32m"list"[39m
+            [33maria-controls[39m=[32m"v4-position-options"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Filter by position"[39m
+            [33mid[39m=[32m"v4-position-filter"[39m
+            [33mplaceholder[39m=[32m"All positions"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Filter by status"[39m
+        [33mclass[39m=[32m"v4-status-filters"[39m
+        [33mrole[39m=[32m"group"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"true"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mAll statuses[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mLearning[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCompleted[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mSetting up[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mSetup failed[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCancelled[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33maria-live[39m=[32m"polite"[39m
+        [33mclass[39m=[32m"v4-list-meta"[39m
+      [36m>[39m
+        [0mShowing 0 profiles · on this page[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33maria-label[39m=[32m"Employee"[39m
+        [33mclass[39m=[32m"v4-table-wrap"[39m
+        [33mrole[39m=[32m"region"[39m
+        [33mtabindex[39m=[32m"0"[39m
+      [36m>[39m
+        [36m<table[39m
+          [33maria-label[39m=[32m"Employee"[39m
+        [36m>[39m
+          [36m<thead>[39m
+            [36m<tr>[39m
+              [36m<th>[39m
+                [0mEmployee[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mPosition[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mStart date[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mRoadmap progress[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mQuiz scores[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mStatus[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mActions[0m
+              [36m</th>[39m
+            [36m</tr>[39m
+          [36m</thead>[39m
+          [36m<tbody />[39m
+        [36m</table>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-table-state"[39m
+        [36m>[39m
+          [36m<p>[39m
+            [0mNo matching profiles.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-pager"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mPrevious[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mNext[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/onboarding/catalog-filter-ux.spec.tsx:15:27
+     13|     const onStatus = vi.fn();
+     14|     const view = renderI18n(<HiresCatalogTable {...base} onStatus={onS…
+     15|     const select = screen.getByRole('combobox', { name: 'Filter by sta…
+       |                           ^
+     16|     expect(select.tagName).toBe('SELECT');
+     17|     expect(within(select).getAllByRole('option').map((option) => optio…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/onboarding/catalog-filter-ux.spec.tsx > catalog filter UX > offers a reset beside an empty filtered template result and clears both conditions
+TestingLibraryElementError: Unable to find an accessible element with the role "combobox" and name "Filter template status"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Templates by position":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+    [33mclass[39m=[32m"v4-screen"[39m
+  [36m/>[39m
+
+  Name "Templates by position":
+  [36m<div[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33maria-label[39m=[32m"Templates by position"[39m
+    [33mclass[39m=[32m"v4-table-wrap"[39m
+    [33mrole[39m=[32m"region"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"v4-eyebrow"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mclass[39m=[32m"v4-list-meta"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Templates by position":
+  [36m<h1[39m
+    [33mid[39m=[32m"v4-positions-title"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Create template":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-primary-button"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Clear filters":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-secondary-button v4-clear-filters"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "All statuses":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Draft":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Ready":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"true"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Disabled":
+  [36m<button[39m
+    [33maria-pressed[39m=[32m"false"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Clear filters":
+  [36m<button[39m
+    [33mclass[39m=[32m"v4-secondary-button"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Previous":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Next":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Search positions":
+  [36m<input[39m
+    [33mplaceholder[39m=[32m"Search positions"[39m
+    [33mvalue[39m=[32m"Engineer"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "Filter template status":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Filter template status"[39m
+    [33mclass[39m=[32m"v4-status-filters"[39m
+    [33mrole[39m=[32m"group"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  table:
+
+  Name "Templates by position":
+  [36m<table[39m
+    [33maria-label[39m=[32m"Templates by position"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead />[39m
+
+  Name "":
+  [36m<tbody />[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Position Weeks Days Lessons Questions Missing answers In use Status Actions":
+  [36m<tr />[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Position":
+  [36m<th />[39m
+
+  Name "Weeks":
+  [36m<th />[39m
+
+  Name "Days":
+  [36m<th />[39m
+
+  Name "Lessons":
+  [36m<th />[39m
+
+  Name "Questions":
+  [36m<th />[39m
+
+  Name "Missing answers":
+  [36m<th />[39m
+
+  Name "In use":
+  [36m<th />[39m
+
+  Name "Status":
+  [36m<th />[39m
+
+  Name "Actions":
+  [36m<th />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+      [33mclass[39m=[32m"v4-screen"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-page-head"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"v4-eyebrow"[39m
+          [36m>[39m
+            [0mPosition templates[0m
+          [36m</p>[39m
+          [36m<h1[39m
+            [33mid[39m=[32m"v4-positions-title"[39m
+          [36m>[39m
+            [0mTemplates by position[0m
+          [36m</h1>[39m
+          [36m<p>[39m
+            [0mEach position has an onboarding template.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"v4-primary-button"[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mCreate template[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-toolbar"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"v4-search"[39m
+        [36m>[39m
+          [36m<span>[39m
+            [0mSearch positions[0m
+          [36m</span>[39m
+          [36m<input[39m
+            [33mplaceholder[39m=[32m"Search positions"[39m
+            [33mvalue[39m=[32m"Engineer"[39m
+          [36m/>[39m
+        [36m</label>[39m
+        [36m<button[39m
+          [33mclass[39m=[32m"v4-secondary-button v4-clear-filters"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mClear filters[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33maria-label[39m=[32m"Filter template status"[39m
+        [33mclass[39m=[32m"v4-status-filters"[39m
+        [33mrole[39m=[32m"group"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mAll statuses[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mDraft[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"true"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mReady[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33maria-pressed[39m=[32m"false"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mDisabled[0m
+        [36m</button>[39m
+      [36m</div>[39m
+      [36m<p[39m
+        [33maria-live[39m=[32m"polite"[39m
+        [33mclass[39m=[32m"v4-list-meta"[39m
+      [36m>[39m
+        [0mShowing 0 positions · on this page · Latest updated[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33maria-busy[39m=[32m"false"[39m
+        [33maria-label[39m=[32m"Templates by position"[39m
+        [33mclass[39m=[32m"v4-table-wrap"[39m
+        [33mrole[39m=[32m"region"[39m
+        [33mtabindex[39m=[32m"0"[39m
+      [36m>[39m
+        [36m<table[39m
+          [33maria-label[39m=[32m"Templates by position"[39m
+        [36m>[39m
+          [36m<thead>[39m
+            [36m<tr>[39m
+              [36m<th>[39m
+                [0mPosition[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mWeeks[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mDays[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mLessons[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mQuestions[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mMissing answers[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mIn use[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mStatus[0m
+              [36m</th>[39m
+              [36m<th>[39m
+                [0mActions[0m
+              [36m</th>[39m
+            [36m</tr>[39m
+          [36m</thead>[39m
+          [36m<tbody />[39m
+        [36m</table>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-table-state"[39m
+        [36m>[39m
+          [36m<p>[39m
+            [0mNo results match your filters.[0m
+            [36m<button[39m
+              [33mclass[39m=[32m"v4-secondary-button"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mClear filters[0m
+            [36m</button>[39m
+          [36m</p>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"v4-pager"[39m
+      [36m>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mPrevious[0m
+        [36m</button>[39m
+        [36m<button[39m
+          [33mdisabled[39m=[32m""[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [0mNext[0m
+        [36m</button>[39m
+      [36m</div>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/onboarding/catalog-filter-ux.spec.tsx:29:27
+     27|     const onSearch = vi.fn(); const onStatus = vi.fn();
+     28|     const view = renderI18n(<PositionsCatalogTable {...base} search="E…
+     29|     const select = screen.getByRole('combobox', { name: 'Filter templa…
+       |                           ^
+     30|     expect((select as HTMLSelectElement).value).toBe('ready');
+     31|     expect(within(select).getAllByRole('option')).toHaveLength(4);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  15:08:49
+   Duration  34.68s (transform 593ms, setup 0ms, collect 8.53s, tests 188ms, environment 23.99s, prepare 1.21s)
+

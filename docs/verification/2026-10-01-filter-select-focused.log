@@ -1,0 +1,21 @@
+
+> ai.privos.onboarding-mcp-app@3.0.0 typecheck:all
+> tsc --noEmit && tsc -p tsconfig.scripts.json && tsc -p tsconfig.tests.json
+
+
+ RUN  v2.1.9 /mnt/e/Hoc-tap/WebStormProject/onboarding-mini-app/privos-mcp-app-demo
+
+ ✓ tests/onboarding/v4-catalog-tables.spec.tsx (5 tests) 41ms
+ ✓ tests/onboarding/catalog-filter-ux.spec.tsx (4 tests) 151ms
+ ✓ tests/onboarding/v4-bootstrap.spec.tsx (10 tests) 4037ms
+   ✓ v4 room bootstrap surface > keeps the newest-first order and filters when returning from a newly saved template 697ms
+   ✓ v4 room bootstrap surface > keeps hire name and status filters when switching tabs 436ms
+   ✓ v4 room bootstrap surface > keeps the applied position while searching another and appends further lookup pages 1451ms
+   ✓ v4 room bootstrap surface > ignores a lookup page that finishes after a new search 671ms
+   ✓ v4 room bootstrap surface > keeps loaded position options visible while navigating with arrow keys 345ms
+
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  15:11:06
+   Duration  31.47s (transform 4.71s, setup 0ms, collect 19.96s, tests 4.23s, environment 26.49s, prepare 2.64s)
+

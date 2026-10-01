@@ -1,0 +1,33 @@
+
+> ai.privos.onboarding-mcp-app@3.0.0 typecheck:all
+> tsc --noEmit && tsc -p tsconfig.scripts.json && tsc -p tsconfig.tests.json
+
+
+> ai.privos.onboarding-mcp-app@3.0.0 architecture:check
+> tsx scripts/architecture/run-check.ts
+
+DI architecture: 188 files, 0 violations
+
+> ai.privos.onboarding-mcp-app@3.0.0 i18n:check
+> tsx scripts/i18n/check-ui-copy.ts
+
+UI copy check passed for 117 reachable modules.
+
+ RUN  v2.1.9 /mnt/e/Hoc-tap/WebStormProject/onboarding-mini-app/privos-mcp-app-demo
+
+ ✓ tests/onboarding/v4-catalog-tables.spec.tsx (5 tests) 49ms
+ ✓ tests/onboarding/typeahead-keyboard.spec.tsx (1 test) 159ms
+ ✓ tests/i18n/admin.spec.tsx (1 test) 283ms
+ ✓ tests/onboarding/catalog-filter-ux.spec.tsx (4 tests) 127ms
+ ✓ tests/onboarding/v4-bootstrap.spec.tsx (10 tests) 4171ms
+   ✓ v4 room bootstrap surface > keeps the newest-first order and filters when returning from a newly saved template 731ms
+   ✓ v4 room bootstrap surface > keeps hire name and status filters when switching tabs 459ms
+   ✓ v4 room bootstrap surface > keeps the applied position while searching another and appends further lookup pages 1472ms
+   ✓ v4 room bootstrap surface > ignores a lookup page that finishes after a new search 683ms
+   ✓ v4 room bootstrap surface > keeps loaded position options visible while navigating with arrow keys 351ms
+
+ Test Files  5 passed (5)
+      Tests  21 passed (21)
+   Start at  14:57:56
+   Duration  34.67s (transform 5.66s, setup 0ms, collect 35.41s, tests 4.79s, environment 46.82s, prepare 5.02s)
+

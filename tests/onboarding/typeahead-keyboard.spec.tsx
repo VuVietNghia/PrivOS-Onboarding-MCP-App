@@ -24,7 +24,7 @@ describe('position typeahead keyboard', () => {
     const view = renderI18n(<HiresCatalogTable {...common} />, 'vi');
     const input = screen.getByRole('combobox', { name: 'Lọc theo vị trí' });
     input.focus();
-    await view.user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+    await view.user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{Enter}');
     expect(onSelect).toHaveBeenCalledWith(positions[1]);
     await view.user.keyboard('{Escape}');
     expect(onClose).toHaveBeenCalledOnce();

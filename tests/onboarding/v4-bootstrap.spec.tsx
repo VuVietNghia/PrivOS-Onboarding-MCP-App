@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { V4Onboarding } from '../../src/ui/onboarding/views/V4Onboarding';
@@ -47,6 +47,7 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.positions.mockReset().mockResolvedValue({ items: [], nextCursor: null });
+  mocks.hires.mockReset().mockResolvedValue({ items: [], nextCursor: null });
   mocks.bootstrap.mockResolvedValue({ state: 'ready', binding: { roomId: 'room-a', positionsListId: 'positions-a', hiresListId: 'hires-a' } });
 });
 
@@ -65,7 +66,7 @@ describe('v4 room bootstrap surface', () => {
     await user.click(screen.getByRole('button', { name: 'Save draft' }));
     await waitFor(() => expect(mocks.saveTemplate).toHaveBeenCalledOnce());
     await user.click(screen.getByRole('button', { name: 'Back to list' }));
-    await screen.findByText('No matching positions.');
+    await screen.findByText('No results match your filters.');
     expect((screen.getByRole('textbox', { name: 'Search positions' }) as HTMLInputElement).value).toBe('Engineer');
     expect((screen.getByRole('combobox', { name: 'Filter template status' }) as HTMLSelectElement).value).toBe('draft');
     await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWith({ text: 'Engineer', status: 'draft' }, undefined, 'updated-desc'));
@@ -128,7 +129,7 @@ describe('v4 room bootstrap surface', () => {
     await user.type(screen.getByRole('textbox', { name: 'Search people' }), 'An');
     expect((screen.getByRole('textbox', { name: 'Search people' }) as HTMLInputElement).value).toBe('An');
     expect(screen.getByRole('alert').textContent).toContain('PrivOS did not create the required list stages.');
-    await user.click(screen.getByRole('button', { name: 'Reset' }));
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }));
     expect((hireStatus as HTMLSelectElement).value).toBe('all');
 
     await user.click(screen.getByRole('button', { name: /^Templates$/ }));
@@ -148,7 +149,7 @@ describe('v4 room bootstrap surface', () => {
     expect((screen.getByRole('button', { name: 'Create onboarding' }) as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('keeps every status count visible after filtering the hire list', async () => {
+  it('keeps hire name and status filters when switching tabs', async () => {
     const learningHire: Hire = { id: 'h-learning', employeeId: 'u-learning', name: 'Learning hire', positionId: 'p1', positionName: 'Engineering', totalDays: 5, startDate: '2026-09-30', roadmapListId: 'r-learning', status: 'learning', doneDays: 1, scores: {}, errorCode: null, pendingAction: null };
     const completedHireOne: Hire = { ...learningHire, id: 'h-done-1', employeeId: 'u-done-1', name: 'Completed hire one', roadmapListId: 'r-done-1', status: 'done', doneDays: 5 };
     const completedHireTwo: Hire = { ...learningHire, id: 'h-done-2', employeeId: 'u-done-2', name: 'Completed hire two', roadmapListId: 'r-done-2', status: 'done', doneDays: 5 };
@@ -158,10 +159,60 @@ describe('v4 room bootstrap surface', () => {
     const user = userEvent.setup();
     renderV4();
 
-    expect(await screen.findByRole('button', { name: /Completed 2/ })).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: /Onboarding 1/ }));
+    await screen.findByText('Completed hire one');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by status' }), 'learning');
     await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', status: 'learning' }, undefined));
-    expect(screen.getByRole('button', { name: /Completed 2/ })).toBeTruthy();
+    await user.type(screen.getByRole('textbox', { name: 'Search people' }), 'Learning');
+    await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: 'Learning', status: 'learning' }, undefined));
+    await user.click(screen.getByRole('button', { name: /^Templates$/ }));
+    await user.click(screen.getByRole('button', { name: /^People$/ }));
+    expect((screen.getByRole('textbox', { name: 'Search people' }) as HTMLInputElement).value).toBe('Learning');
+    expect((screen.getByRole('combobox', { name: 'Filter by status' }) as HTMLSelectElement).value).toBe('learning');
+    await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: 'Learning', status: 'learning' }, undefined));
+  });
+
+  it('keeps the applied position while searching another and appends further lookup pages', async () => {
+    const first: Position = { id: 'p1', name: 'Engineering', templateListId: 't1', status: 'ready', weeks: 1, days: 1, lessons: 1, questions: 0, missingAnswers: 0, inUse: 0 };
+    const second: Position = { ...first, id: 'p2', name: 'Finance' };
+    mocks.positions.mockResolvedValue({ items: [first], nextCursor: null });
+    const user = userEvent.setup(); renderV4();
+    await screen.findByText('No matching profiles.');
+    const input = screen.getByRole('combobox', { name: 'Filter by position' });
+    await user.click(input);
+    await user.click(await screen.findByRole('option', { name: 'Engineering' }));
+    await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', positionId: 'p1' }, undefined));
+    mocks.positions.mockResolvedValue({ items: [], nextCursor: 'lookup-next' });
+    await user.click(input); await user.clear(input); await user.type(input, 'Fin');
+    await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWith({ text: 'Fin' }, undefined));
+    expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', positionId: 'p1' }, undefined);
+    mocks.positions.mockResolvedValueOnce({ items: [second], nextCursor: null });
+    await user.click(await screen.findByRole('button', { name: 'Load more positions' }));
+    await user.click(await screen.findByRole('option', { name: 'Finance' }));
+    expect(mocks.positions).toHaveBeenLastCalledWith({ text: 'Fin' }, 'lookup-next');
+    await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', positionId: 'p2' }, undefined));
+    await user.click(input); await user.clear(input); await user.type(input, 'Discard'); await user.keyboard('{Escape}');
+    expect((input as HTMLInputElement).value).toBe('Finance');
+    expect(mocks.hires).toHaveBeenLastCalledWith({ text: '', positionId: 'p2' }, undefined);
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by status' }), 'learning');
+    await user.type(screen.getByRole('textbox', { name: 'Search people' }), 'An');
+    await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: 'An', status: 'learning', positionId: 'p2' }, undefined));
+    await user.click(screen.getAllByRole('button', { name: 'Clear filters' })[0]);
+    await waitFor(() => expect(mocks.hires).toHaveBeenLastCalledWith({ text: '' }, undefined));
+    expect((input as HTMLInputElement).value).toBe('');
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).toBeNull();
+  });
+
+  it('ignores a lookup page that finishes after a new search', async () => {
+    let finish!: (page: Page<Position>) => void;
+    const pending = new Promise<Page<Position>>((resolve) => { finish = resolve; });
+    mocks.positions.mockResolvedValueOnce({ items: [], nextCursor: 'old-next' }).mockReturnValueOnce(pending).mockResolvedValue({ items: [], nextCursor: null });
+    const user = userEvent.setup(); renderV4(); await screen.findByText('No matching profiles.');
+    const input = screen.getByRole('combobox', { name: 'Filter by position' });
+    await user.click(input); await user.click(await screen.findByRole('button', { name: 'Load more positions' }));
+    await user.type(input, 'New');
+    await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWith({ text: 'New' }, undefined));
+    await act(async () => finish({ items: [{ id: 'old', name: 'Stale option', templateListId: 't', status: 'ready', weeks: 0, days: 0, lessons: 0, questions: 0, missingAnswers: 0, inUse: 0 }], nextCursor: null }));
+    expect(screen.queryByRole('option', { name: 'Stale option' })).toBeNull();
   });
 
   it('keeps loaded position options visible while navigating with arrow keys', async () => {

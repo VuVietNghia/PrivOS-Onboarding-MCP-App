@@ -30,8 +30,8 @@ describe('v4 catalog tables', () => {
     expect(html).toContain('Điểm quiz');
     expect(html).toContain('Chưa có điểm');
     expect(html).toContain('Xem lộ trình');
-    expect(html).toContain('aria-pressed="false"');
-    expect(html).toContain('Trong trang này');
+    expect(html).toContain('<option value="all" selected=""');
+    expect(html).toContain('trong trang này');
     expect(html).not.toContain('tổng cộng');
   });
 
@@ -42,10 +42,10 @@ describe('v4 catalog tables', () => {
     expect(html).not.toContain(position.name);
   });
 
-  it('shows the selected status card and a disabled template action', () => {
+  it('shows the selected status option and a disabled template action', () => {
     const hiresHtml = renderToStaticMarkup(<HiresCatalogTable items={[hire]} loading={false} error={null} search="" onSearch={() => {}} status="learning" onStatus={() => {}} canPrevious={false} canNext={false} onPrevious={() => {}} onNext={() => {}} />);
     const positionsHtml = renderToStaticMarkup(<PositionsCatalogTable items={[position]} loading={false} error={null} search="" onSearch={() => {}} status="all" onStatus={() => {}} canPrevious={false} canNext={false} onPrevious={() => {}} onNext={() => {}} />);
-    expect(hiresHtml).toContain('aria-pressed="true"');
+    expect(hiresHtml).toContain('<option value="learning" selected=""');
     expect(positionsHtml).toContain('Mở');
     expect(positionsHtml).toContain('disabled=""');
   });

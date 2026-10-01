@@ -1,0 +1,182 @@
+
+> ai.privos.onboarding-mcp-app@3.0.0 typecheck:all
+> tsc --noEmit && tsc -p tsconfig.scripts.json && tsc -p tsconfig.tests.json
+
+
+> ai.privos.onboarding-mcp-app@3.0.0 test
+> vitest run --exclude tests/packaging.spec.ts
+
+
+ RUN  v2.1.9 /mnt/e/Hoc-tap/WebStormProject/onboarding-mini-app/privos-mcp-app-demo
+
+ ✓ tests/onboarding-v4-interactive.spec.ts (15 tests) 170ms
+ ✓ tests/onboarding/probe-results.spec.ts (15 tests) 8ms
+ ✓ tests/onboarding/schemas.spec.ts (23 tests) 14ms
+ ✓ tests/onboarding/v2-schemas.spec.ts (17 tests) 19ms
+ ✓ tests/onboarding/current-room-member-ids.spec.ts (28 tests) 18ms
+ ✓ tests/onboarding/room-members.spec.ts (55 tests) 41ms
+ ✓ tests/onboarding/room-bootstrap.spec.ts (13 tests) 15ms
+ ✓ tests/onboarding/catalogs.spec.ts (13 tests) 28ms
+ ✓ tests/onboarding/provision-roadmap.spec.ts (17 tests) 54ms
+ ✓ tests/onboarding/hub-contracts.spec.ts (20 tests) 10ms
+ ✓ tests/onboarding/toggle-task.spec.ts (6 tests) 58ms
+ ✓ tests/onboarding/provision-guard-contract.spec.ts (9 tests) 19ms
+ ✓ tests/onboarding/save-template-v4.spec.ts (19 tests) 38ms
+ ✓ tests/onboarding/learning-v4.spec.ts (28 tests) 62ms
+ ✓ tests/onboarding/provision-v4.spec.ts (12 tests) 53ms
+ ✓ tests/onboarding/hr-v4.spec.ts (16 tests) 15ms
+ ✓ tests/di/files-members-adapters.spec.ts (8 tests) 11ms
+ ✓ tests/onboarding/theme-tokens.spec.ts (8 tests) 51ms
+ ✓ tests/permission-catalog.spec.ts (4 tests) 3ms
+ ✓ tests/onboarding/p03-contracts.spec.ts (8 tests) 7ms
+ ✓ tests/onboarding/files.spec.ts (6 tests) 6ms
+ ✓ tests/onboarding/onboarding-lists.spec.ts (10 tests) 8ms
+ ✓ tests/di/server-lifecycle.spec.ts (10 tests) 9ms
+ ✓ tests/onboarding/find-lists.spec.ts (11 tests) 15ms
+ ✓ tests/onboarding/onboarding-lists-tool.spec.ts (5 tests) 6ms
+ ✓ tests/di/file-content.spec.ts (9 tests) 9ms
+ ✓ tests/onboarding/room-folders.spec.ts (5 tests) 5ms
+ ✓ tests/di/lists-adapter.spec.ts (5 tests) 7ms
+ ✓ tests/onboarding/request-budget.spec.ts (4 tests) 8ms
+ ✓ tests/onboarding/select-template.spec.ts (3 tests) 10ms
+ ✓ tests/onboarding/import-v4.spec.ts (9 tests) 266ms
+ ✓ tests/onboarding/v2-lists-tool.spec.ts (4 tests) 7ms
+ ✓ tests/onboarding/browser-import-v4.spec.ts (4 tests) 12ms
+ ✓ tests/onboarding/small-domain.spec.ts (13 tests) 8ms
+ ✓ tests/onboarding/progress.spec.ts (9 tests) 11ms
+ ✓ tests/onboarding/run-tree.spec.ts (14 tests) 9ms
+ ✓ tests/onboarding/template-draft.spec.ts (6 tests) 5ms
+ ✓ tests/di/architecture.spec.ts (6 tests) 21ms
+ ✓ tests/import/read-source.spec.ts (5 tests) 1054ms
+   ✓ readPositions > reads the legacy demo with common days and complete Markdown 349ms
+   ✓ readPositions > reads three positions with 2, 5, and 7 days without common source 373ms
+ ✓ tests/di/scripts-commands.spec.ts (4 tests) 7ms
+ ✓ tests/onboarding/roadmap-plan.spec.ts (8 tests) 8ms
+ ✓ tests/onboarding/v4-catalog-tables.spec.tsx (5 tests) 104ms
+ ✓ tests/onboarding/template-item-model.spec.ts (3 tests) 7ms
+ ✓ tests/onboarding/working-days.spec.ts (11 tests) 5ms
+ ✓ tests/onboarding/quiz.spec.ts (4 tests) 7ms
+ ✓ tests/di/import-parity.spec.ts (2 tests) 8ms
+ ✓ tests/onboarding/tree.spec.ts (6 tests) 4ms
+ ✓ tests/i18n/resources.spec.ts (4 tests) 9ms
+ ✓ tests/import/parse-quiz.spec.ts (7 tests) 5ms
+ ✓ tests/privos-rest.spec.ts (5 tests) 4ms
+ ✓ tests/di/provision-service.spec.ts (2 tests) 4ms
+ ✓ tests/onboarding/v4-errors.spec.ts (4 tests) 3ms
+ ✓ tests/onboarding/cursor-pages.spec.ts (4 tests) 3ms
+ ✓ tests/onboarding/v4-source-contract.spec.ts (2 tests) 114ms
+ ✓ tests/onboarding/scores.spec.ts (4 tests) 3ms
+ ✓ tests/onboarding/template-form.spec.ts (5 tests) 4ms
+ ✓ tests/i18n/errors.spec.ts (2 tests) 4ms
+ ✓ tests/onboarding/v4-shell.spec.tsx (2 tests) 12ms
+ ✓ tests/scope-audit.spec.ts (2 tests) 1389ms
+   ✓ scope audit > documents and exercises every declared scope 1387ms
+ ✓ tests/di/catalog-bootstrap-ports.spec.ts (2 tests) 9ms
+ ✓ tests/di/bundle-boundaries.spec.ts (1 test) 34ms
+ ✓ tests/di/learning-service.spec.ts (2 tests) 5ms
+ ✓ tests/onboarding/tool-result.spec.ts (3 tests) 3ms
+ ✓ tests/di/keyed-lock.spec.ts (2 tests) 3ms
+ ✓ tests/onboarding/file-refs.spec.ts (3 tests) 4ms
+ ✓ tests/relay-actor-verification.spec.ts (4 tests) 4ms
+ ✓ tests/onboarding/assignee.spec.ts (7 tests) 5ms
+ ✓ tests/manifest.spec.ts (2 tests) 11ms
+ ✓ tests/onboarding/learning-theme-css.spec.ts (1 test) 2ms
+ ✓ tests/di/request-budget-lifetime.spec.ts (1 test) 4ms
+ ✓ tests/onboarding/p0-dev-ui-mode.spec.ts (3 tests) 2ms
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > delivers the production onboarding app without external assets or P0 diagnostics
+vite v5.4.21 building for production...
+
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > delivers the production onboarding app without external assets or P0 diagnostics
+transforming...
+
+ ✓ tests/mcp.spec.ts (5 tests) 180ms
+ ✓ tests/i18n/formatters.spec.ts (2 tests) 24ms
+ ✓ tests/onboarding/room-binding.spec.ts (2 tests) 6ms
+ ✓ tests/import/preflight.spec.ts (1 test) 176ms
+ ✓ tests/di/mcp-handler-isolation.spec.ts (1 test) 3ms
+ ✓ tests/di/browser-composition.spec.ts (1 test) 3ms
+ ✓ tests/i18n/copy-coverage.spec.ts (2 tests) 32ms
+ ✓ tests/i18n/locale.spec.ts (3 tests) 2ms
+ ✓ tests/runtime-security.spec.ts (1 test) 3ms
+ ✓ tests/di/import-gateway.spec.ts (1 test) 3ms
+ ✓ tests/di/template-service.spec.ts (1 test) 4ms
+ ✓ tests/di/list-discovery.spec.ts (1 test) 3ms
+ ✓ tests/di/session-key.spec.ts (1 test) 2ms
+ ✓ tests/onboarding/local-date.spec.ts (2 tests) 3ms
+ ✓ tests/di/legacy-services.spec.ts (1 test) 5ms
+ ✓ tests/di/hr-gateway.spec.ts (1 test) 6ms
+ ✓ tests/di/cli-composition.spec.ts (1 test) 2ms
+ ✓ tests/di/lifetime.spec.ts (1 test) 3ms
+ ✓ tests/readiness-tool-affinity.spec.ts (1 test) 2ms
+ ✓ tests/di/browser-effects.spec.ts (1 test) 3ms
+ ✓ tests/onboarding/atomic-lists-contract.spec.ts (16 tests) 14ms
+ ✓ tests/ui-shell.spec.ts (7 tests) 14041ms
+ ✓ tests/onboarding/p0-probe-surface.spec.tsx (2 tests) 27ms
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > delivers the production onboarding app without external assets or P0 diagnostics
+✓ 346 modules transformed.
+
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > delivers the production onboarding app without external assets or P0 diagnostics
+rendering chunks...
+
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > delivers the production onboarding app without external assets or P0 diagnostics
+✓ built in 13.97s
+
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > keeps diagnostics disabled in the development inline shell while embedding all executable assets
+vite v5.4.21 building for development...
+
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > keeps diagnostics disabled in the development inline shell while embedding all executable assets
+transforming...
+
+ ✓ tests/onboarding/probe-panel-key.spec.ts (2 tests) 2ms
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > keeps diagnostics disabled in the development inline shell while embedding all executable assets
+✓ 351 modules transformed.
+
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > keeps diagnostics disabled in the development inline shell while embedding all executable assets
+rendering chunks...
+
+stdout | tests/onboarding/p0-inline-ui.spec.ts > paired Relay P0 UI delivery > keeps diagnostics disabled in the development inline shell while embedding all executable assets
+✓ built in 13.89s
+
+ ✓ tests/onboarding/p0-inline-ui.spec.ts (2 tests) 28162ms
+   ✓ paired Relay P0 UI delivery > delivers the production onboarding app without external assets or P0 diagnostics 14184ms
+   ✓ paired Relay P0 UI delivery > keeps diagnostics disabled in the development inline shell while embedding all executable assets 13977ms
+ ✓ tests/onboarding/quiz-view.spec.tsx (9 tests) 544ms
+ ✓ tests/i18n/admin.spec.tsx (1 test) 339ms
+   ✓ admin localization > preserves filters, drawer, and an in-flight provision while locale changes 338ms
+ ✓ tests/onboarding/provision-v4-form.spec.tsx (18 tests) 588ms
+ ✓ tests/onboarding/employee-roadmap-screen.spec.tsx (9 tests) 862ms
+   ✓ employee roadmap screen integration > runs load, lesson, attachment, quiz, result and refreshed progress 333ms
+ ✓ tests/onboarding/learning-view.spec.tsx (6 tests) 318ms
+ ✓ tests/onboarding/attachments.spec.tsx (13 tests) 776ms
+ ✓ tests/i18n/provider.spec.tsx (6 tests) 188ms
+ ✓ tests/onboarding/template-builder.spec.tsx (7 tests) 1004ms
+ ✓ tests/i18n/templates.spec.tsx (3 tests) 327ms
+ ✓ tests/onboarding/v4-bootstrap.spec.tsx (10 tests) 4427ms
+   ✓ v4 room bootstrap surface > keeps the newest-first order and filters when returning from a newly saved template 777ms
+   ✓ v4 room bootstrap surface > keeps hire name and status filters when switching tabs 472ms
+   ✓ v4 room bootstrap surface > keeps the applied position while searching another and appends further lookup pages 1488ms
+   ✓ v4 room bootstrap surface > ignores a lookup page that finishes after a new search 691ms
+   ✓ v4 room bootstrap surface > keeps loaded position options visible while navigating with arrow keys 357ms
+ ✓ tests/onboarding/theme-surfaces.spec.tsx (5 tests) 417ms
+ ✓ tests/i18n/app-locale.spec.tsx (3 tests) 302ms
+ ✓ tests/i18n/learning.spec.tsx (2 tests) 310ms
+ ✓ tests/onboarding/catalog-page-race.spec.tsx (2 tests) 47ms
+ ✓ tests/onboarding/import-folder-panel.spec.tsx (4 tests) 257ms
+ ✓ tests/onboarding/dialog-focus.spec.tsx (2 tests) 159ms
+ ✓ tests/di/ui-composition.spec.tsx (3 tests) 35ms
+ ✓ tests/onboarding/typeahead-keyboard.spec.tsx (1 test) 141ms
+ ✓ tests/onboarding/catalog-filter-ux.spec.tsx (4 tests) 203ms
+ ✓ tests/onboarding/copy-template-dialog.spec.tsx (1 test) 121ms
+ ✓ tests/i18n/error-banner.spec.tsx (1 test) 95ms
+ ✓ tests/onboarding/employee-preview.spec.tsx (3 tests) 303ms
+ ✓ tests/di/presentation.spec.tsx (2 tests) 127ms
+stderr | tests/onboarding/provision-form-default-date.spec.tsx > shows local today and permits another working date
+react-i18next:: useTranslation: You will need to pass in an i18next instance by using initReactI18next { code: 'NO_I18NEXT_INSTANCE' }
+
+ ✓ tests/onboarding/provision-form-default-date.spec.tsx (1 test) 31ms
+
+ Test Files  120 passed (120)
+      Tests  764 passed (764)
+   Start at  15:00:12
+   Duration  125.63s (transform 65.72s, setup 0ms, collect 568.37s, tests 58.59s, environment 554.89s, prepare 216.09s)
+
