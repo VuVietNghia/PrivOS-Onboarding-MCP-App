@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildP0InlineHtml } from '../../src/p0-inline-ui';
+import { buildP0InlineHtml, buildStandaloneInlineHtml } from '../../src/p0-inline-ui';
 import { createAppMcpHandler } from '../../src/mcp-message-handlers';
 import manifest from '../../privos-app.json';
 
@@ -7,6 +7,23 @@ const resourceUri = (manifest.tools as { ui?: { resourceUri?: string } }[])
   .find((tool) => tool.ui?.resourceUri)?.ui?.resourceUri;
 
 describe('paired Relay P0 UI delivery', () => {
+  it('delivers the production onboarding app without external assets or P0 diagnostics', async () => {
+    const html = await buildStandaloneInlineHtml();
+    expect(html).toContain('__privosUiBooted');
+    expect(html).toMatch(/<style>[^]*<\/style>/);
+    expect(html).toMatch(/<script>[^]*<\/script>/);
+    expect(html).not.toMatch(/<script[^>]+src=/);
+    expect(html).not.toMatch(/<link[^>]+href=/);
+    expect(html).not.toContain('P0 Hub contract tests');
+    expect(html).not.toContain('P0.2 ACL and Files');
+    expect(html).not.toContain('localhost:5179');
+
+    const handler = createAppMcpHandler();
+    handler.ui.set({ kind: 'inline', html });
+    const result = await handler.handle('resources/read', 1, { uri: resourceUri }) as { contents: { text: string }[] };
+    expect(result.contents[0].text).toBe(html);
+  }, 20_000);
+
   it('embeds the P0 controls and all executable assets in the Hub shell', async () => {
     expect(resourceUri).toBeTruthy();
     const html = await buildP0InlineHtml();

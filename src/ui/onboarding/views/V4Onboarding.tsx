@@ -7,7 +7,8 @@ import { countHireStatuses, HiresCatalogTable, PositionsCatalogTable, type HireS
 import { OnboardingShell, type OnboardingScreen, type OnboardingTheme } from './OnboardingShell';
 import { TemplateBuilder } from './templates/TemplateBuilder';
 import { CopyTemplateDialog, type CopySource } from './templates/CopyTemplateDialog';
-import { ImportFolderPanel } from './templates/ImportFolderPanel';
+// Markdown folder import is temporarily disabled; uncomment the integration to restore it.
+// import { ImportFolderPanel } from './templates/ImportFolderPanel';
 import { ProvisionV4Form } from './ProvisionV4Form';
 import { HrV4Drawer } from './HrV4Drawer';
 import { EmployeeRoadmapScreen } from './learning/EmployeeRoadmapScreen';
@@ -116,7 +117,7 @@ export function V4Onboarding({ admin, employeePreviewControl, onResolvedThemeCha
   const session = useOnboardingSession();
   if (!session) throw new Error('ONBOARDING_SESSION_MISSING');
   const services = session.services;
-  const { roomId, userId, roles: userRoles } = session.actor;
+  const { roomId, userId /*, roles: userRoles */ } = session.actor;
   const hostTheme = session.hostTheme;
   const role = admin ? 'admin' : 'employee';
   const [screen, setScreen] = useState<OnboardingScreen>(admin ? 'hires' : 'roadmap');
@@ -126,7 +127,7 @@ export function V4Onboarding({ admin, employeePreviewControl, onResolvedThemeCha
   const [copySource, setCopySource] = useState<CopySource | null>(null);
   const [copyLoading, setCopyLoading] = useState(false);
   const [copyError, setCopyError] = useState<UiError | null>(null);
-  const [importOpen, setImportOpen] = useState(false);
+  // const [importOpen, setImportOpen] = useState(false);
   const [catalogRevision, setCatalogRevision] = useState(0);
   const [selectedHireId, setSelectedHireId] = useState<string | null>(null);
   const [disableTarget, setDisableTarget] = useState<Position | null>(null);
@@ -144,7 +145,7 @@ export function V4Onboarding({ admin, employeePreviewControl, onResolvedThemeCha
   const identityKey = session.key;
   useEffect(() => { onResolvedThemeChange?.(theme); }, [theme, onResolvedThemeChange]);
 
-  useEffect(() => { setScreen(admin ? 'hires' : 'roadmap'); setTemplateEditor(null); setSelectedHireId(null); setCopySource(null); setImportOpen(false); }, [admin, roomId, userId]);
+  useEffect(() => { setScreen(admin ? 'hires' : 'roadmap'); setTemplateEditor(null); setSelectedHireId(null); setCopySource(null); /* setImportOpen(false); */ }, [admin, roomId, userId]);
   useEffect(() => {
     if (!userId) return;
     let active = true;
@@ -210,15 +211,18 @@ export function V4Onboarding({ admin, employeePreviewControl, onResolvedThemeCha
     } catch (cause) { setDisableError(toUiError(cause)); }
     finally { setDisableBusy(false); }
   };
-  return <OnboardingShell role={role} roomId={roomId} screen={screen} onNavigate={(next) => { setScreen(next); setTemplateEditor(null); setCopySource(null); setImportOpen(false); }} locale={locale} onLocaleChange={changeLocale} theme={theme} onThemeChange={changeTheme} employeePreviewControl={employeePreviewControl}>
+  return <OnboardingShell role={role} roomId={roomId} screen={screen} onNavigate={(next) => { setScreen(next); setTemplateEditor(null); setCopySource(null); /* setImportOpen(false); */ }} locale={locale} onLocaleChange={changeLocale} theme={theme} onThemeChange={changeTheme} employeePreviewControl={employeePreviewControl}>
     {admin && catalogs && services && screen === 'hires' && <HiresScreen key={`${identityKey}:${catalogRevision}`} catalogs={catalogs} identityKey={identityKey} scheduler={services.scheduler} onCreate={() => setScreen('provision')} onOpen={setSelectedHireId} />}
     {admin && catalogs && services && selectedHireId && <HrV4Drawer catalogs={catalogs} services={services} hireId={selectedHireId} onClose={() => setSelectedHireId(null)} onChanged={() => setCatalogRevision((value) => value + 1)} />}
     {admin && catalogs && binding && services && screen === 'provision' && <ProvisionV4Form key={identityKey} binding={binding} catalogs={catalogs} services={services} onDone={() => { setCatalogRevision((value) => value + 1); setScreen('hires'); }} />}
     {admin && services && screen === 'templates' && templateEditor && <><button type="button" className="v4-secondary-button v4-builder-back" onClick={() => { setTemplateEditor(null); setCatalogRevision((value) => value + 1); }}>{templatesT('shell.back')}</button><TemplateBuilder key={templateEditor.key} mode="live" initial={templateEditor.tree} initialName={templateEditor.name} initialStatus={templateEditor.status} onSave={saveTemplate} positionId={templateEditor.positionId} filesGateway={filesGateway ?? undefined} ids={services.ids} focus={services.focus} /></>}
     {admin && screen === 'templates' && templateLoading && <p role="status">{templatesT('shell.loadingTemplate')}</p>}
     {admin && screen === 'templates' && templateError && <p role="alert">{getErrorMessage(templateError, errorT)}</p>}
-    {admin && screen === 'templates' && !templateEditor && binding && services && importOpen && <><button type="button" className="v4-secondary-button" onClick={() => setImportOpen(false)}>{templatesT('shell.back')}</button><ImportFolderPanel binding={binding} roomId={roomId} userRoles={userRoles} services={services} onDone={() => setCatalogRevision((value) => value + 1)} /></>}
-    {admin && catalogs && services && screen === 'templates' && !templateEditor && !templateLoading && !importOpen && <><div className="v4-template-tools"><button type="button" className="v4-secondary-button" onClick={() => setImportOpen(true)}>{templatesT('shell.importFolder')}</button></div><PositionsScreen key={`${identityKey}:${catalogRevision}`} catalogs={catalogs} identityKey={identityKey} scheduler={services.scheduler} onCreate={createTemplate} onOpen={openTemplate} onCopy={openCopy} onDisable={setDisableTarget} /></>}
+    {/* {admin && screen === 'templates' && !templateEditor && binding && services && importOpen && <><button type="button" className="v4-secondary-button" onClick={() => setImportOpen(false)}>{templatesT('shell.back')}</button><ImportFolderPanel binding={binding} roomId={roomId} userRoles={userRoles} services={services} onDone={() => setCatalogRevision((value) => value + 1)} /></>} */}
+    {admin && catalogs && services && screen === 'templates' && !templateEditor && !templateLoading /* && !importOpen */ && <>
+      {/* <div className="v4-template-tools"><button type="button" className="v4-secondary-button" onClick={() => setImportOpen(true)}>{templatesT('shell.importFolder')}</button></div> */}
+      <PositionsScreen key={`${identityKey}:${catalogRevision}`} catalogs={catalogs} identityKey={identityKey} scheduler={services.scheduler} onCreate={createTemplate} onOpen={openTemplate} onCopy={openCopy} onDisable={setDisableTarget} />
+    </>}
     {admin && screen === 'templates' && copyLoading && <p role="status">{templatesT('shell.loadingCopy')}</p>}
     {admin && screen === 'templates' && copyError && <p role="alert">{getErrorMessage(copyError, errorT)}</p>}
     {admin && screen === 'templates' && copySource && <CopyTemplateDialog sources={[copySource]} onCopy={copyTemplate} onClose={() => setCopySource(null)} />}

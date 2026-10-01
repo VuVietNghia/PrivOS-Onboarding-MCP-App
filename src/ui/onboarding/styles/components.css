@@ -417,3 +417,23 @@
     padding: 12px;
   }
 }
+
+.onboarding-v4 .v4-learning-quiz fieldset {
+  min-inline-size: 0;
+  margin-inline: 0;
+}
+
+.onboarding-v4 .v4-quiz-question-title {
+  margin: 0 0 16px;
+  color: var(--v4-text);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.onboarding-v4 .v4-quiz-result > ol {
+  margin: 16px 0;
+  padding: 0;
+  list-style: none;
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Answers } from '../../domain/quiz';
 import type { Question } from '../../domain/models';
@@ -20,6 +20,7 @@ function valid(questions: readonly Question[]): boolean {
 
 export function QuizView({ questions, onSubmit, pending = false, error, onBack }: QuizViewProps) {
   const { t } = useTranslation('learning');
+  const questionHeadingPrefix = useId();
   const [answers, setAnswers] = useState<Record<string, string[]>>({});
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState(false);
@@ -46,8 +47,11 @@ export function QuizView({ questions, onSubmit, pending = false, error, onBack }
   return <section className="v4-learning-quiz" aria-label={t('quiz.region')}>
     {onBack && <button type="button" className="v4-secondary-button" onClick={onBack}>{t('quiz.back')}</button>}
     <h1>{t('quiz.title')}</h1>
-    {questions.map((question, index) => <fieldset key={question.id} disabled={busy}>
-      <legend>{t('quiz.question', { count: index + 1, content: question.content })}</legend>
+    {questions.map((question, index) => <fieldset key={question.id} disabled={busy}
+      aria-labelledby={`${questionHeadingPrefix}-${index}`}>
+      <h2 id={`${questionHeadingPrefix}-${index}`} className="v4-quiz-question-title">
+        {t('quiz.question', { count: index + 1, content: question.content })}
+      </h2>
       {question.options.map((option, optionIndex) => {
         const label = String.fromCharCode(97 + optionIndex);
         const multi = question.correctLabels.length > 1;

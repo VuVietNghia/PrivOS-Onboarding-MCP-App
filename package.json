@@ -31,7 +31,9 @@
     "node": ">=22.0.0"
   },
   "scripts": {
-    "build": "vite build && tsx scripts/generate-manifest.ts && npm run manifest:lint",
+    "build": "npm run build:ui && tsx scripts/generate-manifest.ts && npm run manifest:lint",
+    "build:ui": "tsx scripts/build-ui.ts",
+    "prestart": "npm run build:ui",
     "dev": "PRIVOS_TRANSPORT=relay PRIVOS_DEV_UI=1 tsx src/server.ts",
     "start": "tsx src/server.ts",
     "pair": "tsx scripts/pair.ts",

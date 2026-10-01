@@ -10,8 +10,9 @@
  * The ONE piece that stays app-local (by design) is the interactive
  * `development` Relay loop: `PRIVOS_TRANSPORT=relay` (`npm run dev`) steps
  * `serveApp` aside from the Direct HTTP MCP router and runs the terminal
- * pairing prompt here. An explicit local `PRIVOS_DEV_UI=1` serves the P0
- * test UI inline in a paired standalone session when NODE_ENV is not production.
+ * pairing prompt here. Paired standalone sessions serve prebuilt production
+ * inline HTML. An explicit local `PRIVOS_DEV_UI=1` selects P0 diagnostics
+ * when NODE_ENV is not production.
  * `PRIVOS_TRANSPORT` is a
  * development affordance only — `serveApp` rejects `transportOverride` under any
  * production mode as a boot error.
@@ -23,11 +24,13 @@
 import 'dotenv/config';
 
 import express from 'express';
+import { fileURLToPath } from 'node:url';
 import { RuntimeModeError } from '@privos_ai/app-server';
 
 import { createManifest } from './manifest';
 import { createAppMcpHandler } from './mcp-message-handlers';
 import { createSdkRuntime } from './server-adapters/sdk-runtime';
+import { loadStandaloneUi } from './server-adapters/built-ui-assets';
 import { startServer } from './server-core/start-server';
 
 /**
@@ -67,6 +70,7 @@ async function start(): Promise<void> {
 			devUi: process.env.PRIVOS_DEV_UI === '1',
 			transport: transportOverride === 'relay' ? 'relay' : 'default',
 		},
+		loadStandaloneUi: () => loadStandaloneUi(fileURLToPath(new URL('../dist/standalone-ui.html', import.meta.url))),
 		async startDevUi(mode) {
 			if (mode === 'standalone-production') {
 				const { buildP0InlineHtml } = await import('./p0-inline-ui');

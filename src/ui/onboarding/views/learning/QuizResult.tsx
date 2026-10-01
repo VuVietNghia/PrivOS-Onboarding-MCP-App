@@ -22,11 +22,13 @@ export function QuizResult({ questions, grade, attempts, firstScore, onRetake, o
   return <section className="v4-quiz-result" aria-label={t('result.region')}>
     <h1>{t('result.attempt', { count: attempts.length })}</h1><strong>{grade.score}/{grade.total}</strong>
     <p>{t('result.firstScore', { score: firstScore })}</p><p>{t('result.attempts', { attempts: attempts.join(' · ') })}</p>
-    <ol>{grade.results.map((result) => {
+    <ol role="list">{grade.results.map((result, index) => {
       const question = questionById.get(result.itemId);
       if (!question) return null;
       const correct = result.correctLabels.map((label) => question.options[label.charCodeAt(0) - 97]).filter(Boolean);
-      return <li key={result.itemId}><h2>{question.content}</h2>
+      return <li key={result.itemId}><h2 className="v4-quiz-question-title">
+        {t('quiz.question', { count: index + 1, content: question.content })}
+      </h2>
         <p>{result.correct ? t('result.correct') : t('result.incorrect')}</p>
         <p>{t('result.correctAnswer', { answers: formatList(correct, locale) })}</p>
         {result.explanation && <p>{result.explanation}</p>}

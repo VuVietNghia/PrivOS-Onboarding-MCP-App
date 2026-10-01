@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render as testingRender, screen } from '@testing-library/react';
+import { cleanup, render as testingRender, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { ReactElement, ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
@@ -23,6 +23,33 @@ const questions: Question[] = [
 ];
 
 describe('quiz UI', () => {
+  it.each([
+    ['vi', 'Câu 1: Chọn một', 'Câu 2: Chọn nhiều'],
+    ['en', 'Question 1: Chọn một', 'Question 2: Chọn nhiều'],
+  ] as const)('keeps question headings inside their answer groups in %s', (locale, first, second) => {
+    render(<QuizView questions={questions} onSubmit={vi.fn()} />, locale);
+    const single = screen.getByRole('group', { name: first });
+    const multiple = screen.getByRole('group', { name: second });
+    expect(within(single).getByRole('heading', { level: 2, name: first })).toBeTruthy();
+    expect(within(multiple).getByRole('heading', { level: 2, name: second })).toBeTruthy();
+    expect(within(single).getAllByRole('radio')).toHaveLength(2);
+    expect(within(multiple).getAllByRole('checkbox')).toHaveLength(3);
+  });
+
+  it.each([
+    ['vi', 'Câu 1: Chọn một', 'Câu 2: Chọn nhiều', 'Đáp án đúng: B'],
+    ['en', 'Question 1: Chọn một', 'Question 2: Chọn nhiều', 'Correct answer: B'],
+  ] as const)('includes the question number inside each result card in %s', (locale, first, second, correctAnswer) => {
+    render(<QuizResult questions={questions} grade={{ score: 1, total: 2, results: [
+      { itemId: 'q1', correct: true, correctLabels: ['b'], explanation: 'Vì B đúng' },
+      { itemId: 'q2', correct: false, correctLabels: ['a', 'c'], explanation: 'Vì C và E đúng' },
+    ] }} attempts={['1/2']} firstScore="1/2" onRetake={vi.fn()} />, locale);
+    const cards = screen.getAllByRole('listitem');
+    expect(within(cards[0]).getByRole('heading', { level: 2, name: first })).toBeTruthy();
+    expect(within(cards[1]).getByRole('heading', { level: 2, name: second })).toBeTruthy();
+    expect(within(cards[0]).getByText(correctAnswer)).toBeTruthy();
+  });
+
   it('blocks duplicate submissions and keeps answers after a failed save for retry', async () => {
     const user = userEvent.setup();
     let rejectSave: (cause: Error) => void = () => { throw new Error('SAVE_NOT_STARTED'); };

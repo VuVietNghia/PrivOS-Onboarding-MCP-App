@@ -52,7 +52,7 @@ export function boundaryFor(path: string): BoundaryRule {
     || normalized.startsWith('scripts/architecture/') || normalized.startsWith('scripts/i18n/')) {
     return { path: normalized, role: 'config', allowedEffects: ['node'], reason: 'Build configuration' };
   }
-  if (['scripts/generate-manifest.ts', 'scripts/pair.ts', 'scripts/preflight.ts'].includes(normalized)) {
+  if (['scripts/build-ui.ts', 'scripts/generate-manifest.ts', 'scripts/pair.ts', 'scripts/preflight.ts'].includes(normalized)) {
     return { path: normalized, role: 'entry', allowedEffects: ['SDK', 'node'], reason: 'CLI composition entry' };
   }
   if (normalized.startsWith('src/ui/')) return { path: normalized, role: 'view', allowedEffects: [], reason: 'View defaults to injected effects' };

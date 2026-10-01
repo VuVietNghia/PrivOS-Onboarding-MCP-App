@@ -10,6 +10,7 @@ export interface ServerDeps {
   handler: McpHandler;
   ui: UiModeController;
   config: ServerConfig;
+  loadStandaloneUi(): Promise<string>;
   startDevUi(mode: RuntimeMode): Promise<StopHandle & { mode: UiMode }>;
   startDevelopmentRelay(): Promise<StopHandle>;
   logger: Logger;
@@ -42,6 +43,9 @@ export async function startServer(deps: ServerDeps): Promise<StopHandle> {
       const ui = await deps.startDevUi(runtime.mode);
       acquired.push(ui);
       deps.ui.set(ui.mode);
+    } else if (runtime.mode === 'standalone-production') {
+      deps.ui.set({ kind: 'inline', html: await deps.loadStandaloneUi() });
+      deps.logger.event('server.ui_ready', { delivery: 'inline', build: 'production' });
     }
     if (runtime.mode === 'development' && deps.config.transport === 'relay') {
       acquired.push(await deps.startDevelopmentRelay());

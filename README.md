@@ -195,11 +195,16 @@ browser displaying Hub is on another machine.
 
 ### V4 review in a Hub test room
 
-With the paired Relay configured, start the interactive UI from WSL in this app directory:
+With the paired Relay configured, start the app from WSL in this app directory:
 
 ```bash
-NODE_ENV=development PRIVOS_DEV_UI=1 npm start
+npm start
 ```
+
+`prestart` builds the production UI automatically. A paired standalone session serves
+`dist/standalone-ui.html`, with JS/CSS embedded so Hub does not fetch separate assets.
+The normal split bundle remains in `dist/ui` for managed/runtime-v3 installations.
+For P0 diagnostics only, use `NODE_ENV=development PRIVOS_DEV_UI=1 npm start`.
 
 Open the app inside the test room as owner/admin. On a room without onboarding registries, first
 open creates `Onboarding positions` and `Onboarding hires`; reload should reuse their IDs. In
@@ -389,6 +394,12 @@ Portal and Hub add the versioned authoritative permission catalog, data policy, 
 digest when computing the final permission-contract hash.
 
 ## UI build and asset delivery
+
+`npm start` runs `npm run build:ui` before starting the server. This produces both the
+split bundle below and `dist/standalone-ui.html`, a production HTML resource with all
+JS/CSS embedded. Paired standalone sessions use the inline resource by default;
+managed/runtime-v3 sessions use the split bundle. `npm run build` prepares both formats
+for the Docker image, whose runtime starts the server directly without rebuilding.
 
 `npm run build` compiles `src/ui` with Vite (`vite.config.ts`: `base: './'`, code-split
 `manualChunks`, `build.manifest: true`, `build.sourcemap: false`, `build.assetsInlineLimit: 0`)
