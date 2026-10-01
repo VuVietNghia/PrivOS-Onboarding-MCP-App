@@ -6,12 +6,15 @@ import { V4Onboarding } from '../../src/ui/onboarding/views/V4Onboarding';
 import { PrivosOnboardingRoot } from '../../src/ui/composition/PrivosOnboardingRoot';
 import type { RoomBootstrap } from '../../src/ui/onboarding/data/room-bootstrap';
 import type { Hire, Page, Position } from '../../src/ui/onboarding/domain/models';
+import type { Catalogs } from '../../src/ui/onboarding/ports/catalogs';
 import { OnboardingI18nProvider } from '../../src/ui/i18n/OnboardingI18nProvider';
 
 const mocks = vi.hoisted(() => ({
   bootstrap: vi.fn<() => Promise<RoomBootstrap>>(),
   hires: vi.fn(async (): Promise<Page<Hire>> => ({ items: [], nextCursor: null })),
-  positions: vi.fn(async (): Promise<Page<Position>> => ({ items: [], nextCursor: null })),
+  positions: vi.fn<Catalogs['positions']>(async () => ({ items: [], nextCursor: null })),
+  disablePosition: vi.fn(async () => {}),
+  saveTemplate: vi.fn(async () => 'created-position'),
 }));
 
 vi.mock('@privos_ai/app-react', () => ({
@@ -33,14 +36,62 @@ vi.mock('../../src/ui/onboarding/data/catalogs', () => ({
     hires: mocks.hires,
   }),
 }));
+vi.mock('../../src/ui/onboarding/flows/hr-v4', () => ({
+  createHrV4Actions: () => ({ disablePosition: mocks.disablePosition }),
+}));
+vi.mock('../../src/ui/onboarding/flows/save-template-v4', () => ({
+  createTemplateService: () => ({ save: mocks.saveTemplate }),
+}));
 
 afterEach(cleanup);
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.positions.mockReset().mockResolvedValue({ items: [], nextCursor: null });
   mocks.bootstrap.mockResolvedValue({ state: 'ready', binding: { roomId: 'room-a', positionsListId: 'positions-a', hiresListId: 'hires-a' } });
 });
 
 describe('v4 room bootstrap surface', () => {
+  it('keeps the newest-first order and filters when returning from a newly saved template', async () => {
+    const user = userEvent.setup();
+    renderV4();
+    await user.click(screen.getByRole('button', { name: /^Templates$/ }));
+    await screen.findByText('No matching positions.');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Filter template status' }), 'draft');
+    await user.type(screen.getByRole('textbox', { name: 'Search positions' }), 'Engineer');
+    await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWith({ text: 'Engineer', status: 'draft' }, undefined, 'updated-desc'));
+    await user.click(screen.getByRole('button', { name: 'Create template' }));
+    await user.type(screen.getByRole('textbox', { name: 'Position name' }), 'Engineer new');
+    await user.click(screen.getAllByRole('button', { name: 'Add day' })[0]);
+    await user.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(mocks.saveTemplate).toHaveBeenCalledOnce());
+    await user.click(screen.getByRole('button', { name: 'Back to list' }));
+    await screen.findByText('No matching positions.');
+    expect((screen.getByRole('textbox', { name: 'Search positions' }) as HTMLInputElement).value).toBe('Engineer');
+    expect((screen.getByRole('combobox', { name: 'Filter template status' }) as HTMLSelectElement).value).toBe('draft');
+    await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWith({ text: 'Engineer', status: 'draft' }, undefined, 'updated-desc'));
+  });
+
+  it('discards the old cursor and preserves the status filter after disabling a template', async () => {
+    const position: Position = { id: 'p1', name: 'Engineering', templateListId: 't1', status: 'ready', weeks: 1, days: 1, lessons: 1, questions: 0, missingAnswers: 0, inUse: 0 };
+    mocks.positions.mockResolvedValue({ items: [position], nextCursor: 'next-updated-page' });
+    const user = userEvent.setup();
+    renderV4();
+    await user.click(screen.getByRole('button', { name: /^Templates$/ }));
+    await screen.findByText('Engineering');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Filter template status' }), 'ready');
+    await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWith({ text: '', status: 'ready' }, undefined, 'updated-desc'));
+    mocks.positions.mockResolvedValueOnce({ items: [{ ...position, id: 'p2', name: 'Engineering second' }], nextCursor: null });
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await screen.findByText('Engineering second');
+    expect(mocks.positions).toHaveBeenLastCalledWith({ text: '', status: 'ready' }, 'next-updated-page', 'updated-desc');
+    await user.click(screen.getByRole('button', { name: 'Disable' }));
+    await user.click(screen.getByRole('button', { name: 'Confirm' }));
+    await screen.findByText('Engineering');
+    expect(mocks.disablePosition).toHaveBeenCalledWith('p2');
+    expect((screen.getByRole('combobox', { name: 'Filter template status' }) as HTMLSelectElement).value).toBe('ready');
+    expect(mocks.positions).toHaveBeenLastCalledWith({ text: '', status: 'ready' }, undefined, 'updated-desc');
+  });
+
   it('opens the live P2 editor when room Lists are ready', async () => {
     const user = userEvent.setup();
     renderV4();

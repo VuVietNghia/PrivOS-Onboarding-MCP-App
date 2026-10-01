@@ -28,7 +28,7 @@ function NavIcon({ screen }: { screen: OnboardingScreen }) {
   return <svg className="v4-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[screen]}</svg>;
 }
 
-export function OnboardingShell({ role, roomId, screen, onNavigate, children, locale = 'vi', onLocaleChange, theme = 'light', onThemeChange, employeePreviewControl }: OnboardingShellProps) {
+export function OnboardingShell({ role, /* roomId, */ screen, onNavigate, children, locale = 'vi', onLocaleChange, theme = 'light', onThemeChange, employeePreviewControl }: OnboardingShellProps) {
   const { t } = useTranslation('common');
   const pages: { id: OnboardingScreen; title: string }[] = role === 'admin'
     ? [{ id: 'hires', title: t('shell.hires') }, { id: 'provision', title: t('shell.provision') }, { id: 'templates', title: t('shell.templates') }]
@@ -41,10 +41,10 @@ export function OnboardingShell({ role, roomId, screen, onNavigate, children, lo
         <div className="v4-brand"><span className="v4-brand-mark" aria-hidden="true" /><span><strong>PrivOS Onboarding</strong><small>{t('shell.workspace')}</small></span></div>
         {role === 'admin' && <div className="v4-nav-label">{t('shell.administration')}</div>}
         <nav className="v4-nav" aria-label={t('shell.navigation')}>{pages.map((page) => <button key={page.id} type="button" className={`v4-nav-button${screen === page.id ? ' active' : ''}`} aria-label={page.title} aria-current={screen === page.id ? 'page' : undefined} onClick={() => onNavigate(page.id)}><NavIcon screen={page.id} /><span>{page.title}</span></button>)}</nav>
-        <div className="v4-room-note"><strong>{t('shell.room')}</strong><span>{roomId}</span></div>
+        {/* <div className="v4-room-note"><strong>{t('shell.room')}</strong><span>{roomId}</span></div> */}
       </aside>
       <div className="v4-shell">
-        <header className="v4-topbar"><div className="v4-context"><strong>{currentTitle}</strong><span>{roomId} / {t('shell.onboarding')}</span></div>
+        <header className="v4-topbar"><div className="v4-context"><strong>{currentTitle}</strong><span>{/* {roomId} / */}{t('shell.onboarding')}</span></div>
           <div className="v4-top-actions">
             {employeePreviewControl?.active && <span className="v4-employee-preview-status" role="status">{t('shell.previewMode')}</span>}
             {employeePreviewControl && <button type="button" className="v4-employee-preview-button" onClick={employeePreviewControl.onToggle}>

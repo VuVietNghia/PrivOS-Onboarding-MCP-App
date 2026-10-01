@@ -31,6 +31,77 @@ function fakeGateway(): { gateway: HrV4Gateway; events: string[]; setHire: (valu
 }
 
 describe('HR v4 actions', () => {
+  it('retries marker cleanup after cancellation without deleting the run again or losing scores', async () => {
+    const fake = fakeGateway();
+    const clear = fake.gateway.clearCancelPending;
+    let failClear = true;
+    fake.gateway.clearCancelPending = async (id) => {
+      if (failClear) throw new Error('clear failed');
+      await clear(id);
+    };
+    const actions = createHrV4Actions(fake.gateway, 'room1', ['admin']);
+    await expect(actions.cancelActive('h1')).rejects.toThrow('clear failed');
+    expect(fake.events).not.toContain('readPosition');
+    failClear = false;
+    const result = await actions.cancelActive('h1');
+    expect(result.hire.pendingAction).toBeNull();
+    expect(result.hire.scores).toEqual(baseHire.scores);
+    expect(fake.events.filter((event) => event === 'deleteRun')).toHaveLength(1);
+    expect(fake.events.slice(-5)).toEqual(['clearMarker', 'readHire', 'readPosition', 'listHires', 'inUse:0']);
+  });
+
+  it('rejects cancelled cleanup when a successful clear leaves its marker present', async () => {
+    const fake = fakeGateway();
+    fake.setHire({ ...baseHire, status: 'cancelled', pendingAction: 'cancel' });
+    fake.gateway.clearCancelPending = async () => { fake.events.push('stubbornClear'); };
+    await expect(createHrV4Actions(fake.gateway, 'room1', ['admin']).cancelActive('h1')).rejects.toThrow('HIRE_CANCEL_UNVERIFIED');
+    expect(fake.events).not.toContain('readPosition');
+    expect(fake.events).not.toContain('deleteRun');
+  });
+
+  it('rejects failed cancelled cleanup before recounting', async () => {
+    const fake = fakeGateway();
+    fake.setHire({ ...baseHire, status: 'cancelled', pendingAction: 'cancel' });
+    fake.gateway.clearCancelPending = async () => { throw new Error('clear failed'); };
+    await expect(createHrV4Actions(fake.gateway, 'room1', ['admin']).cancelActive('h1')).rejects.toThrow('HIRE_CANCEL_UNVERIFIED');
+    expect(fake.events).not.toContain('readPosition');
+  });
+
+  it('reconciles a persisted clear with a lost response before recounting', async () => {
+    const fake = fakeGateway();
+    fake.setHire({ ...baseHire, status: 'cancelled', pendingAction: 'cancel' });
+    const clear = fake.gateway.clearCancelPending;
+    fake.gateway.clearCancelPending = async (id) => { await clear(id); throw new Error('response lost'); };
+    const result = await createHrV4Actions(fake.gateway, 'room1', ['admin']).cancelActive('h1');
+    expect(result.hire.pendingAction).toBeNull();
+    expect(result.hire.scores).toEqual(baseHire.scores);
+    expect(fake.events).toEqual(['readHire', 'clearMarker', 'readHire', 'readPosition', 'listHires', 'inUse:0']);
+  });
+
+  it('rejects cancelled cleanup when readback no longer has cancelled status', async () => {
+    const fake = fakeGateway();
+    fake.setHire({ ...baseHire, status: 'cancelled', pendingAction: 'cancel' });
+    fake.gateway.clearCancelPending = async () => { fake.setHire({ ...baseHire }); };
+    await expect(createHrV4Actions(fake.gateway, 'room1', ['admin']).cancelActive('h1')).rejects.toThrow('HIRE_CANCEL_UNVERIFIED');
+    expect(fake.events).not.toContain('readPosition');
+  });
+
+  it('retries recount after marker cleanup was confirmed without repeating cleanup', async () => {
+    const fake = fakeGateway();
+    fake.setHire({ ...baseHire, status: 'cancelled', pendingAction: 'cancel' });
+    const write = fake.gateway.writeInUse;
+    fake.gateway.writeInUse = async () => { throw new Error('recount failed'); };
+    const actions = createHrV4Actions(fake.gateway, 'room1', ['admin']);
+    const first = await actions.cancelActive('h1');
+    expect(first.hire.pendingAction).toBeNull();
+    expect(first.needsRecount).toBe(true);
+    fake.gateway.writeInUse = write;
+    const second = await actions.cancelActive('h1');
+    expect(second.needsRecount).toBe(false);
+    expect(fake.events.filter((event) => event === 'clearMarker')).toHaveLength(1);
+    expect(fake.events).not.toContain('deleteRun');
+  });
+
   it('rejects non-admin before any Hub read or write', async () => {
     const fake = fakeGateway();
     const actions = createHrV4Actions(fake.gateway, 'room1', ['member']);

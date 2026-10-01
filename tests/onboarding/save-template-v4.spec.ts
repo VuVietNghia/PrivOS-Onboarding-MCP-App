@@ -8,11 +8,15 @@ interface Row { _id: string; listId: string; name: string; description?: string;
 interface List { _id: string; name: string; roomId: string; isolatedList: boolean; fieldDefinitions: Field[]; stages: { _id: string; name: string; order: number }[] }
 
 function fakeHub(options: { loseDayResponse?: boolean; dropTemplateCustomFieldUpdates?: boolean; omitEmptyTemplateFields?: boolean;
-  dropAttachmentUpdates?: boolean; dropRegistryCountUpdates?: boolean; dropStageMoves?: boolean } = {}): { app: McpApp; calls: string[]; lists: Map<string, List>; rows: Map<string, Row> } {
+  dropAttachmentUpdates?: boolean; dropRegistryCountUpdates?: boolean; dropStageMoves?: boolean;
+  failLessonWrite?: boolean; losePublishResponse?: boolean; failDraftReadback?: boolean;
+  failPublishReadback?: boolean; publishReadbackChange?: 'metadata' | 'content' } = {}): { app: McpApp; calls: string[]; events: string[]; lists: Map<string, List>; rows: Map<string, Row> } {
   const calls: string[] = [];
+  const events: string[] = [];
   const lists = new Map<string, List>();
   const rows = new Map<string, Row>();
   let next = 0;
+  let published = false;
   const id = () => `id-${++next}`;
   const positions: List = { _id: 'positions', name: 'Onboarding positions', roomId: 'room', isolatedList: true,
     fieldDefinitions: V2_POSITION_FIELDS.map((field) => ({ _id: id(), name: field.name, type: field.type })),
@@ -30,7 +34,10 @@ function fakeHub(options: { loseDayResponse?: boolean; dropTemplateCustomFieldUp
         lists.set(list._id, list);
         return { list };
       }
-      case 'mcpapp.lists.queryItems': return { items: [...rows.values()].filter((row) => row.listId === args.listId), nextCursor: null };
+      case 'mcpapp.lists.queryItems': {
+        const items = [...rows.values()].filter((row) => row.listId === args.listId);
+        return { items: published && options.publishReadbackChange ? items.reverse() : items, nextCursor: null };
+      }
       case 'mcpapp.lists.createItem': {
         const list = lists.get(String(args.listId))!;
         const rawFields = args.customFields as Row['customFields'];
@@ -44,9 +51,17 @@ function fakeHub(options: { loseDayResponse?: boolean; dropTemplateCustomFieldUp
         if (options.loseDayResponse && args.title === 'Ngày 1') { options.loseDayResponse = false; throw new Error('lost create response'); }
         return { item };
       }
-      case 'mcpapp.lists.getItem': return { item: rows.get(String(args.itemId)) };
+      case 'mcpapp.lists.getItem': {
+        const row = rows.get(String(args.itemId));
+        if (options.failDraftReadback && row?.listId === 'positions' && row.stageId === positions.stages[0]._id) throw new Error('draft readback failed');
+        if (options.failPublishReadback && row?.listId === 'positions' && row.stageId === positions.stages[1]._id) throw new Error('publish readback unavailable');
+        if (row?.listId === 'positions' && row.stageId === positions.stages[0]._id) events.push('verified-draft');
+        return { item: row };
+      }
       case 'mcpapp.lists.updateItem': {
         const row = rows.get(String(args.itemId))!;
+        if (options.failLessonWrite && row.listId !== 'positions' && row.name === 'Bài 1') throw new Error('lesson write failed');
+        if (row.listId !== 'positions') events.push('tree-write');
         if (args.title !== undefined) row.name = String(args.title);
         if (args.description !== undefined) row.description = String(args.description);
         if (row.listId === 'positions' || !options.dropTemplateCustomFieldUpdates) {
@@ -65,15 +80,118 @@ function fakeHub(options: { loseDayResponse?: boolean; dropTemplateCustomFieldUp
       case 'mcpapp.lists.moveItemToStage': {
         const row = rows.get(String(args.itemId))!;
         if (!options.dropStageMoves) row.stageId = String(args.stageId);
+        if (args.stageId === positions.stages[1]._id) {
+          published = true;
+          for (const item of rows.values()) {
+            if (item.listId === 'positions' || item.name !== 'Bài 1') continue;
+            const fields = lists.get(item.listId)!.fieldDefinitions;
+            const attachmentId = fields.find((field) => field.name === V2.attachments)!._id;
+            const contentId = fields.find((field) => field.name === V2.content)!._id;
+            item.customFields = item.customFields.map((field) => {
+              if (options.publishReadbackChange === 'metadata' && field.fieldId === attachmentId) {
+                return { ...field, value: [{ signedUrl: 'refreshed-url', name: 'guide.pdf', _id: 'guide' }] };
+              }
+              if (options.publishReadbackChange === 'content' && field.fieldId === contentId) return { ...field, value: 'Changed persisted content' };
+              return field;
+            });
+          }
+        }
+        if (options.losePublishResponse && args.stageId === positions.stages[1]._id) throw new Error('lost publish response');
         return { item: row };
       }
       default: throw new Error(`Unexpected tool ${name}`);
     }
   } } as unknown as McpApp;
-  return { app, calls, lists, rows };
+  return { app, calls, events, lists, rows };
 }
 
 describe('saveTemplateV4', () => {
+  const binding = { roomId: 'room', positionsListId: 'positions', hiresListId: 'hires' };
+  const readyTree = () => ({ weeks: [{ id: 'draft:week', name: 'Tuần 1', order: 0 }], items: [
+    { id: 'draft:day', kind: 'day' as const, name: 'Ngày 1', stageId: 'draft:week', parentId: null, order: 1, content: 'Goal' },
+    { id: 'draft:lesson', kind: 'lesson' as const, name: 'Bài 1', stageId: 'draft:week', parentId: 'draft:day', order: 0,
+      content: 'Content', attachments: [], videos: [], read: false },
+  ] });
+
+  it('ready_edit_failure_leaves_draft', async () => {
+    const options = { failLessonWrite: false };
+    const hub = fakeHub(options);
+    const positionId = await saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'ready', tree: readyTree() });
+    options.failLessonWrite = true;
+    hub.calls.length = 0;
+    hub.events.length = 0;
+    const changed = { ...readyTree(), weeks: [{ id: 'draft:week', name: 'Edited week', order: 0 }] };
+    await expect(saveTemplateV4(hub.app, binding, { positionId, name: 'Engineer', status: 'ready', tree: changed })).rejects.toThrow();
+    expect([...hub.rows.values()].some((row) => row.name === 'Edited week')).toBe(true);
+    expect(hub.rows.get(positionId)?.stageId).toBe(hub.lists.get('positions')!.stages[0]._id);
+    expect(hub.calls.indexOf('mcpapp.lists.moveItemToStage')).toBeLessThan(hub.calls.indexOf('mcpapp.lists.updateItem'));
+    expect(hub.events).toContain('verified-draft');
+    expect(hub.events.indexOf('verified-draft')).toBeLessThan(hub.events.indexOf('tree-write'));
+  });
+
+  it('draft_readback_failure_prevents_tree_write', async () => {
+    const options = { failDraftReadback: false };
+    const hub = fakeHub(options);
+    const positionId = await saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'ready', tree: readyTree() });
+    options.failDraftReadback = true;
+    hub.calls.length = 0;
+    await expect(saveTemplateV4(hub.app, binding, { positionId, name: 'Engineer', status: 'ready', tree: readyTree() })).rejects.toThrow();
+    expect(hub.calls).not.toContain('mcpapp.lists.updateItem');
+  });
+
+  it('publishes_only_valid_readback', async () => {
+    const options = { dropRegistryCountUpdates: false };
+    const hub = fakeHub(options);
+    const positionId = await saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'draft', tree: { weeks: readyTree().weeks, items: [] } });
+    options.dropRegistryCountUpdates = true;
+    await expect(saveTemplateV4(hub.app, binding, { positionId, name: 'Engineer', status: 'ready', tree: readyTree() })).rejects.toMatchObject({ code: 'SCHEMA_DRIFT' });
+    expect(hub.rows.get(positionId)?.stageId).toBe(hub.lists.get('positions')!.stages[0]._id);
+  });
+
+  it('lost_publish_response_is_reconciled', async () => {
+    const hub = fakeHub({ losePublishResponse: true });
+    const positionId = await saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'ready', tree: readyTree() });
+    expect(hub.rows.get(positionId)?.stageId).toBe(hub.lists.get('positions')!.stages[1]._id);
+    expect(hub.calls.at(-1)).toBe('mcpapp.lists.queryItems');
+  });
+
+  it('does not report success when lost publish response cannot be read back', async () => {
+    const hub = fakeHub({ losePublishResponse: true, failPublishReadback: true });
+    await expect(saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'ready', tree: readyTree() })).rejects.toThrow();
+  });
+
+  it('reconciles identical reordered tree rows and refreshed attachment transport metadata', async () => {
+    const hub = fakeHub({ losePublishResponse: true, publishReadbackChange: 'metadata' });
+    const tree = readyTree();
+    const lesson = tree.items.find((item) => item.kind === 'lesson')!;
+    const withFile = { ...tree, items: [tree.items[0], { ...lesson, kind: 'lesson' as const,
+      attachments: [{ id: 'guide', name: 'guide.pdf', raw: { _id: 'guide', name: 'guide.pdf', signedUrl: 'old-url' } }],
+      videos: [], read: false }, { ...lesson, id: 'draft:second-lesson', name: 'Bài 2' }] };
+    const positionId = await saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'ready', tree: withFile });
+    expect(hub.rows.get(positionId)?.stageId).toBe(hub.lists.get('positions')!.stages[1]._id);
+  });
+
+  it('rejects a real content change during lost publish reconciliation', async () => {
+    const hub = fakeHub({ losePublishResponse: true, publishReadbackChange: 'content' });
+    await expect(saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'ready', tree: readyTree() }))
+      .rejects.toMatchObject({ code: 'SCHEMA_DRIFT' });
+  });
+
+  it('retains unrelated registry and template fields through ready edits', async () => {
+    const hub = fakeHub();
+    const positionId = await saveTemplateV4(hub.app, binding, { name: 'Engineer', status: 'ready', tree: readyTree() });
+    for (const row of hub.rows.values()) row.customFields.push({ fieldId: 'unrelated', value: 'preserved' });
+    const lesson = [...hub.rows.values()].find((row) => row.name === 'Bài 1')!;
+    lesson.description = 'Description\n[fileId:existing]';
+    const tree = readyTree();
+    const file = { _id: 'existing', name: 'guide.pdf' };
+    const edited = { ...tree, items: tree.items.map((item) => item.kind === 'lesson'
+      ? { ...item, attachments: [{ id: 'existing', name: 'guide.pdf', raw: file }] } : item) };
+    await saveTemplateV4(hub.app, binding, { positionId, name: 'Engineer', status: 'ready', tree: edited });
+    for (const row of hub.rows.values()) expect(row.customFields).toContainEqual({ fieldId: 'unrelated', value: 'preserved' });
+    expect(lesson.description).toBe('Description\n[fileId:existing]');
+  });
+
   it('rejects a reported ready move when the registry readback remains draft', async () => {
     const options = { dropStageMoves: true };
     const hub = fakeHub(options);

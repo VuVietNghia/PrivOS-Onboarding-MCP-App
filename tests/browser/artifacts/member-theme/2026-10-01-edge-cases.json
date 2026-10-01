@@ -1,0 +1,289 @@
+{
+  "date": "2026-10-01",
+  "scope": "Real React member components with mocked service ports; no live Hub requests",
+  "fixture": "http://127.0.0.1:5174/tests/browser/member-theme.html?theme=dark",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "existingChecks": {
+    "total": 130,
+    "failed": []
+  },
+  "themeSummary": [
+    {
+      "theme": "light",
+      "states": 26,
+      "locales": [
+        "vi",
+        "en"
+      ],
+      "overflow": false,
+      "clipped": [],
+      "contrastFailures": [],
+      "minContrast": 4.74
+    },
+    {
+      "theme": "dark",
+      "states": 26,
+      "locales": [
+        "vi",
+        "en"
+      ],
+      "overflow": false,
+      "clipped": [],
+      "contrastFailures": [],
+      "minContrast": 5.82
+    },
+    {
+      "theme": "brand",
+      "states": 13,
+      "locales": [
+        "en"
+      ],
+      "overflow": false,
+      "clipped": [],
+      "contrastFailures": [],
+      "minContrast": 9.38
+    }
+  ],
+  "extra": [
+    {
+      "id": "empty-quiz",
+      "pass": true,
+      "evidence": {
+        "disabled": true,
+        "requests": 0,
+        "status": "Answered 0/2"
+      }
+    },
+    {
+      "id": "complete-answer-unlocks",
+      "pass": true,
+      "evidence": {
+        "disabled": false
+      }
+    },
+    {
+      "id": "clear-last-answer-locks",
+      "pass": true,
+      "evidence": {
+        "disabled": true,
+        "status": "Answered 1/2"
+      }
+    },
+    {
+      "id": "locale-preserves-vi",
+      "pass": true,
+      "evidence": {
+        "chosen": 2
+      }
+    },
+    {
+      "id": "locale-preserves-en",
+      "pass": true,
+      "evidence": {
+        "chosen": 2
+      }
+    },
+    {
+      "id": "leave-pending-quiz",
+      "pass": true,
+      "evidence": {
+        "dayVisible": true
+      }
+    },
+    {
+      "id": "late-save-does-not-navigate",
+      "pass": true,
+      "evidence": {
+        "dayVisible": true,
+        "resultVisible": false
+      }
+    },
+    {
+      "id": "late-save-updates-progress",
+      "pass": true,
+      "evidence": {
+        "text": "Onboarding roadmap\nEmbedded UI Engineer · 09/30/2026 · Completed\nQuality Engineer · 09/30/2026 · Learning\n\nMY ROADMAP\n\nEmbedded UI Engineer\n\nStarted 09/30/2026 · 1/1 days completed\n\n100%\nWeek 1\nDay 3 — Embedded UI and host context · Completed\nFirst score: 0/2\nChoose a reference file "
+      }
+    },
+    {
+      "id": "resume-single-request",
+      "pass": true,
+      "evidence": {
+        "disabled": true,
+        "requests": 1
+      }
+    },
+    {
+      "id": "resume-shows-result",
+      "pass": true,
+      "evidence": {
+        "score": "2/2"
+      }
+    },
+    {
+      "id": "preview-focus-enters",
+      "pass": true,
+      "evidence": {
+        "active": "Close preview"
+      }
+    },
+    {
+      "id": "tab-wraps-inside-preview",
+      "pass": true,
+      "evidence": {
+        "active": "Close preview"
+      }
+    },
+    {
+      "id": "shift-tab-wraps-inside-preview",
+      "pass": true,
+      "evidence": {
+        "active": "Download"
+      }
+    },
+    {
+      "id": "escape-restores-opener",
+      "pass": true,
+      "evidence": {
+        "dialogClosed": true,
+        "active": "Open"
+      }
+    },
+    {
+      "id": "empty-is-not-error",
+      "pass": true,
+      "evidence": {
+        "text": "My roadmap\n\nYou do not have an onboarding roadmap in this room.\n\nChoose a reference file "
+      }
+    },
+    {
+      "id": "load-error-shows-retry",
+      "pass": true,
+      "evidence": {
+        "alert": "Could not load the roadmap. Try again.",
+        "retry": "Retry"
+      }
+    },
+    {
+      "id": "retry-error-does-not-crash",
+      "pass": true,
+      "evidence": {
+        "alert": "Could not load the roadmap. Try again."
+      }
+    },
+    {
+      "id": "error-recovery-clears-alert",
+      "pass": true,
+      "evidence": {
+        "roadmapVisible": true
+      }
+    }
+  ],
+  "mobile320": [
+    {
+      "id": "320-long-question-light",
+      "pass": true,
+      "evidence": {
+        "width": 320,
+        "overflow": false,
+        "inside": true,
+        "locale": "vi"
+      }
+    },
+    {
+      "id": "320-long-question-dark",
+      "pass": true,
+      "evidence": {
+        "width": 320,
+        "overflow": false,
+        "inside": true,
+        "locale": "vi"
+      }
+    },
+    {
+      "id": "320-long-question-brand",
+      "pass": true,
+      "evidence": {
+        "width": 320,
+        "overflow": false,
+        "inside": true,
+        "locale": "vi"
+      }
+    },
+    {
+      "id": "320-last-answer-reachable",
+      "pass": true,
+      "evidence": {
+        "targets": [
+          {
+            "type": "radio",
+            "name": "q1",
+            "clickable": true
+          },
+          {
+            "type": "radio",
+            "name": "q1",
+            "clickable": true
+          },
+          {
+            "type": "checkbox",
+            "name": "q2",
+            "clickable": true
+          },
+          {
+            "type": "checkbox",
+            "name": "q2",
+            "clickable": true
+          },
+          {
+            "type": "checkbox",
+            "name": "q2",
+            "clickable": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "320-result-number-inside-light",
+      "pass": true,
+      "evidence": {
+        "width": 320,
+        "inside": true,
+        "marker": "none",
+        "overflow": false
+      }
+    },
+    {
+      "id": "320-result-number-inside-dark",
+      "pass": true,
+      "evidence": {
+        "width": 320,
+        "inside": true,
+        "marker": "none",
+        "overflow": false
+      }
+    },
+    {
+      "id": "320-result-number-inside-brand",
+      "pass": true,
+      "evidence": {
+        "width": 320,
+        "inside": true,
+        "marker": "none",
+        "overflow": false
+      }
+    }
+  ],
+  "consoleErrors": 0,
+  "consoleWarnings": 0,
+  "backendNetworkRequests": 0,
+  "totalAssertions": 155,
+  "failedAssertions": [],
+  "hubVerification": {
+    "status": "NOT_RUN",
+    "reason": "Automatic approval review rejected opening client.privos.io because the external target was not specified and cookie/session metadata could be sent."
+  }
+}

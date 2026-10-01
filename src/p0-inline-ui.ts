@@ -1,5 +1,5 @@
 /**
- * Build inline UI for a paired Relay app, with diagnostics only in P0 mode.
+ * Build inline UI for a paired Relay app. Diagnostics are temporarily disabled.
  * The Hub rewrites external script URLs inside its srcdoc iframe to a
  * standalone-relay: scheme, which its CSP rejects. Inline JS/CSS is allowed.
  * The build stays in memory; the CLI saves production HTML outside dist/ui.
@@ -65,9 +65,10 @@ async function buildInlineHtml(mode: 'development' | 'production'): Promise<stri
     ? styles[0].source
     : new TextDecoder().decode(styles[0].source);
   const js = scripts[0].code;
-  if (development && (!js.includes('P0 Hub contract tests') || !js.includes('P0.2 ACL and Files'))) {
-    throw new Error('P0 controls were excluded from the inline build');
-  }
+  // Restore this guard with the diagnostics entry in OnboardingPanel.
+  // if (development && (!js.includes('P0 Hub contract tests') || !js.includes('P0.2 ACL and Files'))) {
+  //   throw new Error('P0 controls were excluded from the inline build');
+  // }
 
   return `<!DOCTYPE html>
 <html>

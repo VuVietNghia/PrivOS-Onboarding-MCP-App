@@ -1,0 +1,1692 @@
+
+ RUN  v2.1.9 /mnt/e/Hoc-tap/WebStormProject/onboarding-mini-app/privos-mcp-app-demo
+
+ ❯ tests/onboarding/catalogs.spec.ts (13 tests | 1 failed) 39ms
+   × v4 Catalogs read adapter > requests newest-updated templates from Hub with the same sort on every cursor page 20ms
+     → expected [ …(2) ] to deeply equal [ …(2) ]
+ ❯ tests/onboarding/v4-bootstrap.spec.tsx (8 tests | 2 failed) 2927ms
+   × v4 room bootstrap surface > keeps the newest-first order and filters when returning from a newly saved template 1267ms
+     → expected last "spy" call to have been called with [ { text: 'Engineer', …(1) }, …(2) ]
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"onboarding-v4"[39m
+        [33mdata-theme-mode[39m=[32m"light"[39m
+        [33mlang[39m=[32m"en"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-app"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"Main navigation"[39m
+            [33mclass[39m=[32m"v4-sidebar"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-brand"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"v4-brand-mark"[39m
+              [36m/>[39m
+              [36m<span>[39m
+                [36m<strong>[39m
+                  [0mPrivOS Onboarding[0m
+                [36m</strong>[39m
+                [36m<small>[39m
+                  [0mLearning workspace[0m
+                [36m</small>[39m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-nav-label"[39m
+            [36m>[39m
+              [0mAdministration[0m
+            [36m</div>[39m
+            [36m<nav[39m
+              [33maria-label[39m=[32m"Main navigation"[39m
+              [33mclass[39m=[32m"v4-nav"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"People"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"9"[39m
+                    [33mcy[39m=[32m"7"[39m
+                    [33mr[39m=[32m"4"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mPeople[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"New onboarding"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 5v14M5 12h14"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mNew onboarding[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-current[39m=[32m"page"[39m
+                [33maria-label[39m=[32m"Templates"[39m
+                [33mclass[39m=[32m"v4-nav-button active"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<rect[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mrx[39m=[32m"2"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mx[39m=[32m"3"[39m
+                    [33my[39m=[32m"3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 9h18M9 21V9"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mTemplates[0m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</nav>[39m
+          [36m</aside>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"v4-shell"[39m
+          [36m>[39m
+            [36m<header[39m
+              [33mclass[39m=[32m"v4-topbar"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-context"[39m
+              [36m>[39m
+                [36m<strong>[39m
+                  [0mTemplates[0m
+                [36m</strong>[39m
+                [36m<span>[39m
+                  [0mOnboarding[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-top-actions"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Language"[39m
+                  [33mclass[39m=[32m"v4-language"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mVI[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"active"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mEN[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Appearance"[39m
+                  [33mclass[39m=[32m"v4-themes"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Light theme"[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"v4-theme-dot active"[39m
+                    [33mdata-theme[39m=[32m"light"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Dark theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"dark"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Brand theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"brand"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</header>[39m
+            [36m<main[39m
+              [33mclass[39m=[32m"v4-main"[39m
+            [36m>[39m
+              [36m<section[39m
+                [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+                [33mclass[39m=[32m"v4-screen"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-page-head"[39m
+                [36m>[39m
+                  [36m<div>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"v4-eyebrow"[39m
+                    [36m>[39m
+                      [0mPosition templates[0m
+                    [36m</p>[39m
+                    [36m<h1[39m
+                      [33mid[39m=[32m"v4-positions-title"[39m
+                    [36m>[39m
+                      [0mTemplates by position[0m
+                    [36m</h1>[39m
+                    [36m<p>[39m
+                      [0mEach position has an onboarding template.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-primary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mCreate template[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-toolbar"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-search"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mSearch positions[0m
+                    [36m</span>[39m
+                    [36m<input[39m
+                      [33mplaceholder[39m=[32m"Search positions"[39m
+                      [33mvalue[39m=[32m"Engineer"[39m
+                    [36m/>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-filter"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mFilter template status[0m
+                    [36m</span>[39m
+                    [36m<select>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"all"[39m
+                      [36m>[39m
+                        [0mAll statuses[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"draft"[39m
+                      [36m>[39m
+                        [0mDraft[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"ready"[39m
+                      [36m>[39m
+                        [0mReady[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"disabled"[39m
+                      [36m>[39m
+                        [0mDisabled[0m
+                      [36m</option>[39m
+                    [36m</select>[39m
+                  [36m</label>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-secondary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mReset[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<p[39m
+                  [33maria-live[39m=[32m"polite"[39m
+                  [33mclass[39m=[32m"v4-list-meta"[39m
+                [36m>[39m
+                  [0mShowing 0 positions · on this page[0m
+                [36m</p>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Templates by position"[39m
+                  [33mclass[39m=[32m"v4-table-wrap"[39m
+                  [33mrole[39m=[32m"region"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                [36m>[39m
+                  [36m<table[39m
+                    [33maria-label[39m=[32m"Templates by position"[39m
+                  [36m>[39m
+                    [36m<thead>[39m
+                      [36m<tr>[39m
+                        [36m<th>[39m
+                          [0mPosition[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mWeeks[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mDays[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mLessons[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mQuestions[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mMissing answers[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mIn use[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mStatus[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mActions[0m
+                        [36m</th>[39m
+                      [36m</tr>[39m
+                    [36m</thead>[39m
+                    [36m<tbody />[39m
+                  [36m</table>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"v4-table-state"[39m
+                  [36m>[39m
+                    [36m<p>[39m
+                      [0mNo matching positions.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-pager"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mPrevious[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mNext[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</section>[39m
+            [36m</main>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+   × v4 room bootstrap surface > discards the old cursor and preserves the status filter after disabling a template 1092ms
+     → expected last "spy" call to have been called with [ { text: '', status: 'ready' }, …(2) ]
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"onboarding-v4"[39m
+        [33mdata-theme-mode[39m=[32m"light"[39m
+        [33mlang[39m=[32m"en"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-app"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"Main navigation"[39m
+            [33mclass[39m=[32m"v4-sidebar"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-brand"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"v4-brand-mark"[39m
+              [36m/>[39m
+              [36m<span>[39m
+                [36m<strong>[39m
+                  [0mPrivOS Onboarding[0m
+                [36m</strong>[39m
+                [36m<small>[39m
+                  [0mLearning workspace[0m
+                [36m</small>[39m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-nav-label"[39m
+            [36m>[39m
+              [0mAdministration[0m
+            [36m</div>[39m
+            [36m<nav[39m
+              [33maria-label[39m=[32m"Main navigation"[39m
+              [33mclass[39m=[32m"v4-nav"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"People"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"9"[39m
+                    [33mcy[39m=[32m"7"[39m
+                    [33mr[39m=[32m"4"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mPeople[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"New onboarding"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 5v14M5 12h14"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mNew onboarding[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-current[39m=[32m"page"[39m
+                [33maria-label[39m=[32m"Templates"[39m
+                [33mclass[39m=[32m"v4-nav-button active"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<rect[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mrx[39m=[32m"2"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mx[39m=[32m"3"[39m
+                    [33my[39m=[32m"3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 9h18M9 21V9"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mTemplates[0m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</nav>[39m
+          [36m</aside>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"v4-shell"[39m
+          [36m>[39m
+            [36m<header[39m
+              [33mclass[39m=[32m"v4-topbar"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-context"[39m
+              [36m>[39m
+                [36m<strong>[39m
+                  [0mTemplates[0m
+                [36m</strong>[39m
+                [36m<span>[39m
+                  [0mOnboarding[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-top-actions"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Language"[39m
+                  [33mclass[39m=[32m"v4-language"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mVI[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"active"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mEN[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Appearance"[39m
+                  [33mclass[39m=[32m"v4-themes"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Light theme"[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"v4-theme-dot active"[39m
+                    [33mdata-theme[39m=[32m"light"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Dark theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"dark"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Brand theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"brand"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</header>[39m
+            [36m<main[39m
+              [33mclass[39m=[32m"v4-main"[39m
+            [36m>[39m
+              [36m<section[39m
+                [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+                [33mclass[39m=[32m"v4-screen"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-page-head"[39m
+                [36m>[39m
+                  [36m<div>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"v4-eyebrow"[39m
+                    [36m>[39m
+                      [0mPosition templates[0m
+                    [36m</p>[39m
+                    [36m<h1[39m
+                      [33mid[39m=[32m"v4-positions-title"[39m
+                    [36m>[39m
+                      [0mTemplates by position[0m
+                    [36m</h1>[39m
+                    [36m<p>[39m
+                      [0mEach position has an onboarding template.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-primary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mCreate template[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-toolbar"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-search"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mSearch positions[0m
+                    [36m</span>[39m
+                    [36m<input[39m
+                      [33mplaceholder[39m=[32m"Search positions"[39m
+                      [33mvalue[39m=[32m""[39m
+                    [36m/>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-filter"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mFilter template status[0m
+                    [36m</span>[39m
+                    [36m<select>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"all"[39m
+                      [36m>[39m
+                        [0mAll statuses[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"draft"[39m
+                      [36m>[39m
+                        [0mDraft[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"ready"[39m
+                      [36m>[39m
+                        [0mReady[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"disabled"[39m
+                      [36m>[39m
+                        [0mDisabled[0m
+                      [36m</option>[39m
+                    [36m</select>[39m
+                  [36m</label>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-secondary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mReset[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<p[39m
+                  [33maria-live[39m=[32m"polite"[39m
+                  [33mclass[39m=[32m"v4-list-meta"[39m
+                [36m>[39m
+                  [0mShowing 1 positions · on this page[0m
+                [36m</p>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Templates by position"[39m
+                  [33mclass[39m=[32m"v4-table-wrap"[39m
+                  [33mrole[39m=[32m"region"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                [36m>[39m
+                  [36m<table[39m
+                    [33maria-label[39m=[32m"Templates by position"[39m
+                  [36m>[39m
+                    [36m<thead>[39m
+                      [36m<tr>[39m
+                        [36m<th>[39m
+                          [0mPosition[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mWeeks[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mDays[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mLessons[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mQuestions[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mMissing answers[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mIn use[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mStatus[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mActions[0m
+                        [36m</th>[39m
+                      [36m</tr>[39m
+                    [36m</thead>[39m
+                    [36m<tbody>[39m
+                      [36m<tr>[39m
+                        [36m<td>[39m
+                          [36m<strong>[39m
+                            [0mEngineering[0m
+                          [36m</strong>[39m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m1[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m1[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m1[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m0[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m0[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m0[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"v4-badge v4-badge-ready"[39m
+                          [36m>[39m
+                            [0mReady[0m
+                          [36m</span>[39m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [36m<button[39m
+                            [33mclass[39m=[32m"v4-row-button"[39m
+                            [33mtype[39m=[32m"button"[39m
+                          [36m>[39m
+                            [0mOpen[0m
+                          [36m</button>[39m
+                          [36m<button[39m
+                            [33mclass[39m=[32m"v4-row-button"[39m
+                            [33mtype[39m=[32m"button"[39m
+                          [36m>[39m
+                            [0mCopy[0m
+                          [36m</button>[39m
+                          [36m<button[39m
+                            [33mclass[39m=[32m"v4-row-button"[39m
+                            [33mtype[39m=[32m"button"[39m
+                          [36m>[39m
+                            [0mDisable[0m
+                          [36m</button>[39m
+                        [36m</td>[39m
+                      [36m</tr>[39m
+                    [36m</tbody>[39m
+                  [36m</table>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-pager"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mPrevious[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mNext[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</section>[39m
+            [36m</main>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/onboarding/catalogs.spec.ts > v4 Catalogs read adapter > requests newest-updated templates from Hub with the same sort on every cursor page
+AssertionError: expected [ …(2) ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  Array [
+    Object {
+      "count": 50,
+      "fields": Array [
+        "name",
+        "description",
+        "stageId",
+        "parentId",
+        "customFields",
+      ],
+      "filter": Object {
+        "archived": false,
+        "customFields": Array [
+          Object {
+            "fieldId": "name",
+            "op": "contains",
+            "value": "Kỹ",
+          },
+        ],
+        "stageId": "stage-ready",
+      },
+      "listId": "positions-1",
+      "sort": Object {
+-       "direction": -1,
+-       "field": "_updatedAt",
++       "direction": 1,
++       "field": "order",
+      },
+    },
+    Object {
+      "count": 50,
+      "cursor": "updated-cursor",
+      "fields": Array [
+        "name",
+        "description",
+        "stageId",
+        "parentId",
+        "customFields",
+      ],
+      "filter": Object {
+        "archived": false,
+        "customFields": Array [
+          Object {
+            "fieldId": "name",
+            "op": "contains",
+            "value": "Kỹ",
+          },
+        ],
+        "stageId": "stage-ready",
+      },
+      "listId": "positions-1",
+      "sort": Object {
+-       "direction": -1,
+-       "field": "_updatedAt",
++       "direction": 1,
++       "field": "order",
+      },
+    },
+  ]
+
+ ❯ tests/onboarding/catalogs.spec.ts:116:51
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/onboarding/v4-bootstrap.spec.tsx > v4 room bootstrap surface > keeps the newest-first order and filters when returning from a newly saved template
+AssertionError: expected last "spy" call to have been called with [ { text: 'Engineer', …(1) }, …(2) ]
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"onboarding-v4"[39m
+        [33mdata-theme-mode[39m=[32m"light"[39m
+        [33mlang[39m=[32m"en"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-app"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"Main navigation"[39m
+            [33mclass[39m=[32m"v4-sidebar"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-brand"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"v4-brand-mark"[39m
+              [36m/>[39m
+              [36m<span>[39m
+                [36m<strong>[39m
+                  [0mPrivOS Onboarding[0m
+                [36m</strong>[39m
+                [36m<small>[39m
+                  [0mLearning workspace[0m
+                [36m</small>[39m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-nav-label"[39m
+            [36m>[39m
+              [0mAdministration[0m
+            [36m</div>[39m
+            [36m<nav[39m
+              [33maria-label[39m=[32m"Main navigation"[39m
+              [33mclass[39m=[32m"v4-nav"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"People"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"9"[39m
+                    [33mcy[39m=[32m"7"[39m
+                    [33mr[39m=[32m"4"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mPeople[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"New onboarding"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 5v14M5 12h14"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mNew onboarding[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-current[39m=[32m"page"[39m
+                [33maria-label[39m=[32m"Templates"[39m
+                [33mclass[39m=[32m"v4-nav-button active"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<rect[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mrx[39m=[32m"2"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mx[39m=[32m"3"[39m
+                    [33my[39m=[32m"3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 9h18M9 21V9"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mTemplates[0m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</nav>[39m
+          [36m</aside>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"v4-shell"[39m
+          [36m>[39m
+            [36m<header[39m
+              [33mclass[39m=[32m"v4-topbar"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-context"[39m
+              [36m>[39m
+                [36m<strong>[39m
+                  [0mTemplates[0m
+                [36m</strong>[39m
+                [36m<span>[39m
+                  [0mOnboarding[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-top-actions"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Language"[39m
+                  [33mclass[39m=[32m"v4-language"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mVI[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"active"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mEN[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Appearance"[39m
+                  [33mclass[39m=[32m"v4-themes"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Light theme"[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"v4-theme-dot active"[39m
+                    [33mdata-theme[39m=[32m"light"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Dark theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"dark"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Brand theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"brand"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</header>[39m
+            [36m<main[39m
+              [33mclass[39m=[32m"v4-main"[39m
+            [36m>[39m
+              [36m<section[39m
+                [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+                [33mclass[39m=[32m"v4-screen"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-page-head"[39m
+                [36m>[39m
+                  [36m<div>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"v4-eyebrow"[39m
+                    [36m>[39m
+                      [0mPosition templates[0m
+                    [36m</p>[39m
+                    [36m<h1[39m
+                      [33mid[39m=[32m"v4-positions-title"[39m
+                    [36m>[39m
+                      [0mTemplates by position[0m
+                    [36m</h1>[39m
+                    [36m<p>[39m
+                      [0mEach position has an onboarding template.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-primary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mCreate template[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-toolbar"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-search"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mSearch positions[0m
+                    [36m</span>[39m
+                    [36m<input[39m
+                      [33mplaceholder[39m=[32m"Search positions"[39m
+                      [33mvalue[39m=[32m"Engineer"[39m
+                    [36m/>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-filter"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mFilter template status[0m
+                    [36m</span>[39m
+                    [36m<select>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"all"[39m
+                      [36m>[39m
+                        [0mAll statuses[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"draft"[39m
+                      [36m>[39m
+                        [0mDraft[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"ready"[39m
+                      [36m>[39m
+                        [0mReady[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"disabled"[39m
+                      [36m>[39m
+                        [0mDisabled[0m
+                      [36m</option>[39m
+                    [36m</select>[39m
+                  [36m</label>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-secondary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mReset[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<p[39m
+                  [33maria-live[39m=[32m"polite"[39m
+                  [33mclass[39m=[32m"v4-list-meta"[39m
+                [36m>[39m
+                  [0mShowing 0 positions · on this page[0m
+                [36m</p>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Templates by position"[39m
+                  [33mclass[39m=[32m"v4-table-wrap"[39m
+                  [33mrole[39m=[32m"region"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                [36m>[39m
+                  [36m<table[39m
+                    [33maria-label[39m=[32m"Templates by position"[39m
+                  [36m>[39m
+                    [36m<thead>[39m
+                      [36m<tr>[39m
+                        [36m<th>[39m
+                          [0mPosition[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mWeeks[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mDays[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mLessons[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mQuestions[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mMissing answers[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mIn use[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mStatus[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mActions[0m
+                        [36m</th>[39m
+                      [36m</tr>[39m
+                    [36m</thead>[39m
+                    [36m<tbody />[39m
+                  [36m</table>[39m
+                  [36m<div[39m
+                    [33mclass[39m=[32m"v4-table-state"[39m
+                  [36m>[39m
+                    [36m<p>[39m
+                      [0mNo matching positions.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-pager"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mPrevious[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mNext[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</section>[39m
+            [36m</main>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+- Expected
++ Received
+
+  Array [
+    Object {
+      "status": "draft",
+      "text": "Engineer",
+    },
+    undefined,
+-   "updated-desc",
+  ]
+
+ ❯ tests/onboarding/v4-bootstrap.spec.tsx:61:49
+     59|     await user.selectOptions(screen.getByRole('combobox', { name: 'Fil…
+     60|     await user.type(screen.getByRole('textbox', { name: 'Search positi…
+     61|     await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWi…
+       |                                                 ^
+     62|     await user.click(screen.getByRole('button', { name: 'Create templa…
+     63|     await user.type(screen.getByRole('textbox', { name: 'Position name…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/onboarding/v4-bootstrap.spec.tsx > v4 room bootstrap surface > discards the old cursor and preserves the status filter after disabling a template
+AssertionError: expected last "spy" call to have been called with [ { text: '', status: 'ready' }, …(2) ]
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"onboarding-v4"[39m
+        [33mdata-theme-mode[39m=[32m"light"[39m
+        [33mlang[39m=[32m"en"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"v4-app"[39m
+        [36m>[39m
+          [36m<aside[39m
+            [33maria-label[39m=[32m"Main navigation"[39m
+            [33mclass[39m=[32m"v4-sidebar"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-brand"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"v4-brand-mark"[39m
+              [36m/>[39m
+              [36m<span>[39m
+                [36m<strong>[39m
+                  [0mPrivOS Onboarding[0m
+                [36m</strong>[39m
+                [36m<small>[39m
+                  [0mLearning workspace[0m
+                [36m</small>[39m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"v4-nav-label"[39m
+            [36m>[39m
+              [0mAdministration[0m
+            [36m</div>[39m
+            [36m<nav[39m
+              [33maria-label[39m=[32m"Main navigation"[39m
+              [33mclass[39m=[32m"v4-nav"[39m
+            [36m>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"People"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"9"[39m
+                    [33mcy[39m=[32m"7"[39m
+                    [33mr[39m=[32m"4"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mPeople[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-label[39m=[32m"New onboarding"[39m
+                [33mclass[39m=[32m"v4-nav-button"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 5v14M5 12h14"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mNew onboarding[0m
+                [36m</span>[39m
+              [36m</button>[39m
+              [36m<button[39m
+                [33maria-current[39m=[32m"page"[39m
+                [33maria-label[39m=[32m"Templates"[39m
+                [33mclass[39m=[32m"v4-nav-button active"[39m
+                [33mtype[39m=[32m"button"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"v4-nav-icon"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"1.8"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                [36m>[39m
+                  [36m<rect[39m
+                    [33mheight[39m=[32m"18"[39m
+                    [33mrx[39m=[32m"2"[39m
+                    [33mwidth[39m=[32m"18"[39m
+                    [33mx[39m=[32m"3"[39m
+                    [33my[39m=[32m"3"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M3 9h18M9 21V9"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+                [36m<span>[39m
+                  [0mTemplates[0m
+                [36m</span>[39m
+              [36m</button>[39m
+            [36m</nav>[39m
+          [36m</aside>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"v4-shell"[39m
+          [36m>[39m
+            [36m<header[39m
+              [33mclass[39m=[32m"v4-topbar"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-context"[39m
+              [36m>[39m
+                [36m<strong>[39m
+                  [0mTemplates[0m
+                [36m</strong>[39m
+                [36m<span>[39m
+                  [0mOnboarding[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"v4-top-actions"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Language"[39m
+                  [33mclass[39m=[32m"v4-language"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mVI[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"active"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mEN[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Appearance"[39m
+                  [33mclass[39m=[32m"v4-themes"[39m
+                  [33mrole[39m=[32m"group"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Light theme"[39m
+                    [33maria-pressed[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"v4-theme-dot active"[39m
+                    [33mdata-theme[39m=[32m"light"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Dark theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"dark"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33maria-label[39m=[32m"Brand theme"[39m
+                    [33maria-pressed[39m=[32m"false"[39m
+                    [33mclass[39m=[32m"v4-theme-dot"[39m
+                    [33mdata-theme[39m=[32m"brand"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</header>[39m
+            [36m<main[39m
+              [33mclass[39m=[32m"v4-main"[39m
+            [36m>[39m
+              [36m<section[39m
+                [33maria-labelledby[39m=[32m"v4-positions-title"[39m
+                [33mclass[39m=[32m"v4-screen"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-page-head"[39m
+                [36m>[39m
+                  [36m<div>[39m
+                    [36m<p[39m
+                      [33mclass[39m=[32m"v4-eyebrow"[39m
+                    [36m>[39m
+                      [0mPosition templates[0m
+                    [36m</p>[39m
+                    [36m<h1[39m
+                      [33mid[39m=[32m"v4-positions-title"[39m
+                    [36m>[39m
+                      [0mTemplates by position[0m
+                    [36m</h1>[39m
+                    [36m<p>[39m
+                      [0mEach position has an onboarding template.[0m
+                    [36m</p>[39m
+                  [36m</div>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-primary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mCreate template[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-toolbar"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-search"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mSearch positions[0m
+                    [36m</span>[39m
+                    [36m<input[39m
+                      [33mplaceholder[39m=[32m"Search positions"[39m
+                      [33mvalue[39m=[32m""[39m
+                    [36m/>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"v4-filter"[39m
+                  [36m>[39m
+                    [36m<span[39m
+                      [33mclass[39m=[32m"v4-visually-hidden"[39m
+                    [36m>[39m
+                      [0mFilter template status[0m
+                    [36m</span>[39m
+                    [36m<select>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"all"[39m
+                      [36m>[39m
+                        [0mAll statuses[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"draft"[39m
+                      [36m>[39m
+                        [0mDraft[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"ready"[39m
+                      [36m>[39m
+                        [0mReady[0m
+                      [36m</option>[39m
+                      [36m<option[39m
+                        [33mvalue[39m=[32m"disabled"[39m
+                      [36m>[39m
+                        [0mDisabled[0m
+                      [36m</option>[39m
+                    [36m</select>[39m
+                  [36m</label>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"v4-secondary-button"[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mReset[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+                [36m<p[39m
+                  [33maria-live[39m=[32m"polite"[39m
+                  [33mclass[39m=[32m"v4-list-meta"[39m
+                [36m>[39m
+                  [0mShowing 1 positions · on this page[0m
+                [36m</p>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Templates by position"[39m
+                  [33mclass[39m=[32m"v4-table-wrap"[39m
+                  [33mrole[39m=[32m"region"[39m
+                  [33mtabindex[39m=[32m"0"[39m
+                [36m>[39m
+                  [36m<table[39m
+                    [33maria-label[39m=[32m"Templates by position"[39m
+                  [36m>[39m
+                    [36m<thead>[39m
+                      [36m<tr>[39m
+                        [36m<th>[39m
+                          [0mPosition[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mWeeks[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mDays[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mLessons[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mQuestions[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mMissing answers[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mIn use[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mStatus[0m
+                        [36m</th>[39m
+                        [36m<th>[39m
+                          [0mActions[0m
+                        [36m</th>[39m
+                      [36m</tr>[39m
+                    [36m</thead>[39m
+                    [36m<tbody>[39m
+                      [36m<tr>[39m
+                        [36m<td>[39m
+                          [36m<strong>[39m
+                            [0mEngineering[0m
+                          [36m</strong>[39m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m1[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m1[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m1[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m0[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m0[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [0m0[0m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [36m<span[39m
+                            [33mclass[39m=[32m"v4-badge v4-badge-ready"[39m
+                          [36m>[39m
+                            [0mReady[0m
+                          [36m</span>[39m
+                        [36m</td>[39m
+                        [36m<td>[39m
+                          [36m<button[39m
+                            [33mclass[39m=[32m"v4-row-button"[39m
+                            [33mtype[39m=[32m"button"[39m
+                          [36m>[39m
+                            [0mOpen[0m
+                          [36m</button>[39m
+                          [36m<button[39m
+                            [33mclass[39m=[32m"v4-row-button"[39m
+                            [33mtype[39m=[32m"button"[39m
+                          [36m>[39m
+                            [0mCopy[0m
+                          [36m</button>[39m
+                          [36m<button[39m
+                            [33mclass[39m=[32m"v4-row-button"[39m
+                            [33mtype[39m=[32m"button"[39m
+                          [36m>[39m
+                            [0mDisable[0m
+                          [36m</button>[39m
+                        [36m</td>[39m
+                      [36m</tr>[39m
+                    [36m</tbody>[39m
+                  [36m</table>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"v4-pager"[39m
+                [36m>[39m
+                  [36m<button[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mPrevious[0m
+                  [36m</button>[39m
+                  [36m<button[39m
+                    [33mtype[39m=[32m"button"[39m
+                  [36m>[39m
+                    [0mNext[0m
+                  [36m</button>[39m
+                [36m</div>[39m
+              [36m</section>[39m
+            [36m</main>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+- Expected
++ Received
+
+  Array [
+    Object {
+      "status": "ready",
+      "text": "",
+    },
+    undefined,
+-   "updated-desc",
+  ]
+
+ ❯ tests/onboarding/v4-bootstrap.spec.tsx:82:49
+     80|     await screen.findByText('Engineering');
+     81|     await user.selectOptions(screen.getByRole('combobox', { name: 'Fil…
+     82|     await waitFor(() => expect(mocks.positions).toHaveBeenLastCalledWi…
+       |                                                 ^
+     83|     mocks.positions.mockResolvedValueOnce({ items: [{ ...position, id:…
+     84|     await user.click(screen.getByRole('button', { name: 'Next' }));
+ ❯ runWithExpensiveErrorDiagnosticsDisabled node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 18 passed (21)
+   Start at  14:24:11
+   Duration  44.35s (transform 4.84s, setup 0ms, collect 17.72s, tests 2.97s, environment 23.84s, prepare 2.08s)
+

@@ -1,0 +1,14 @@
+
+ RUN  v2.1.9 /mnt/e/Hoc-tap/WebStormProject/onboarding-mini-app/privos-mcp-app-demo
+
+ ✓ tests/onboarding/v2-lists-tool.spec.ts (4 tests) 6ms
+ ✓ tests/onboarding/catalogs.spec.ts (13 tests) 15ms
+ ✓ tests/onboarding/catalog-page-race.spec.tsx (2 tests) 31ms
+ ✓ tests/onboarding/v4-bootstrap.spec.tsx (8 tests) 1424ms
+   ✓ v4 room bootstrap surface > keeps the newest-first order and filters when returning from a newly saved template 711ms
+
+ Test Files  4 passed (4)
+      Tests  27 passed (27)
+   Start at  14:26:03
+   Duration  27.29s (transform 5.11s, setup 0ms, collect 19.75s, tests 1.48s, environment 21.43s, prepare 3.42s)
+

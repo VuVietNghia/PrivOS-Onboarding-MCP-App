@@ -90,13 +90,11 @@ function HiresScreen({ catalogs, identityKey, scheduler, onCreate, onOpen }: { c
   return <HiresCatalogTable {...page} statusCounts={statusCounts} search={search} onSearch={setSearch} status={status} onStatus={setStatus} onPrevious={page.previous} onNext={page.next} onReload={page.reload} onCreate={onCreate} onOpen={(hire) => onOpen(hire.id)} positionQuery={positionQuery} selectedPosition={selectedPosition} positionOptions={positionOptions} positionLookupOpen={positionLookupOpen} positionLookupLoading={positionLookupLoading} positionLookupError={positionLookupError} onPositionQuery={changePositionQuery} onPositionFocus={() => { if (!selectedPosition && !positionLookupOpen) { lookupRevision.current += 1; setPositionLookupLoading(true); setPositionLookupOpen(true); } }} onPositionSelect={selectPosition} onPositionClear={clearPosition} onPositionClose={() => setPositionLookupOpen(false)} />;
 }
 
-function PositionsScreen({ catalogs, identityKey, scheduler, onCreate, onOpen, onCopy, onDisable }: { catalogs: Catalogs; identityKey: string; scheduler: Scheduler; onCreate: () => void; onOpen: (position: Position) => void; onCopy: (position: Position) => void; onDisable: (position: Position) => void }) {
-  const [search, setSearch] = useState('');
+function PositionsScreen({ catalogs, identityKey, scheduler, search, onSearch, status, onStatus, onCreate, onOpen, onCopy, onDisable }: { catalogs: Catalogs; identityKey: string; scheduler: Scheduler; search: string; onSearch: (value: string) => void; status: PositionStatus | 'all'; onStatus: (value: PositionStatus | 'all') => void; onCreate: () => void; onOpen: (position: Position) => void; onCopy: (position: Position) => void; onDisable: (position: Position) => void }) {
   const query = useDebouncedText(search, scheduler);
-  const [status, setStatus] = useState<PositionStatus | 'all'>('all');
-  const load = useCallback((cursor?: string) => catalogs.positions({ text: query, ...(status !== 'all' ? { status } : {}) }, cursor), [catalogs, query, status]);
-  const page = useCatalogPage(JSON.stringify([identityKey, 'positions', query, status]), load);
-  return <PositionsCatalogTable {...page} search={search} onSearch={setSearch} status={status} onStatus={setStatus} onPrevious={page.previous} onNext={page.next} onReload={page.reload} onCreate={onCreate} onOpen={onOpen} onCopy={onCopy} onDisable={onDisable} />;
+  const load = useCallback((cursor?: string) => catalogs.positions({ text: query, ...(status !== 'all' ? { status } : {}) }, cursor, 'updated-desc'), [catalogs, query, status]);
+  const page = useCatalogPage(JSON.stringify([identityKey, 'positions', query, status, 'updated-desc']), load);
+  return <PositionsCatalogTable {...page} search={search} onSearch={onSearch} status={status} onStatus={onStatus} onPrevious={page.previous} onNext={page.next} onReload={page.reload} onCreate={onCreate} onOpen={onOpen} onCopy={onCopy} onDisable={onDisable} />;
 }
 
 function UnconfiguredScreen({ screen, error }: { screen: OnboardingScreen; error: UiError }) {
@@ -129,6 +127,8 @@ export function V4Onboarding({ admin, employeePreviewControl, onResolvedThemeCha
   const [copyError, setCopyError] = useState<UiError | null>(null);
   // const [importOpen, setImportOpen] = useState(false);
   const [catalogRevision, setCatalogRevision] = useState(0);
+  const [positionSearch, setPositionSearch] = useState('');
+  const [positionStatus, setPositionStatus] = useState<PositionStatus | 'all'>('all');
   const [selectedHireId, setSelectedHireId] = useState<string | null>(null);
   const [disableTarget, setDisableTarget] = useState<Position | null>(null);
   const disableDialogRef = useRef<HTMLDivElement>(null);
@@ -145,7 +145,7 @@ export function V4Onboarding({ admin, employeePreviewControl, onResolvedThemeCha
   const identityKey = session.key;
   useEffect(() => { onResolvedThemeChange?.(theme); }, [theme, onResolvedThemeChange]);
 
-  useEffect(() => { setScreen(admin ? 'hires' : 'roadmap'); setTemplateEditor(null); setSelectedHireId(null); setCopySource(null); /* setImportOpen(false); */ }, [admin, roomId, userId]);
+  useEffect(() => { setScreen(admin ? 'hires' : 'roadmap'); setTemplateEditor(null); setSelectedHireId(null); setCopySource(null); setPositionSearch(''); setPositionStatus('all'); /* setImportOpen(false); */ }, [admin, roomId, userId]);
   useEffect(() => {
     if (!userId) return;
     let active = true;
@@ -221,7 +221,7 @@ export function V4Onboarding({ admin, employeePreviewControl, onResolvedThemeCha
     {/* {admin && screen === 'templates' && !templateEditor && binding && services && importOpen && <><button type="button" className="v4-secondary-button" onClick={() => setImportOpen(false)}>{templatesT('shell.back')}</button><ImportFolderPanel binding={binding} roomId={roomId} userRoles={userRoles} services={services} onDone={() => setCatalogRevision((value) => value + 1)} /></>} */}
     {admin && catalogs && services && screen === 'templates' && !templateEditor && !templateLoading /* && !importOpen */ && <>
       {/* <div className="v4-template-tools"><button type="button" className="v4-secondary-button" onClick={() => setImportOpen(true)}>{templatesT('shell.importFolder')}</button></div> */}
-      <PositionsScreen key={`${identityKey}:${catalogRevision}`} catalogs={catalogs} identityKey={identityKey} scheduler={services.scheduler} onCreate={createTemplate} onOpen={openTemplate} onCopy={openCopy} onDisable={setDisableTarget} />
+      <PositionsScreen key={`${identityKey}:${catalogRevision}`} catalogs={catalogs} identityKey={identityKey} scheduler={services.scheduler} search={positionSearch} onSearch={setPositionSearch} status={positionStatus} onStatus={setPositionStatus} onCreate={createTemplate} onOpen={openTemplate} onCopy={openCopy} onDisable={setDisableTarget} />
     </>}
     {admin && screen === 'templates' && copyLoading && <p role="status">{templatesT('shell.loadingCopy')}</p>}
     {admin && screen === 'templates' && copyError && <p role="alert">{getErrorMessage(copyError, errorT)}</p>}

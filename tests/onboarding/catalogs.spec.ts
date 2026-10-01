@@ -102,6 +102,23 @@ describe('v4 Catalogs read adapter', () => {
     ] }, sort: { field: 'order', direction: 1 }, fields: ['name', 'description', 'stageId', 'parentId', 'customFields'] });
   });
 
+  it('requests newest-updated templates from Hub with the same sort on every cursor page', async () => {
+    const { app, toolCalls } = fakeRestApp([
+      { method: 'GET', path: 'lists.info', reply: () => ok({ list: { _id: binding.positionsListId, name: 'Positions', fieldDefinitions: defs(V2_POSITION_FIELDS) }, stages: [{ _id: 'stage-ready', name: 'Sẵn sàng' }] }) },
+      { method: 'POST', path: 'items.query', reply: (_request, index) => ok({ items: [{ ...position, _id: `position-${index}` }], nextCursor: index === 0 ? 'updated-cursor' : null }) },
+    ]);
+    const catalogs = createCatalogs(app, binding);
+    const first = await catalogs.positions({ text: 'Kỹ', status: 'ready' }, undefined, 'updated-desc');
+    const second = await catalogs.positions({ text: 'Kỹ', status: 'ready' }, first.nextCursor ?? undefined, 'updated-desc');
+    expect(first.items[0].id).toBe('position-0');
+    expect(second.items[0].id).toBe('position-1');
+    const queries = toolCalls.filter((call) => call.name === 'mcpapp.lists.queryItems');
+    expect(queries.map((call) => call.arguments)).toEqual([
+      { listId: 'positions-1', count: 50, filter: { archived: false, stageId: 'stage-ready', customFields: [{ fieldId: 'name', op: 'contains', value: 'Kỹ' }] }, sort: { field: '_updatedAt', direction: -1 }, fields: ['name', 'description', 'stageId', 'parentId', 'customFields'] },
+      { listId: 'positions-1', count: 50, cursor: 'updated-cursor', filter: { archived: false, stageId: 'stage-ready', customFields: [{ fieldId: 'name', op: 'contains', value: 'Kỹ' }] }, sort: { field: '_updatedAt', direction: -1 }, fields: ['name', 'description', 'stageId', 'parentId', 'customFields'] },
+    ]);
+  });
+
   it('loads 601 template items over four 200-row windows without parent filter', async () => {
     const pages = [200, 200, 200, 1];
     const { app, calls } = fakeRestApp([

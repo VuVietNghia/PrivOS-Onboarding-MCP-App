@@ -1,0 +1,5 @@
+
+> ai.privos.onboarding-mcp-app@3.0.0 architecture:check
+> tsx scripts/architecture/run-check.ts
+
+DI architecture: 187 files, 0 violations

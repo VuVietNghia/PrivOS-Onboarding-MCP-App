@@ -1,7 +1,7 @@
 import type { CatalogFilter, Hire, Page, Position, Roadmap, TemplateTree } from '../domain/models';
 
 export interface Catalogs {
-  positions(filter: CatalogFilter, cursor?: string): Promise<Page<Position>>;
+  positions(filter: CatalogFilter, cursor?: string, order?: 'updated-desc'): Promise<Page<Position>>;
   hires(filter: CatalogFilter, cursor?: string): Promise<Page<Hire>>;
   position(id: string): Promise<Position>;
   hire(id: string): Promise<Hire>;

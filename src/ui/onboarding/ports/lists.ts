@@ -43,6 +43,11 @@ export interface ItemQueryFilter {
   customFields?: readonly { fieldId: string; op: 'contains' | 'is'; value: string }[];
 }
 
+export interface ItemQuerySort {
+  field: 'order' | 'createdAt' | '_updatedAt' | 'name';
+  direction: 1 | -1;
+}
+
 export interface ListReadPort {
   listRoomLists(roomId: string): Promise<HubList[]>;
   registryLists(roomId: string): Promise<Array<{ _id: string; name: string; roomId: string; isolatedList: boolean }>>;
@@ -52,7 +57,7 @@ export interface ListReadPort {
     list: { _id: string; name: string; roomId: string; fieldDefinitions: FieldDef[] };
     stages: StageRef[];
   }>;
-  queryItems(listId: string, filter: ItemQueryFilter, count: number, cursor?: string): Promise<{ items: HubItem[]; nextCursor: string | null }>;
+  queryItems(listId: string, filter: ItemQueryFilter, count: number, cursor?: string, sort?: ItemQuerySort): Promise<{ items: HubItem[]; nextCursor: string | null }>;
   readAllItems(listId: string): Promise<HubItem[]>;
   readItem(listId: string, itemId: string): Promise<HubItem>;
   listAllItems(listId: string): Promise<{ items: HubItem[]; capped: boolean }>;

@@ -73,22 +73,23 @@ describe('theme roots outside the onboarding shell', () => {
     expect(logger.event).toHaveBeenCalledWith('ui.chunk_failed', { code: 'CHUNK_UNAVAILABLE' });
   });
 
-  it('shares saved Brand and manual Light with the diagnostics sibling', async () => {
+  it('keeps saved Brand and manual Light working while diagnostics are disabled', async () => {
     mocks.savedTheme = 'brand';
     const user = userEvent.setup();
     renderSurface(panel());
-    const diagnostics = await screen.findByRole('button', { name: 'Open P0 diagnostics' });
-    await waitFor(() => expect(diagnostics.closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('brand'));
+    const appearance = screen.getByRole('group', { name: 'Appearance' });
+    await waitFor(() => expect(appearance.closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('brand'));
+    expect(screen.queryByRole('button', { name: 'Open P0 diagnostics' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Light theme' }));
-    await waitFor(() => expect(diagnostics.closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('light'));
+    await waitFor(() => expect(appearance.closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('light'));
   });
 
   it('does not carry the old identity theme into a new room', async () => {
     mocks.savedTheme = 'brand';
     const view = renderSurface(panel());
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Open P0 diagnostics' }).closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('brand'));
+    await waitFor(() => expect(screen.getByRole('group', { name: 'Appearance' }).closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('brand'));
     mocks.context.roomId = 'room-b'; mocks.context.theme = 'light'; mocks.savedTheme = undefined;
     view.rerender(panel());
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Open P0 diagnostics' }).closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('light'));
+    await waitFor(() => expect(screen.getByRole('group', { name: 'Appearance' }).closest('.onboarding-v4')?.getAttribute('data-theme-mode')).toBe('light'));
   });
 });

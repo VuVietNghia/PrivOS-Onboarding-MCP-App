@@ -57,14 +57,14 @@ export function createCatalogs(deps: CatalogDeps): Catalogs {
   }
 
   return {
-    async positions(filter, cursor) {
+    async positions(filter, cursor, order) {
       const { list, stages } = await info(binding.positionsListId);
       const ids = resolveV2FieldIds(list.fieldDefinitions, V2_POSITION_FIELDS);
       const stageId = selectedStageId(stages, filter, POSITION_STAGES);
       const page = await read.queryItems(binding.positionsListId, {
         archived: false, ...(stageId ? { stageId } : {}),
         ...(filter.text.trim() ? { customFields: conditions(filter.text) } : {}),
-      }, 50, cursor);
+      }, 50, cursor, order === 'updated-desc' ? { field: '_updatedAt', direction: -1 } : undefined);
       return { items: page.items.map((item) => parsePositionItem(item, ids, stageStatus(stages, item.stageId, POSITION_STAGES))), nextCursor: page.nextCursor };
     },
     async hires(filter, cursor) {

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { OnboardingError } from '../domain/errors';
 import type { FieldDef, HubItem } from '../domain/fields';
 import type { StageRef } from '../domain/roadmap-plan';
-import type { ItemQueryFilter } from '../ports/lists';
+import type { ItemQueryFilter, ItemQuerySort } from '../ports/lists';
 export type { ItemQueryFilter } from '../ports/lists';
 import { normalizeHubItem } from '../domain/v2-schemas';
 import { getIsolatedListViaTool } from './isolated-lists';
@@ -26,11 +26,11 @@ export async function readListInfo(app: McpApp, listId: string): Promise<{ list:
 
 export async function queryItems(
   app: McpApp, listId: string, filter: ItemQueryFilter,
-  count: number, cursor?: string,
+  count: number, cursor?: string, sort: ItemQuerySort = { field: 'order', direction: 1 },
 ): Promise<{ items: HubItem[]; nextCursor: string | null }> {
   if (!listId) throw new OnboardingError('ROOM_NOT_CONFIGURED');
   const response: unknown = await app.callServerTool({ name: 'mcpapp.lists.queryItems', arguments: {
-    listId, filter, sort: { field: 'order', direction: 1 }, count,
+    listId, filter, sort, count,
     fields: ['name', 'description', 'stageId', 'parentId', 'customFields'], ...(cursor ? { cursor } : {}),
   } });
   let payload: unknown;

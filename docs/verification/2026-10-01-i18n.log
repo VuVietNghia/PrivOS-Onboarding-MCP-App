@@ -1,0 +1,5 @@
+
+> ai.privos.onboarding-mcp-app@3.0.0 i18n:check
+> tsx scripts/i18n/check-ui-copy.ts
+
+UI copy check passed for 116 reachable modules.

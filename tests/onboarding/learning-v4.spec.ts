@@ -356,3 +356,34 @@ describe('P5 learning flow', () => {
     expect(run.find((row) => row._id === 'q-1')?.customFields.find((entry) => entry.fieldId === V2.selected)?.value).toBe('');
   });
 });
+
+describe('invalid run mutation barrier', () => {
+  it.each([
+    ['day-1', V2.order, 1.5],
+    ['lesson-1', V2.order, 0.5],
+    ['q-1', V2.options, 42],
+  ] as const)('load rejects malformed %s field %s without writes', async (id, fieldId, value) => {
+    const env = fixture();
+    env.run.find((row) => row._id === id)!.customFields.find((entry) => entry.fieldId === fieldId)!.value = value;
+    env.hire.customFields.find((entry) => entry.fieldId === V2.doneDays)!.value = 1;
+    await expect(scope(env.app, binding, 'user-1').load()).rejects.toThrow('RUN_INVALID');
+    expect(env.calls.filter((call) => ['mcpapp.lists.updateItem', 'mcpapp.lists.moveItemToStage'].includes(call.name))).toEqual([]);
+  });
+  it.each(['load', 'markRead', 'submit', 'resume', 'load-completed'] as const)('%s rejects duplicate day order without writes', async (action) => {
+    const env = fixture();
+    const clone = (id: string, source: Row): Row => ({ ...source, _id: id, customFields: source.customFields.map((entry) => ({ ...entry })) });
+    env.run.push(clone('week-2', env.run[1]));
+    const day = clone('day-2', env.run[2]);
+    day.customFields.find((entry) => entry.fieldId === V2.parent)!.value = 'week-2'; env.run.push(day);
+    if (action === 'load-completed') env.hire.customFields.find((entry) => entry.fieldId === V2.doneDays)!.value = 1;
+    if (action === 'resume') env.hire.customFields.find((entry) => entry.fieldId === V2.pendingSubmission)!.value = JSON.stringify({
+      version: 1, operationId: 'attempt-12345678', dayId: 'day-1', previousScores: '{}', answers: { 'q-1': ['b'] },
+    });
+    const service = scope(env.app, binding, 'user-1');
+    const operation = action === 'markRead' ? service.markRead('hire-1', 'lesson-1')
+      : action === 'submit' ? service.submit({ hireId: 'hire-1', dayId: 'day-1', operationId: 'attempt-12345678', answers: { 'q-1': ['b'] } })
+      : action === 'resume' ? service.resume('hire-1') : service.load();
+    await expect(operation).rejects.toThrow('RUN_INVALID');
+    expect(env.calls.filter((call) => ['mcpapp.lists.updateItem', 'mcpapp.lists.moveItemToStage'].includes(call.name))).toEqual([]);
+  });
+});

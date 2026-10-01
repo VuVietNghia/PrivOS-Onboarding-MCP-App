@@ -85,6 +85,28 @@ function descriptionFor(node: Week | ContentItem, previous?: string): string | u
 
 function listName(positionName: string, key: string): string { return `Onboarding template · ${positionName} · ${key.slice(-8)}`; }
 
+function treeSnapshot(tree: TemplateTree): string {
+  const byId = (left: { id: string }, right: { id: string }): number => left.id < right.id ? -1 : left.id > right.id ? 1 : 0;
+  return JSON.stringify({
+    weeks: [...tree.weeks].sort(byId).map(({ id, name, order }) => ({ id, name, order })),
+    items: [...tree.items].sort(byId).map((item) => {
+      const base = { id: item.id, name: item.name, kind: item.kind, stageId: item.stageId,
+        parentId: item.parentId, sourceId: item.sourceId, order: item.order, content: item.content };
+      switch (item.kind) {
+        case 'day': return base;
+        case 'lesson': return { ...base, videos: item.videos, read: item.read,
+          attachments: item.attachments.map(({ id, name, mimeType }) => ({ id, name, mimeType })) };
+        case 'question': return { ...base, options: item.options, correctLabels: item.correctLabels,
+          explanation: item.explanation, selectedLabels: item.selectedLabels, correct: item.correct };
+        default: {
+          const unexpected: never = item;
+          return unexpected;
+        }
+      }
+    }),
+  });
+}
+
 async function writeTree(deps: TemplateDeps, listId: string, roomId: string, draft: TemplateTree): Promise<TemplateTree> {
   const info = await deps.read.isolatedInfo(listId);
   if (!info.isolatedList || info.roomId !== roomId || info.stages.length !== 1 || info.stages[0].name !== CONTENT_STAGE) throw new OnboardingError('SCHEMA_DRIFT');
@@ -204,9 +226,12 @@ async function saveTemplateWithPorts(deps: TemplateDeps, input: SaveTemplateV4In
       }
     }
   }
-  if (positionId && input.status === 'draft') {
+  if (positionId) {
     const current = await deps.read.readItem(binding.positionsListId, positionId);
     if (current.stageId !== draftStage) await deps.write.moveItemToStage(positionId, draftStage);
+    // A publish barrier, not a lock against concurrent editors.
+    const draft = await deps.read.readItem(binding.positionsListId, positionId);
+    if (draft.stageId !== draftStage || fieldValue(draft, positionIds[V2.template]) !== listId) throw new OnboardingError('SCHEMA_DRIFT');
   }
   const readback = await writeTree(deps, listId, binding.roomId, input.tree);
   if (input.status === 'ready' && validateReady(readback, name).length) throw new OnboardingError('TEMPLATE_INVALID');
@@ -218,12 +243,29 @@ async function saveTemplateWithPorts(deps: TemplateDeps, input: SaveTemplateV4In
   } else {
     await deps.write.updateItem({ itemId: positionId, name, customFields: expectedRegistryFields });
   }
-  if (input.status === 'ready') {
-    await deps.write.moveItemToStage(positionId, readyStage);
-  }
   const verified = await deps.read.readItem(binding.positionsListId, positionId);
-  if (verified.name !== name || verified.stageId !== (input.status === 'ready' ? readyStage : draftStage) ||
+  if (verified.name !== name || verified.stageId !== draftStage ||
     !expectedRegistryFields.every(({ fieldId, value }) => fieldValue(verified, fieldId) === value)) throw new OnboardingError('SCHEMA_DRIFT');
+  if (input.status === 'ready') {
+    try {
+      await deps.write.moveItemToStage(positionId, readyStage);
+    } catch {
+      // The write may have committed despite a lost response. Only a complete
+      // readback can establish success; failed reads leave the outcome unknown.
+      const published = await deps.read.readItem(binding.positionsListId, positionId);
+      const info = await deps.read.isolatedInfo(listId);
+      const publishedTree = decodeTemplateTree(await deps.read.readAllItems(listId), info.fieldDefinitions, info.stages[0]._id);
+      if (published.name !== name || published.stageId !== readyStage ||
+        !expectedRegistryFields.every(({ fieldId, value }) => fieldValue(published, fieldId) === value) ||
+        treeSnapshot(publishedTree) !== treeSnapshot(readback) || validateReady(publishedTree, published.name).length) {
+        throw new OnboardingError('SCHEMA_DRIFT');
+      }
+      return positionId;
+    }
+    const published = await deps.read.readItem(binding.positionsListId, positionId);
+    if (published.name !== name || published.stageId !== readyStage ||
+      !expectedRegistryFields.every(({ fieldId, value }) => fieldValue(published, fieldId) === value)) throw new OnboardingError('SCHEMA_DRIFT');
+  }
   return positionId;
 }
 

@@ -2,6 +2,7 @@ import type { HubItem } from '../domain/fields';
 import { OnboardingError, type OnboardingErrorCode } from '../domain/errors';
 import type { ContentItem, Day, Hire, Lesson, Question, Roadmap, Week } from '../domain/models';
 import { gradeDay } from '../domain/quiz';
+import { validateRunTree } from '../domain/run-tree';
 import { appendScore, completeLessonDay, countCompletedDays } from '../domain/scores';
 import { parseHireItem, parseTemplateItems } from '../domain/v2-schemas';
 import { resolveSelectLabels, resolveV2FieldIds, V2, V2_HIRE_FIELDS, V2_ROADMAP_FIELDS } from '../domain/v2-fields';
@@ -94,6 +95,7 @@ async function loadRun(deps: LearningDeps, runId: string): Promise<Roadmap> {
   const ids = resolveV2FieldIds(info.list.fieldDefinitions, V2_ROADMAP_FIELDS);
   const labels = resolveSelectLabels(info.list.fieldDefinitions);
   const rows = await deps.read.readAllItems(runId);
+  if (new Set(rows.map((row) => row._id)).size !== rows.length) throw new OnboardingError('RUN_INVALID');
   const logicalParent = (row: HubItem): string => {
     const value = field(row, ids[V2.parent]);
     if (typeof value !== 'string') throw new Error('RUN_INVALID');
@@ -119,7 +121,14 @@ async function loadRun(deps: LearningDeps, runId: string): Promise<Roadmap> {
     if (!parentId) throw new Error('RUN_INVALID');
     return { ...row, parentId };
   });
-  const parsed = parseTemplateItems(contentRows, ids, labels);
+  let parsed: ContentItem[];
+  try {
+    parsed = parseTemplateItems(contentRows, ids, labels);
+  } catch (error) {
+    // Malformed run content is RUN_INVALID; reads and field-definition checks stay outside this boundary.
+    if (error instanceof OnboardingError && error.code === 'SCHEMA_DRIFT') throw new OnboardingError('RUN_INVALID');
+    throw error;
+  }
   const dayRows = parsed.filter((item): item is Day => item.kind === 'day');
   const dayWeek = new Map<string, string>();
   for (const day of dayRows) {
@@ -140,7 +149,9 @@ async function loadRun(deps: LearningDeps, runId: string): Promise<Roadmap> {
     return { ...item, stageId: weekId, selectedLabels: selected ? selected.split(',') : [],
       correct: resultLabel === 'Đúng' ? true : resultLabel === 'Sai' ? false : null };
   });
-  return { overviewId: overview._id, templateListId: text(field(overview, ids[V2.template])), tree: { weeks, items } };
+  const roadmap: Roadmap = { overviewId: overview._id, templateListId: text(field(overview, ids[V2.template])), tree: { weeks, items } };
+  validateRunTree(roadmap);
+  return roadmap;
 }
 
 async function listMyHiresWithPorts(deps: LearningDeps, userId: string): Promise<Hire[]> {
@@ -189,13 +200,14 @@ async function loadMyRoadmapWithPorts(deps: LearningDeps, userId: string, hireId
   if (!hire.roadmapListId) throw new Error('RUN_INVALID');
   return deps.lock.run(hire.id, async () => {
     let context = await ownHire(deps, userId, hire.id);
+    const roadmap = await loadRun(deps, context.hire.roadmapListId!);
     const pending = journal(field(context.row, context.ids[V2.pendingSubmission]));
     if (!pending && context.hire.status === 'learning' && context.hire.doneDays >= context.hire.totalDays) {
       await finishHireIfDone(deps, hire.id, context.hire, context.info.stages);
       context = await ownHire(deps, userId, hire.id);
       if (context.hire.status !== 'done') throw new Error('WRITE_CONFLICT');
     }
-    return { hire: context.hire, roadmap: await loadRun(deps, context.hire.roadmapListId!),
+    return { hire: context.hire, roadmap,
       pendingSubmission: pendingMetadata(pending) };
   });
 }

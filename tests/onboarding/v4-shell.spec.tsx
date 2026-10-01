@@ -20,6 +20,7 @@ describe('v4 onboarding shell', () => {
     expect(html).toContain('Nhân sự');
     expect(html).toContain('Template');
     expect(html).toContain('Actual list content');
+    expect(html).not.toContain('room-1');
     expect(html).not.toContain('Chọn vai trò');
     expect(html).not.toContain('Lộ trình của tôi');
   });
@@ -32,6 +33,7 @@ describe('v4 onboarding shell', () => {
     );
     expect(html).toContain('Lộ trình của tôi');
     expect(html).toContain('Personal content');
+    expect(html).not.toContain('room-1');
     expect(html).not.toContain('Template');
     expect(html).not.toContain('Onboarding mới');
   });

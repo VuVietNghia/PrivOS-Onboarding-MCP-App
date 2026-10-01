@@ -24,13 +24,13 @@ describe('paired Relay P0 UI delivery', () => {
     expect(result.contents[0].text).toBe(html);
   }, 20_000);
 
-  it('embeds the P0 controls and all executable assets in the Hub shell', async () => {
+  it('keeps diagnostics disabled in the development inline shell while embedding all executable assets', async () => {
     expect(resourceUri).toBeTruthy();
     const html = await buildP0InlineHtml();
-    expect(html).toContain('P0 Hub contract tests');
-    expect(html).toContain('P0.1 Hub contract');
-    expect(html).toContain('P0.2 ACL and Files');
-    expect(html).toContain('P0.3 limits');
+    expect(html).not.toContain('P0 Hub contract tests');
+    expect(html).not.toContain('P0.1 Hub contract');
+    expect(html).not.toContain('P0.2 ACL and Files');
+    expect(html).not.toContain('P0.3 limits');
     expect(html).toMatch(/<style>[^]*<\/style>/);
     expect(html).toMatch(/<script>[^]*<\/script>/);
     expect(html).not.toMatch(/<script[^>]+src=/);

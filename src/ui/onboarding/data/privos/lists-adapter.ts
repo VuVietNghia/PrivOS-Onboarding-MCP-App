@@ -46,7 +46,7 @@ export function createPrivosLists(
     isolatedInfo: (listId) => runRead(() => getIsolatedListViaTool(app, listId)),
     getListInfo: (listId) => guardRead(() => getListInfo(app, listId, effects.budget)),
     readListInfo: (listId) => runRead(() => readListInfo(app, listId)),
-    queryItems: (listId, filter, count, cursor) => runRead(() => queryItems(app, listId, filter, count, cursor)),
+    queryItems: (listId, filter, count, cursor, sort) => runRead(() => queryItems(app, listId, filter, count, cursor, sort)),
     readAllItems: (listId) => guardRead(() => readAllItems(app, listId, effects.budget)),
     readItem: (listId, itemId) => runRead(() => readItem(app, listId, itemId)),
     listAllItems: (listId) => guardRead(() => listAllItems(app, listId, effects.budget)),

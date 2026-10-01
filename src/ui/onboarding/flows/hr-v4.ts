@@ -56,9 +56,16 @@ export function createHrV4Actions(gateway: HrV4Gateway, roomId: string, actorRol
     requireAdmin(actorRoles);
     const initial = await gateway.readHire(hireId);
     if (initial.hire.status === 'cancelled') {
+      let final = initial;
+      if (initial.hire.pendingAction === 'cancel') {
+        try { await gateway.clearCancelPending(hireId); }
+        catch { /* A lost response is reconciled only by verified readback. */ }
+        final = await gateway.readHire(hireId);
+        if (final.hire.status !== 'cancelled' || final.hire.pendingAction !== null) throw new Error('HIRE_CANCEL_UNVERIFIED');
+      }
       let needsRecount = false;
-      try { await recountPosition(initial.hire.positionId); } catch { needsRecount = true; }
-      return { hire: initial.hire, needsRecount };
+      try { await recountPosition(final.hire.positionId); } catch { needsRecount = true; }
+      return { hire: final.hire, needsRecount };
     }
     if (initial.hire.status !== 'learning' && initial.hire.status !== 'done') throw new Error('HIRE_STATUS_INVALID');
     if (initial.pendingSubmission) throw new Error('HIRE_BUSY');

@@ -1,0 +1,4 @@
+
+> ai.privos.onboarding-mcp-app@3.0.0 typecheck:all
+> tsc --noEmit && tsc -p tsconfig.scripts.json && tsc -p tsconfig.tests.json
+

@@ -92,6 +92,25 @@ interface FilesGatewayWithContent {
   content(fileId: string): Promise<ExpectedFileContent>;
 }
 
+it('downloads exact binary bytes from nested Hub envelope', async () => {
+  const saved: { blob: Blob; name: string }[] = [];
+  const app = {
+    callServerTool: async () => ({ file: {
+      _id: 'file-1', name: 'image.png', channel_id: 'room-1', folder_id: 'folder-1',
+    } }),
+    rest: async () => ({ statusCode: 200, body: { result: { dataBase64: 'AP+JUA==', size: 4, mimeType: 'image/png' } } }),
+  } as unknown as McpApp;
+  const gateway = createPrivosFiles(app, 'room-1', {
+    links: { async open() {}, save(blob, name) { saved.push({ blob, name }); } },
+    scheduler: { after: () => () => {} }, lifetime: { assertActive() {}, dispose() {} },
+  });
+  await gateway.download('file-1');
+  expect(saved).toHaveLength(1);
+  expect(saved[0].name).toBe('image.png');
+  expect(saved[0].blob.type).toBe('image/png');
+  expect([...new Uint8Array(await saved[0].blob.arrayBuffer())]).toEqual([0, 255, 137, 80]);
+});
+
 it('downloads the authenticated Hub content as a named Blob', async () => {
   const save = vi.fn();
   const app = {

@@ -12,7 +12,10 @@ export function createBrowserPresentation(): { reloadPage: ReloadPage; themeTarg
   return {
     reloadPage: { reload: () => window.location.reload() },
     themeTarget: { apply: (theme) => document.documentElement.setAttribute('data-theme', theme) },
-    logger: { event: (name, fields) => console.info(`[app] ${name}`, fields) },
+    logger: { event: () => {
+      // Temporarily disabled: restore (name, fields) parameters with the console output.
+      // console.info(`[app] ${name}`, fields);
+    } },
   };
 }
 
