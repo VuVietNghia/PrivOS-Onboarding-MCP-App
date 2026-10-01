@@ -55,7 +55,9 @@ function runStandaloneServer(): Promise<number> {
 }
 
 async function main(): Promise<void> {
+	const pairOnly = process.argv.slice(2).includes('--pair-only');
 	const result = await pairAndStart({
+		mode: pairOnly ? 'pair-only' : 'pair-and-start',
 		prompt: createNodePrompt(),
 		readManifest: async () => {
 			const manifest: unknown = JSON.parse(await readFile(path.join(repositoryRoot, 'privos-app.json'), 'utf8'));
@@ -64,7 +66,9 @@ async function main(): Promise<void> {
 		},
 		pair: async (pairUrl, manifest) => {
 			console.log('\nRegistering… once registered, approve the permission ceiling in Hub Admin > Apps.');
-			console.log('This command will keep waiting and start the app automatically after approval.');
+			console.log(pairOnly
+				? 'This command will wait for approval, save the identity, then exit.'
+				: 'This command will keep waiting and start the app automatically after approval.');
 			return pairAndAwaitApproval(pairUrl,
 				{ ...buildPairingMetadata(buildRelayAppDescriptor()), manifest }, WebSocket,
 				{ onAwaitingApproval: () => process.stdout.write('.') });

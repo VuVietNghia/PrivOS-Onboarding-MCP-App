@@ -3,6 +3,7 @@ import type { Prompt } from './ports';
 export interface ApprovedPairing { pairingVersion?: number; identityFilePath?: string }
 
 export async function pairAndStart(deps: {
+  mode?: 'pair-and-start' | 'pair-only';
   prompt: Prompt;
   readManifest(): Promise<Record<string, unknown>>;
   pair(url: string, manifest: Record<string, unknown>): Promise<ApprovedPairing>;
@@ -17,5 +18,5 @@ export async function pairAndStart(deps: {
     throw new Error('This Hub did not return standalone dispatch trust (pairingVersion 2). Standalone production requires a Hub that supports standalone pairing.');
   }
   deps.onApproved?.(paired.identityFilePath);
-  return { identityFilePath: paired.identityFilePath, exitCode: await deps.start() };
+  return { identityFilePath: paired.identityFilePath, exitCode: deps.mode === 'pair-only' ? 0 : await deps.start() };
 }

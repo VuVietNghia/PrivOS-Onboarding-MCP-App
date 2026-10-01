@@ -1,0 +1,50 @@
+name: privos-onboarding
+
+x-runtime: &runtime
+  image: ${COMPOSE_PROJECT_NAME:-privos-onboarding}-app:local
+  environment:
+    NODE_ENV: production
+    PORT: "3000"
+    PRIVOS_STANDALONE_IDENTITY_FILE: /var/lib/privos/identity/privos-standalone-identity.json
+  volumes:
+    - identity:/var/lib/privos/identity
+  read_only: true
+  tmpfs:
+    - /tmp:rw,size=64m,mode=1777
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  pids_limit: 128
+  init: true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  app:
+    <<: *runtime
+    build:
+      context: .
+      args:
+        PRIVOS_MCP_MANIFEST_JSON: ${PRIVOS_MCP_MANIFEST_JSON:-}
+        PRIVOS_MCP_MANIFEST_DIGEST: ${PRIVOS_MCP_MANIFEST_DIGEST:-}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+  pair:
+    <<: *runtime
+    profiles: [pairing]
+    command: [node_modules/.bin/tsx, scripts/pair.ts, --pair-only]
+    stdin_open: true
+    tty: true
+    healthcheck:
+      disable: true
+    restart: "no"
+
+volumes:
+  identity:

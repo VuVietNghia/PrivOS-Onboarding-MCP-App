@@ -9,3 +9,6 @@
 /dist-source export-ignore
 /pnpm-lock.yaml export-ignore
 /.privos export-ignore
+*.sh text eol=lf
+/dist-deploy export-ignore
+/docker-data export-ignore

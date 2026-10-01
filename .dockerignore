@@ -12,3 +12,9 @@ node_modules
 *.key
 *.tsbuildinfo
 coverage
+.cache
+dist-deploy
+docker-data
+**/*identity*.json
+**/*credentials*
+**/id_rsa*

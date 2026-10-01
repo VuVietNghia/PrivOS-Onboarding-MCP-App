@@ -10,6 +10,9 @@ ENV NODE_ENV=production PORT=3000
 WORKDIR /app
 # Patch base-image openssl (CVE-2026-14456: libcrypto3/libssl3, fixed in 3.5.8-r0)
 RUN apk --no-cache upgrade libcrypto3 libssl3 \
+    && mkdir -p /var/lib/privos/identity \
+    && chown node:node /var/lib/privos/identity \
+    && chmod 700 /var/lib/privos/identity \
     && rm -rf /usr/local/lib/node_modules/npm \
     && rm -f /usr/local/bin/npm /usr/local/bin/npx
 COPY --from=build --chown=node:node /app/package.json /app/package-lock.json ./
@@ -18,6 +21,9 @@ COPY --from=build --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/src ./src
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --from=build --chown=node:node /app/public ./public
+COPY --from=build --chown=node:node /app/scripts/pair.ts ./scripts/pair.ts
+COPY --from=build --chown=node:node /app/scripts/core/pair.ts /app/scripts/core/ports.ts ./scripts/core/
+COPY --from=build --chown=node:node /app/scripts/adapters/node-script-effects.ts ./scripts/adapters/
 ARG PRIVOS_MCP_MANIFEST_JSON
 ARG PRIVOS_MCP_MANIFEST_DIGEST
 LABEL io.privos.mcp.manifest="${PRIVOS_MCP_MANIFEST_JSON}" \

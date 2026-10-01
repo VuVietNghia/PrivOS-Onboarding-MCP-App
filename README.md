@@ -439,6 +439,19 @@ version bump does not by itself ship a UI change. See privos-dev-docs:
 [mcp-app-platform/ui-bundle.md](https://github.com/PrivOS-AI/privos-dev-docs/blob/main/mcp-app-platform/ui-bundle.md)
 for the full mechanism and its refusal codes.
 
+## Ubuntu Docker Compose
+
+See [Ubuntu deployment instructions](docs/deployment/ubuntu-compose.md). The server needs Docker and Compose; no host Node/npm is required.
+
+```bash
+cp compose.env.example .env  # set APP_PORT if host port 3000 is occupied
+bash scripts/build-compose.sh
+docker compose run --rm --no-deps pair
+docker compose up -d --no-build
+```
+
+Pairing waits for Hub approval and writes a persistent identity volume. Use `/ready` to verify readiness. Create the transferable Ubuntu source bundle with `bash scripts/package-ubuntu.sh`.
+
 ## Verification
 
 ```bash

@@ -58,3 +58,29 @@ it('does not start the server for a pairing response without standalone trust', 
   expect(onApproved).not.toHaveBeenCalled();
   expect(start).not.toHaveBeenCalled();
 });
+
+it('exits after trusted pairing in pair-only mode without starting a server', async () => {
+  const start = vi.fn(async () => 9);
+  const onApproved = vi.fn();
+  const result = await pairAndStart({
+    mode: 'pair-only',
+    prompt: { ask: async () => 'https://hub.example/pair' },
+    readManifest: async () => createManifest(),
+    pair: async () => ({ pairingVersion: 2, identityFilePath: '/var/lib/privos/identity/app.json' }),
+    onApproved,
+    start,
+  });
+  expect(result).toEqual({ identityFilePath: '/var/lib/privos/identity/app.json', exitCode: 0 });
+  expect(onApproved).toHaveBeenCalledWith('/var/lib/privos/identity/app.json');
+  expect(start).not.toHaveBeenCalled();
+});
+
+it('keeps starting the server and propagating its exit code in default pairing mode', async () => {
+  const result = await pairAndStart({
+    prompt: { ask: async () => 'https://hub.example/pair' },
+    readManifest: async () => createManifest(),
+    pair: async () => ({ pairingVersion: 2, identityFilePath: 'identity.json' }),
+    start: async () => 7,
+  });
+  expect(result).toEqual({ identityFilePath: 'identity.json', exitCode: 7 });
+});
